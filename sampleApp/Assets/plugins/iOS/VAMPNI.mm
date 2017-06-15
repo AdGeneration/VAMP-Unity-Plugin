@@ -67,10 +67,11 @@ static NSMutableArray *_stockInstance;
  * リワード広告の表示を行う
  *
  */
-- (void)show{
+- (BOOL)show{
     if (self.adReward) {
-        [self.adReward show];
+        return [self.adReward show];
     }
+    return NO;
 }
 
 /**
@@ -91,23 +92,23 @@ static NSMutableArray *_stockInstance;
     [_stockInstance addObject:self];
 }
 
-- (void)setTestMode:(BOOL)enableTestMode
++ (void)setTestMode:(BOOL)enableTestMode
 {
     [VAMP setTestMode:enableTestMode];
 }
 
-- (BOOL)isTestMode
++ (BOOL)isTestMode
 {
     return [VAMP isTestMode];
 }
 
-- (void)setDebugMode:(BOOL)enableDebugMode
++ (void)setDebugMode:(BOOL)enableDebugMode
 {
     
     [VAMP setDebugMode:enableDebugMode];
 }
 
-- (BOOL)isDebugMode
++ (BOOL)isDebugMode
 {
     return [VAMP isDebugMode];
 }
@@ -117,7 +118,7 @@ static NSMutableArray *_stockInstance;
     return [VAMP SupportedOSVersion];
 }
 
-- (NSString *)SDKVersion
++ (NSString *)SDKVersion
 {
     return [VAMP SDKVersion];
 }
@@ -207,7 +208,7 @@ static NSMutableArray *_stockInstance;
     else if ([infoName isEqualToString:@"Carrier"]) {
         CTTelephonyNetworkInfo *networkInfo = [[CTTelephonyNetworkInfo alloc] init];
         CTCarrier *provider = [networkInfo subscriberCellularProvider];
-
+        
         info = provider.carrierName;
     }
     else if ([infoName isEqualToString:@"ISOCountry"]) {
@@ -251,7 +252,6 @@ static NSMutableArray *_stockInstance;
 -(void) vampDidFail:(NSString *)placementId error:(VAMPError *)error
 {
     NSString *codeString = [error kVAMPErrorString];
-    NSString *failMessage = error.localizedDescription;
     
     if([self canUseGameObj]){
         NSString *str = [NSString stringWithFormat:@"vampDidFail(%@)(%@)" , placementId,codeString];
@@ -318,16 +318,16 @@ static NSMutableArray *_stockInstance;
 extern "C"{
     void *_initVAMP(void *vampni , const char* pubId , bool enableTest, bool enableDebug, const char* objName);
     void _loadVAMP(void *vampni);
-    void _showVAMP(void *vampni);
-    void _setTestModeVAMP(void *vampni, bool enableTest);
-    bool _isTestModeVAMP(void *vampni);
-    void _setDebugModeVAMP(void *vampni, bool enableTest);
-    bool _isDebugModeVAMP(void *vampni);
+    bool _showVAMP(void *vampni);
+    void _setTestModeVAMP(bool enableTest);
+    bool _isTestModeVAMP();
+    void _setDebugModeVAMP(bool enableTest);
+    bool _isDebugModeVAMP();
     float _supportedOSVersionVAMP();
     void  _initializeAdnwSDK(void *vampni,const char* pubId);
     void _initializeAdnwSDKState(void *vampni,const char* pubId, const char* state, int duration);
     void _setMediationTimeoutVAMP(void *vampni, int timeout);
-    char* _SDKVersionVAMP(void *vampni);
+    char* _SDKVersionVAMP();
     bool _isReadyVAMP(void *vampni);
     char* _ADNWSDKVersionVAMP (const char* adnwName);
     char* _SDKInfoVAMP (const char* infoName);
@@ -363,32 +363,28 @@ void _loadVAMP(void *vampni){
     [vampni_temp loadRequest];
 }
 
-void _showVAMP(void *vampni){
+bool _showVAMP(void *vampni){
     VAMPNI *vampni_temp = (__bridge VAMPNI *)vampni;
-    [vampni_temp show];
+    return [vampni_temp show];
 }
 
-void _setTestModeVAMP(void *vampni, bool enableTest){
-    VAMPNI *vampni_temp = (__bridge VAMPNI *)vampni;
-    [vampni_temp setTestMode:enableTest];
+void _setTestModeVAMP(bool enableTest){
+    [VAMPNI setTestMode:enableTest];
 }
 
-bool _isTestModeVAMP(void *vampni)
+bool _isTestModeVAMP()
 {
-    VAMPNI *vampni_temp = (__bridge VAMPNI *)vampni;
-    return [vampni_temp isTestMode];
+    return [VAMPNI isTestMode];
 }
 
 
-void _setDebugModeVAMP(void *vampni, bool enableTest){
-    VAMPNI *vampni_temp = (__bridge VAMPNI *)vampni;
-    [vampni_temp setDebugMode:enableTest];
+void _setDebugModeVAMP(bool enableTest){
+    [VAMPNI setDebugMode:enableTest];
 }
 
-bool _isDebugModeVAMP(void *vampni)
+bool _isDebugModeVAMP()
 {
-    VAMPNI *vampni_temp = (__bridge VAMPNI *)vampni;
-    return [vampni_temp isDebugMode];
+    return [VAMPNI isDebugMode];
 }
 
 float _supportedOSVersionVAMP()
@@ -397,10 +393,9 @@ float _supportedOSVersionVAMP()
     
 }
 
-char* _SDKVersionVAMP(void *vampni)
+char* _SDKVersionVAMP()
 {
-    VAMPNI *vampni_temp = (__bridge VAMPNI *)vampni;
-    NSString *version = [vampni_temp SDKVersion];
+    NSString *version = [VAMPNI SDKVersion];
     if ( version == nil ) {
         version = @"";
     }
@@ -419,7 +414,7 @@ void _initializeAdnwSDK(void *vampni,const char* pubId)
     NSString *adidStr = [NSString stringWithCString:pubId encoding:NSUTF8StringEncoding];
     if(vampni == NULL){
         vampni_temp = [[VAMPNI alloc] init];
-        [vampni_temp setParams:UnityGetGLViewController() pubId:adidStr enableTestMode:_isTestModeVAMP enableDebugMode:_isDebugModeVAMP objName:@""];
+        [vampni_temp setParams:UnityGetGLViewController() pubId:adidStr enableTestMode:[VAMPNI isTestMode] enableDebugMode:[VAMPNI isDebugMode] objName:@""];
     }
     [vampni_temp initializeAdnwSDK:adidStr];
 }
@@ -431,7 +426,7 @@ void _initializeAdnwSDKState(void *vampni,const char* pubId, const char* state, 
     NSString *stateStr = [NSString stringWithCString:state encoding:NSUTF8StringEncoding];
     if(vampni == NULL){
         vampni_temp = [[VAMPNI alloc] init];
-        [vampni_temp setParams:UnityGetGLViewController() pubId:adidStr enableTestMode:_isTestModeVAMP enableDebugMode:_isDebugModeVAMP objName:@""];
+        [vampni_temp setParams:UnityGetGLViewController() pubId:adidStr enableTestMode:[VAMPNI isTestMode] enableDebugMode:[VAMPNI isDebugMode] objName:@""];
     }
     
     [vampni_temp initializeAdnwSDK:adidStr state:stateStr duration:duration];

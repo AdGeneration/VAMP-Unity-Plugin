@@ -149,6 +149,31 @@ public class SDKTest : MonoBehaviour {
 			labelStyle.fontSize = 20;
 			labelStyle.alignment = TextAnchor.MiddleCenter;
 
+			// 各アドネットワークのSDK初期化
+			GUI.Box (new Rect (80, 670, 380, 215), "");
+			GUILayout.BeginArea (new Rect (100, 680, 340, 195));
+			GUI.Label (new Rect (0, 0, 340, 30), "ADNW SDK Initialize State");
+			if (GUI.Button (new Rect (40, 40, 40, 40), initializeState == InitializeState.AUTO ? btnOnTexture : btnOffTexture)) {
+				initializeState = InitializeState.AUTO;
+			}
+			GUI.Label (new Rect (10, 85, 100, 30), state[(int)InitializeState.AUTO]);
+			if (GUI.Button (new Rect (150, 40, 40, 40), initializeState == InitializeState.WEIGHT ? btnOnTexture : btnOffTexture)) {
+				initializeState = InitializeState.WEIGHT;
+			}
+			GUI.Label (new Rect (120, 85, 100, 30), state[(int)InitializeState.WEIGHT]);
+			if (GUI.Button (new Rect (260, 40, 40, 40), initializeState == InitializeState.ALL ? btnOnTexture : btnOffTexture)) {
+				initializeState = InitializeState.ALL;
+			}
+			GUI.Label (new Rect (230, 85, 100, 30), state[(int)InitializeState.ALL]);
+
+			if (GUI.Button (new Rect (0, 125, 340, 60), "ADNW SDK INIT")) {
+				isInitVamp = true;
+				VAMPUnitySDK.setTestMode (testMode);
+				VAMPUnitySDK.setDebugMode (debugMode);
+				VAMPUnitySDK.initializeAdnwSDK (placementID, initializeState.ToString(), initializeDuration);
+			}
+			GUILayout.EndArea ();
+
 			GUI.enabled = true;
 
 			// AD1ボタン

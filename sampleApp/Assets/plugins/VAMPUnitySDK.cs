@@ -77,7 +77,7 @@ public class  VAMPUnitySDK : VAMPMonoBehaviour {
 	{
 		#if UNITY_IPHONE
 		if(Application.platform == RuntimePlatform.IPhonePlayer){
-		_setTestModeVAMP(vampni, testMode);
+			_setTestModeVAMP(testMode);
 		}
 		#elif UNITY_ANDROID
 		if(Application.platform == RuntimePlatform.Android){
@@ -91,7 +91,7 @@ public class  VAMPUnitySDK : VAMPMonoBehaviour {
 	{
 		#if UNITY_IPHONE
 		if(Application.platform == RuntimePlatform.IPhonePlayer){
-		_isTestModeVAMP(vampni);
+			isEnableTest = _isTestModeVAMP();
 		}
 		#elif UNITY_ANDROID
 		if(Application.platform == RuntimePlatform.Android){
@@ -105,7 +105,7 @@ public class  VAMPUnitySDK : VAMPMonoBehaviour {
 	{
 		#if UNITY_IPHONE
 		if(Application.platform == RuntimePlatform.IPhonePlayer){
-			_setDebugModeVAMP(vampni, debugMode);
+			_setDebugModeVAMP(debugMode);
 		}
 
 		#elif UNITY_ANDROID
@@ -120,7 +120,7 @@ public class  VAMPUnitySDK : VAMPMonoBehaviour {
 	{
 		#if UNITY_IPHONE
 		if(Application.platform == RuntimePlatform.IPhonePlayer){
-		_isDebugModeVAMP(vampni);
+			isEnableDebug = _isDebugModeVAMP();
 		}
 
 		#elif UNITY_ANDROID
@@ -136,7 +136,7 @@ public class  VAMPUnitySDK : VAMPMonoBehaviour {
 		string ret = "unknown";
 		#if UNITY_IPHONE
 		if(Application.platform == RuntimePlatform.IPhonePlayer){
-			ret = _SDKVersionVAMP(vampni);
+			ret = _SDKVersionVAMP();
 		}
 
 		#elif UNITY_ANDROID
@@ -166,7 +166,7 @@ public class  VAMPUnitySDK : VAMPMonoBehaviour {
 	public static void initializeAdnwSDK(string _placementID) {
 		#if UNITY_IPHONE
 		if(Application.platform == RuntimePlatform.IPhonePlayer){
-		_initializeAdnwSDK(vampni, _placementID);
+			_initializeAdnwSDK(vampni, _placementID);
 		}
 
 		#elif UNITY_ANDROID
@@ -208,7 +208,7 @@ public class  VAMPUnitySDK : VAMPMonoBehaviour {
 
 		#if UNITY_IPHONE
 		if(Application.platform == RuntimePlatform.IPhonePlayer){
-		_loadVAMP(vampni);
+			_loadVAMP(vampni);
 		}
 		#elif UNITY_ANDROID
 		if(Application.platform == RuntimePlatform.Android){
@@ -242,7 +242,7 @@ public class  VAMPUnitySDK : VAMPMonoBehaviour {
 		bool ret = false;
 		#if UNITY_IPHONE
 		if(Application.platform == RuntimePlatform.IPhonePlayer){
-		_showVAMP(vampni);
+			ret = _showVAMP(vampni);
 		}
 		#elif UNITY_ANDROID
 		if(Application.platform == RuntimePlatform.Android){
@@ -269,7 +269,7 @@ public class  VAMPUnitySDK : VAMPMonoBehaviour {
 	{
 		#if UNITY_IPHONE
 		if(Application.platform == RuntimePlatform.IPhonePlayer){
-		_setMediationTimeoutVAMP(vampni, timeout);
+			_setMediationTimeoutVAMP(vampni, timeout);
 		}
 
 		#elif UNITY_ANDROID
