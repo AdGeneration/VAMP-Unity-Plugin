@@ -6,14 +6,22 @@ public class SDKTestUtil {
 	// 端末情報取得
 	public static string getInfo(List<string> infos){
 		infos.Add ("--------------------");
-		infos.Add ("SDK_Ver(VAMP)：" + getVersion("VAMP"));
-		infos.Add ("SDK_Ver(UnityAds)：" + getVersion("UnityAds"));
-		infos.Add ("SDK_Ver(AppLovin)：" + getVersion("AppLovin"));
-		infos.Add ("SDK_Ver(Maio)：" + getVersion("Maio"));
-		infos.Add ("SDK_Ver(AppVador)：" + getVersion("AppVador"));
-		infos.Add ("SDK_Ver(ADGPlayer)：" + getVersion("ADGPlayer"));
+		#if UNITY_IPHONE
+		infos.Add ("サポートOSバージョン：" + VAMPUnitySDK.SupportedOSVersion());
+		infos.Add ("サポート対象OS：" + VAMPUnitySDK.isSupportedOSVersion());
+		#elif UNITY_ANDROID
+		infos.Add ("サポートAPI Level：" + VAMPUnitySDK.SupportedOSVersion());
+		infos.Add ("サポート対象OS：" + VAMPUnitySDK.isSupportedOSVersion());
+		#endif
 		infos.Add ("--------------------");
-		infos.Add ("Support API Level(VAMP)：" + VAMPUnitySDK.SupportedOSVersion());
+		infos.Add ("SDK_Ver(VAMP)：" + getVersion("VAMP"));
+		infos.Add ("SDK_Ver(ADGPlayer)：" + getVersion("ADGPlayer"));
+		infos.Add ("SDK_Ver(Admob)：" + getVersion("Admob"));
+		infos.Add ("SDK_Ver(AppLovin)：" + getVersion("AppLovin"));
+		infos.Add ("SDK_Ver(AppVador)：" + getVersion("AppVador"));
+		infos.Add ("SDK_Ver(Maio)：" + getVersion("Maio"));
+		infos.Add ("SDK_Ver(UnityAds)：" + getVersion("UnityAds"));
+		infos.Add ("SDK_Ver(Vungle)：" + getVersion("Vungle"));
 		infos.Add ("--------------------");
 		string versionName = getAppInfo (infos);
 		getTerminalInfo (infos);
@@ -115,25 +123,40 @@ public class SDKTestUtil {
 				case "VAMP":
 					version = VAMPUnitySDK.SDKVersion ();
 					break;
-				case "UnityAds":
-					cls = new AndroidJavaClass("com.unity3d.ads.UnityAds");
+				case "ADGPlayer":
+					cls = new AndroidJavaClass("jp.supership.adgplayer.ADGPlayer");
 					version = cls.CallStatic<string>("getVersion");
+					break;
+				case "Admob":
+					AndroidJavaClass player = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+					AndroidJavaObject activity = player.GetStatic<AndroidJavaObject>("currentActivity");
+					AndroidJavaObject res = activity.Call<AndroidJavaObject>("getResources");
+					string packageName = activity.Call<string>("getPackageName");
+					int versionId = res.Call<int>("getIdentifier", "google_play_services_version", "integer", packageName);
+					if (versionId != 0) {
+						int versionInt = res.Call<int>("getInteger", versionId);
+						version = (versionInt).ToString();
+					}
 					break;
 				case "AppLovin":
 					cls = new AndroidJavaClass("com.applovin.sdk.AppLovinSdk");
 					version = cls.GetStatic<string>("VERSION");
 					break;
-				case "Maio":
-					cls = new AndroidJavaClass("jp.maio.sdk.android.MaioAds");
-					version = cls.CallStatic<string>("getSdkVersion");
-					break;
 				case "AppVador":
 					cls = new AndroidJavaClass("com.appvador.ads.reward.RewardAdManager");
 					version = cls.CallStatic<string>("getVersion");
 					break;
-				case "ADGPlayer":
-					cls = new AndroidJavaClass("jp.supership.adgplayer.ADGPlayer");
+				case "Maio":
+					cls = new AndroidJavaClass("jp.maio.sdk.android.MaioAds");
+					version = cls.CallStatic<string>("getSdkVersion");
+					break;
+				case "UnityAds":
+					cls = new AndroidJavaClass("com.unity3d.ads.UnityAds");
 					version = cls.CallStatic<string>("getVersion");
+					break;
+				case "Vungle":
+					cls = new AndroidJavaClass("com.vungle.publisher.VunglePub");
+					version = cls.GetStatic<string>("VERSION");
 					break;
 				}
 			} catch (AndroidJavaException ex) {

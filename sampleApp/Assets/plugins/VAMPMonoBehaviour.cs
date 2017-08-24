@@ -22,6 +22,8 @@ public class VAMPMonoBehaviour : MonoBehaviour {
 	[DllImport ("__Internal")]
 	protected static extern float _supportedOSVersionVAMP();
 	[DllImport ("__Internal")]
+	protected static extern bool _isSupportedOSVersionVAMP();
+	[DllImport ("__Internal")]
 	protected static extern void  _initializeAdnwSDK(IntPtr vampni,string pubId);
 	[DllImport ("__Internal")]
 	protected static extern void _initializeAdnwSDKState(IntPtr vampni,string pubId, string state, int duration);

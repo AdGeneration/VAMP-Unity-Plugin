@@ -10,6 +10,8 @@
 #import <UnityAds/UnityAds.h>
 #import <APVReward/APVRewardAd.h>
 #import <ADGPlayer/ADGPlayer.h>
+#import <VungleSDK/VungleSDK.h>
+#import <GoogleMobileAds/GoogleMobileAds.h>
 
 extern "C" void UnitySendMessage(const char *, const char *, const char *);
 extern UIViewController *UnityGetGLViewController();
@@ -118,6 +120,11 @@ static NSMutableArray *_stockInstance;
     return [VAMP SupportedOSVersion];
 }
 
++ (BOOL)isSupportedOSVersion
+{
+    return [VAMP isSupportedOSVersion];
+}
+
 + (NSString *)SDKVersion
 {
     return [VAMP SDKVersion];
@@ -142,7 +149,9 @@ static NSMutableArray *_stockInstance;
             }
             else if ([state isEqualToString:@"WEIGHT"]) {
                 initializeState = kVAMPInitializeStateWEIGHT;
-                
+            }
+            else if ([state isEqualToString:@"WIFIONLY"]) {
+                initializeState = kVAMPInitializeStateWIFIONLY;
             }
         }
         
@@ -185,6 +194,13 @@ static NSMutableArray *_stockInstance;
     }
     else if ([adnwName isEqualToString:@"ADGPlayer"]) {
         version = [ADGPlayer sdkVersion];
+    }
+    else if ([adnwName isEqualToString:@"Vungle"]) {
+        version = VungleSDKVersion;
+    }
+    else if ([adnwName isEqualToString:@"Admob"]) {
+        version = [NSString stringWithCString:(const char *) GoogleMobileAdsVersionString
+                                     encoding:NSUTF8StringEncoding];
     }
     
     return version;
@@ -324,6 +340,7 @@ extern "C"{
     void _setDebugModeVAMP(bool enableTest);
     bool _isDebugModeVAMP();
     float _supportedOSVersionVAMP();
+    bool _isSupportedOSVersionVAMP();
     void  _initializeAdnwSDK(void *vampni,const char* pubId);
     void _initializeAdnwSDKState(void *vampni,const char* pubId, const char* state, int duration);
     void _setMediationTimeoutVAMP(void *vampni, int timeout);
@@ -391,6 +408,11 @@ float _supportedOSVersionVAMP()
 {
     return [VAMPNI supportedOSVersion];
     
+}
+
+bool _isSupportedOSVersionVAMP()
+{
+    return [VAMPNI isSupportedOSVersion];
 }
 
 char* _SDKVersionVAMP()

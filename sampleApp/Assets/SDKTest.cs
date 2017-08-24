@@ -20,7 +20,8 @@ public class SDKTest : MonoBehaviour {
 	public enum InitializeState {
 		AUTO = 0,
 		WEIGHT,
-		ALL
+		ALL,
+		WIFIONLY
 	};
 	public InitializeState initializeState;	// デフォルトはAUTO
 	public int initializeDuration;	// 秒単位で指定する。最小4秒、最大60秒。デフォルトは10秒。
@@ -28,7 +29,8 @@ public class SDKTest : MonoBehaviour {
 	private string[] state = new string[] {
 		InitializeState.AUTO.ToString(),
 		InitializeState.WEIGHT.ToString(),
-		InitializeState.ALL.ToString()
+		InitializeState.ALL.ToString(),
+		InitializeState.WIFIONLY.ToString()
 	};
 
 	private const float SCREEN_WIDTH = 540f;
@@ -150,23 +152,30 @@ public class SDKTest : MonoBehaviour {
 			labelStyle.alignment = TextAnchor.MiddleCenter;
 
 			// 各アドネットワークのSDK初期化
-			GUI.Box (new Rect (80, 670, 380, 215), "");
-			GUILayout.BeginArea (new Rect (100, 680, 340, 195));
-			GUI.Label (new Rect (0, 0, 340, 30), "ADNW SDK Initialize State");
-			if (GUI.Button (new Rect (40, 40, 40, 40), initializeState == InitializeState.AUTO ? btnOnTexture : btnOffTexture)) {
+			GUI.Box (new Rect (65, 670, 410, 215), "");
+			GUILayout.BeginArea (new Rect (75, 680, 400, 195));
+			GUI.Label (new Rect (10, 0, 380, 30), "ADNW SDK Initialize State");
+
+			labelStyle.fontSize = 18;
+
+			if (GUI.Button (new Rect (35, 40, 40, 40), initializeState == InitializeState.AUTO ? btnOnTexture : btnOffTexture)) {
 				initializeState = InitializeState.AUTO;
 			}
-			GUI.Label (new Rect (10, 85, 100, 30), state[(int)InitializeState.AUTO]);
-			if (GUI.Button (new Rect (150, 40, 40, 40), initializeState == InitializeState.WEIGHT ? btnOnTexture : btnOffTexture)) {
+			GUI.Label (new Rect (10, 85, 90, 30), state[(int)InitializeState.AUTO]);
+			if (GUI.Button (new Rect (125, 40, 40, 40), initializeState == InitializeState.WEIGHT ? btnOnTexture : btnOffTexture)) {
 				initializeState = InitializeState.WEIGHT;
 			}
-			GUI.Label (new Rect (120, 85, 100, 30), state[(int)InitializeState.WEIGHT]);
-			if (GUI.Button (new Rect (260, 40, 40, 40), initializeState == InitializeState.ALL ? btnOnTexture : btnOffTexture)) {
+			GUI.Label (new Rect (100, 85, 90, 30), state[(int)InitializeState.WEIGHT]);
+			if (GUI.Button (new Rect (225, 40, 40, 40), initializeState == InitializeState.ALL ? btnOnTexture : btnOffTexture)) {
 				initializeState = InitializeState.ALL;
 			}
-			GUI.Label (new Rect (230, 85, 100, 30), state[(int)InitializeState.ALL]);
+			GUI.Label (new Rect (200, 85, 90, 30), state[(int)InitializeState.ALL]);
+			if (GUI.Button (new Rect (325, 40, 40, 40), initializeState == InitializeState.WIFIONLY ? btnOnTexture : btnOffTexture)) {
+				initializeState = InitializeState.WIFIONLY;
+			}
+			GUI.Label (new Rect (300, 85, 90, 30), state[(int)InitializeState.WIFIONLY]);
 
-			if (GUI.Button (new Rect (0, 125, 340, 60), "ADNW SDK INIT")) {
+			if (GUI.Button (new Rect (30, 125, 340, 60), "ADNW SDK INIT")) {
 				isInitVamp = true;
 				VAMPUnitySDK.setTestMode (testMode);
 				VAMPUnitySDK.setDebugMode (debugMode);
@@ -218,6 +227,14 @@ public class SDKTest : MonoBehaviour {
 				}
 
 			}
+			#if UNITY_ANDROID
+			// CLEARボタン（※現状Androidのみの機能なのでAndroidの時のみ表示）
+			if (GUI.Button (new Rect (420, 0, 120, 60), "CLEAR")) {
+				addMessage ("click clear button.");
+				VAMPUnitySDK.clearLoaded ();
+				loading = false;
+			}
+			#endif
 
 			labelStyle.fontSize = 25;
 
@@ -347,13 +364,6 @@ public class SDKTest : MonoBehaviour {
 	void VAMPDidExpired(string str){
 		#if UNITY_IPHONE
 		addMessage (str);
-
-		if (blk == (int)Block.Ad1) {
-			VAMPUnitySDK.load ();
-			loading = true;
-			return;
-		}
-
 		#elif UNITY_ANDROID
 		//string[] param = vampParam (str);
 		// param[0]:placementId

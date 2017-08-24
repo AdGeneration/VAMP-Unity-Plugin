@@ -163,6 +163,21 @@ public class  VAMPUnitySDK : VAMPMonoBehaviour {
 		#endif
 		return ret;
 	}
+	public static bool isSupportedOSVersion ()
+	{
+		bool ret = false;
+		#if UNITY_IPHONE
+		if(Application.platform == RuntimePlatform.IPhonePlayer){
+			ret =  _isSupportedOSVersionVAMP();
+		}
+		#elif UNITY_ANDROID
+		if(Application.platform == RuntimePlatform.Android){
+			AndroidJavaClass vampCls = new AndroidJavaClass(VAMP_CLASS);
+			ret = vampCls.CallStatic<bool>("isSupportedOSVersion");
+		}
+		#endif
+		return ret;
+	}
 	public static void initializeAdnwSDK(string _placementID) {
 		#if UNITY_IPHONE
 		if(Application.platform == RuntimePlatform.IPhonePlayer){
