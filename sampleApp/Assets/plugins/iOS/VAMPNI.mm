@@ -8,7 +8,6 @@
 #import <AppLovinSDK/AppLovinSDK.h>
 #import <Maio/Maio.h>
 #import <UnityAds/UnityAds.h>
-#import <APVReward/APVRewardAd.h>
 #import <ADGPlayer/ADGPlayer.h>
 #import <VungleSDK/VungleSDK.h>
 #import <GoogleMobileAds/GoogleMobileAds.h>
@@ -188,9 +187,6 @@ static NSMutableArray *_stockInstance;
     }
     else if ([adnwName isEqualToString:@"Maio"]) {
         version = [Maio sdkVersion];
-    }
-    else if ([adnwName isEqualToString:@"AppVador"]) {
-        version = [APVRewardAd sdkVersion];
     }
     else if ([adnwName isEqualToString:@"ADGPlayer"]) {
         version = [ADGPlayer sdkVersion];
