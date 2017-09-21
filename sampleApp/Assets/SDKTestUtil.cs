@@ -18,6 +18,7 @@ public class SDKTestUtil {
 		infos.Add ("SDK_Ver(ADGPlayer)：" + getVersion("ADGPlayer"));
 		infos.Add ("SDK_Ver(Admob)：" + getVersion("Admob"));
 		infos.Add ("SDK_Ver(AppLovin)：" + getVersion("AppLovin"));
+		infos.Add ("SDK_Ver(FAN)：" + getVersion("FAN"));
 		infos.Add ("SDK_Ver(Maio)：" + getVersion("Maio"));
 		infos.Add ("SDK_Ver(UnityAds)：" + getVersion("UnityAds"));
 		infos.Add ("SDK_Ver(Vungle)：" + getVersion("Vungle"));
@@ -140,6 +141,10 @@ public class SDKTestUtil {
 				case "AppLovin":
 					cls = new AndroidJavaClass("com.applovin.sdk.AppLovinSdk");
 					version = cls.GetStatic<string>("VERSION");
+					break;
+				case "FAN":
+					cls = new AndroidJavaClass("com.facebook.ads.internal.AdSdkVersion");
+					version = cls.GetStatic<string>("BUILD");
 					break;
 				case "Maio":
 					cls = new AndroidJavaClass("jp.maio.sdk.android.MaioAds");

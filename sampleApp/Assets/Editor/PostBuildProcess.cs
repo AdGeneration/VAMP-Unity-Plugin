@@ -28,6 +28,7 @@ public class PostBuildProcess
 			proj.AddFrameworkToProject (target, "ImageIO.framework", false);
 			proj.AddFrameworkToProject (target, "libz.tbd", false);
 			proj.AddFrameworkToProject (target, "libxml2.tbd", false);
+            proj.AddFrameworkToProject (target, "libc++.tbd", false);
 
 			File.WriteAllText (projPath, proj.WriteToString ());
 		}

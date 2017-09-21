@@ -11,6 +11,7 @@
 #import <ADGPlayer/ADGPlayer.h>
 #import <VungleSDK/VungleSDK.h>
 #import <GoogleMobileAds/GoogleMobileAds.h>
+#import <FBAudienceNetwork/FBAudienceNetwork.h>
 
 extern "C" void UnitySendMessage(const char *, const char *, const char *);
 extern UIViewController *UnityGetGLViewController();
@@ -198,6 +199,11 @@ static NSMutableArray *_stockInstance;
         version = [NSString stringWithCString:(const char *) GoogleMobileAdsVersionString
                                      encoding:NSUTF8StringEncoding];
     }
+#ifdef FB_AD_SDK_VERSION
+    else if ([adnwName isEqualToString:@"FAN"]) {
+        version = FB_AD_SDK_VERSION;
+    }
+#endif
     
     return version;
 }
