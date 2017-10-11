@@ -10,6 +10,9 @@ public class SDKTest : MonoBehaviour {
 	// Android
 	public string androidPlacementID;
 
+    // FAN's device ID hash to enable test mode on Android
+    public string androidFANHashedID = "HASHED ID";
+
 	public bool testMode;
 	public bool debugMode;
 
@@ -82,6 +85,14 @@ public class SDKTest : MonoBehaviour {
 		height = Screen.height / scale;
 
 		appVersion = SDKTestUtil.getInfo (infos);
+
+        #if UNITY_ANDROID
+        // Android FANのテストデバイスIDを登録
+        if (androidFANHashedID != null && androidFANHashedID.Length > 0)
+        {
+            SDKTestUtil.AddFANTestDevice(androidFANHashedID);
+        }
+        #endif
 	}
 
 	// Update is called once per frame

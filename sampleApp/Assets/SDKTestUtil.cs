@@ -20,6 +20,8 @@ public class SDKTestUtil {
 		infos.Add ("SDK_Ver(AppLovin)：" + getVersion("AppLovin"));
 		infos.Add ("SDK_Ver(FAN)：" + getVersion("FAN"));
 		infos.Add ("SDK_Ver(Maio)：" + getVersion("Maio"));
+        infos.Add ("SDK_Ver(Nend)：" + getVersion("Nend"));
+        infos.Add ("SDK_Ver(Tapjoy)：" + getVersion("Tapjoy"));
 		infos.Add ("SDK_Ver(UnityAds)：" + getVersion("UnityAds"));
 		infos.Add ("SDK_Ver(Vungle)：" + getVersion("Vungle"));
 		infos.Add ("--------------------");
@@ -150,6 +152,13 @@ public class SDKTestUtil {
 					cls = new AndroidJavaClass("jp.maio.sdk.android.MaioAds");
 					version = cls.CallStatic<string>("getSdkVersion");
 					break;
+                case "Nend":
+                    version = "Unknown";
+                    break;
+                case "Tapjoy":
+                    cls = new AndroidJavaClass("com.tapjoy.Tapjoy");
+                    version = cls.CallStatic<string>("getVersion");
+                    break;
 				case "UnityAds":
 					cls = new AndroidJavaClass("com.unity3d.ads.UnityAds");
 					version = cls.CallStatic<string>("getVersion");
@@ -166,4 +175,26 @@ public class SDKTestUtil {
 		#endif
 		return version;
 	}
+
+    public static void AddFANTestDevice(string deviceIdHash) {
+        #if UNITY_ANDROID
+        try {
+            AndroidJavaClass cls = new AndroidJavaClass("com.facebook.ads.AdSettings");
+            cls.CallStatic("addTestDevice", new string[] { deviceIdHash });
+        } catch (AndroidJavaException ex) {
+            Debug.Log(ex.Message);
+        }
+        #endif
+    }
+
+    public static void ClearFANTestDevices() {
+        #if UNITY_ANDROID
+        try {
+            AndroidJavaClass cls = new AndroidJavaClass("com.facebook.ads.AdSettings");
+            cls.CallStatic("clearTestDevices");
+        } catch (AndroidJavaException ex) {
+            Debug.Log(ex.Message);
+        }
+        #endif
+    }
 }

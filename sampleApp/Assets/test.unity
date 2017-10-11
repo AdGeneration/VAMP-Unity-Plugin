@@ -232,6 +232,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   iosPlacementID: '*****'
   androidPlacementID: '*****'
+  androidFANHashedID: 
   testMode: 1
   debugMode: 1
   logoTexture: {fileID: 2800000, guid: 9488c0736076040a3bb58c182302307c, type: 3}
