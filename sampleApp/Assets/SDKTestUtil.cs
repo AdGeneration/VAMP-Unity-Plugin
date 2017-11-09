@@ -3,51 +3,49 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class SDKTestUtil {
+    
 	// 端末情報取得
-	public static string getInfo(List<string> infos){
-		infos.Add ("--------------------");
+	public static string GetInfo(List<string> infos) {
+		infos.Add("--------------------");
 		#if UNITY_IPHONE
-		infos.Add ("サポートOSバージョン：" + VAMPUnitySDK.SupportedOSVersion());
-		infos.Add ("サポート対象OS：" + VAMPUnitySDK.isSupportedOSVersion());
+		infos.Add("サポートOSバージョン：" + VAMPUnitySDK.SupportedOSVersion());
+		infos.Add("サポート対象OS：" + VAMPUnitySDK.isSupportedOSVersion());
 		#elif UNITY_ANDROID
-		infos.Add ("サポートAPI Level：" + VAMPUnitySDK.SupportedOSVersion());
-		infos.Add ("サポート対象OS：" + VAMPUnitySDK.isSupportedOSVersion());
+		infos.Add("サポートAPI Level：" + VAMPUnitySDK.SupportedOSVersion());
+		infos.Add("サポート対象OS：" + VAMPUnitySDK.isSupportedOSVersion());
 		#endif
-		infos.Add ("--------------------");
-		infos.Add ("SDK_Ver(VAMP)：" + getVersion("VAMP"));
-		infos.Add ("SDK_Ver(ADGPlayer)：" + getVersion("ADGPlayer"));
-		infos.Add ("SDK_Ver(Admob)：" + getVersion("Admob"));
-		infos.Add ("SDK_Ver(AppLovin)：" + getVersion("AppLovin"));
-		infos.Add ("SDK_Ver(FAN)：" + getVersion("FAN"));
-		infos.Add ("SDK_Ver(Maio)：" + getVersion("Maio"));
-        infos.Add ("SDK_Ver(Nend)：" + getVersion("Nend"));
-        infos.Add ("SDK_Ver(Tapjoy)：" + getVersion("Tapjoy"));
-		infos.Add ("SDK_Ver(UnityAds)：" + getVersion("UnityAds"));
-		infos.Add ("SDK_Ver(Vungle)：" + getVersion("Vungle"));
-		infos.Add ("--------------------");
-		string versionName = getAppInfo (infos);
-		getTerminalInfo (infos);
+		infos.Add("--------------------");
+        infos.Add("SDK_Ver(VAMP)：" + GetVersion("VAMP"));
+        infos.Add("SDK_Ver(Admob)：" + GetVersion("Admob"));
+        infos.Add("SDK_Ver(AppLovin)：" + GetVersion("AppLovin"));
+        infos.Add("SDK_Ver(FAN)：" + GetVersion("FAN"));
+        infos.Add("SDK_Ver(Maio)：" + GetVersion("Maio"));
+        infos.Add("SDK_Ver(Nend)：" + GetVersion("Nend"));
+        infos.Add("SDK_Ver(Tapjoy)：" + GetVersion("Tapjoy"));
+        infos.Add("SDK_Ver(UnityAds)：" + GetVersion("UnityAds"));
+		infos.Add("SDK_Ver(Vungle)：" + GetVersion("Vungle"));
+		infos.Add("--------------------");
+		string versionName = GetAppInfo(infos);
+		GetTerminalInfo(infos);
 		return versionName;
 	}
 
-	private static void getTerminalInfo(List<string> infos) {
+	private static void GetTerminalInfo(List<string> infos) {
 		#if UNITY_IPHONE
-		if(Application.platform == RuntimePlatform.IPhonePlayer){
-
-			//versionName = VAMPUnitySDK.SDKInfo(adnw)
-			infos.Add ("デバイス名：" + VAMPUnitySDK.SDKInfo("DeviceName"));
-			infos.Add ("OS名：" + VAMPUnitySDK.SDKInfo("OSName"));
-			infos.Add ("OSバージョン：" + VAMPUnitySDK.SDKInfo("OSVersion"));
-			infos.Add ("OSモデル：" + VAMPUnitySDK.SDKInfo("OSModel"));
-			infos.Add ("キャリア情報：" + VAMPUnitySDK.SDKInfo("Carrier"));
-			infos.Add ("国コード：" + VAMPUnitySDK.SDKInfo("CountryCode"));
-			infos.Add ("IDFA：" + VAMPUnitySDK.SDKInfo("IDFA"));
-			infos.Add ("--------------------");
+		if (Application.platform == RuntimePlatform.IPhonePlayer) {
+			infos.Add("デバイス名：" + VAMPUnitySDK.SDKInfo("DeviceName"));
+			infos.Add("OS名：" + VAMPUnitySDK.SDKInfo("OSName"));
+			infos.Add("OSバージョン：" + VAMPUnitySDK.SDKInfo("OSVersion"));
+			infos.Add("OSモデル：" + VAMPUnitySDK.SDKInfo("OSModel"));
+			infos.Add("キャリア情報：" + VAMPUnitySDK.SDKInfo("Carrier"));
+			infos.Add("国コード：" + VAMPUnitySDK.SDKInfo("CountryCode"));
+			infos.Add("IDFA：" + VAMPUnitySDK.SDKInfo("IDFA"));
+			infos.Add("--------------------");
 
 
 		}
 		#elif UNITY_ANDROID
-		if(Application.platform == RuntimePlatform.Android){
+		if (Application.platform == RuntimePlatform.Android) {
 			string androidVersion = "";
 			int apiLevel = -1;
 			string manufacturer = "";
@@ -64,26 +62,26 @@ public class SDKTestUtil {
 			} catch (AndroidJavaException ex) {
 				Debug.Log("Exception:"+ex.Message);
 			}
-			infos.Add ("Androidバージョン：" + androidVersion);
-			infos.Add ("API Level：" + apiLevel);
-			infos.Add ("メーカー名：" + manufacturer);
-			infos.Add ("モデル番号：" + model);
-			infos.Add ("ブランド名：" + brand);
-			infos.Add ("--------------------");
+			infos.Add("Androidバージョン：" + androidVersion);
+			infos.Add("API Level：" + apiLevel);
+			infos.Add("メーカー名：" + manufacturer);
+			infos.Add("モデル番号：" + model);
+			infos.Add("ブランド名：" + brand);
+			infos.Add("--------------------");
 		}
 		#endif
 	}
 
-	private static string getAppInfo(List<string> infos) {
+	private static string GetAppInfo(List<string> infos) {
 		string versionName = "1.0";
 		#if UNITY_IPHONE
-		if(Application.platform == RuntimePlatform.IPhonePlayer){
-			infos.Add ("BundleID：" + VAMPUnitySDK.SDKInfo("BundleID"));
-			infos.Add ("--------------------");
+		if (Application.platform == RuntimePlatform.IPhonePlayer) {
+			infos.Add("BundleID：" + VAMPUnitySDK.SDKInfo("BundleID"));
+			infos.Add("--------------------");
 
 		}
 		#elif UNITY_ANDROID
-		if(Application.platform == RuntimePlatform.Android){
+		if (Application.platform == RuntimePlatform.Android) {
 			string packageName = "";
 			string appName = "";
 			int versionCode = 0;
@@ -101,29 +99,29 @@ public class SDKTestUtil {
 			} catch (AndroidJavaException ex) {
 				Debug.Log(ex.Message);
 			}
-			infos.Add ("アプリ名：" + appName);
-			infos.Add ("パッケージ名：" + packageName);
-			infos.Add ("バージョンコード：" + versionCode);
-			infos.Add ("バージョン名：" + versionName);
-			infos.Add ("--------------------");
+			infos.Add("アプリ名：" + appName);
+			infos.Add("パッケージ名：" + packageName);
+			infos.Add("バージョンコード：" + versionCode);
+			infos.Add("バージョン名：" + versionName);
+			infos.Add("--------------------");
 		}
 		#endif
 		return versionName;
 	}
 
-	private static string getVersion(string adnw) {
+	private static string GetVersion(string adnw) {
 		string version = "nothing";
 		#if UNITY_IPHONE
-		if(Application.platform == RuntimePlatform.IPhonePlayer){
+		if (Application.platform == RuntimePlatform.IPhonePlayer) {
 			version = VAMPUnitySDK.ADNWSDKVersion(adnw);
 		}
 		#elif UNITY_ANDROID
-		if(Application.platform == RuntimePlatform.Android){
+		if (Application.platform == RuntimePlatform.Android) {
 			AndroidJavaClass cls;
 			try {
 				switch(adnw) {
 				case "VAMP":
-					version = VAMPUnitySDK.SDKVersion ();
+					version = VAMPUnitySDK.SDKVersion();
 					break;
 				case "ADGPlayer":
 					cls = new AndroidJavaClass("jp.supership.adgplayer.ADGPlayer");

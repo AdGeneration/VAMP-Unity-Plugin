@@ -5,7 +5,6 @@
 
 #import <VAMP/VAMP.h>
 
-#import <ADGPlayer/ADGPlayer.h>
 #import <AppLovinSDK/AppLovinSDK.h>
 #import <FBAudienceNetwork/FBAudienceNetwork.h>
 #import <GoogleMobileAds/GoogleMobileAds.h>
@@ -28,9 +27,8 @@ extern UIViewController *UnityGetGLViewController();
 
 @property (nonatomic, strong) VAMP *adReward;
 @property (nonatomic, strong) NSString *pubId;
-@property (nonatomic, strong) UIViewController * viewCon;
+@property (nonatomic, strong) UIViewController *viewCon;
 @property (nonatomic, strong) NSString *gameObjName;
-
 
 @end
 
@@ -38,7 +36,8 @@ extern UIViewController *UnityGetGLViewController();
 
 static NSMutableArray *_stockInstance;
 
-- (void)setParams:(UIViewController *)viewCon pubId:(NSString *)pubId enableTestMode:(BOOL)enableTestMode enableDebugMode:(BOOL)enableDebugMode objName:(NSString *)objName{
+- (void)setParams:(UIViewController *)viewCon pubId:(NSString *)pubId enableTestMode:(BOOL)enableTestMode
+  enableDebugMode:(BOOL)enableDebugMode objName:(NSString *)objName {
     
     self.viewCon = viewCon;
     self.pubId = pubId;
@@ -51,17 +50,14 @@ static NSMutableArray *_stockInstance;
     [VAMP setDebugMode:enableDebugMode];
     [VAMP setTestMode:enableTestMode];
     
-    //[self.adReward load];
-    
     self.gameObjName = [NSString stringWithString:objName];
-    
 }
 
 /**
  * リワード広告の読み込みを行う
  *
  */
-- (void)loadRequest{
+- (void)loadRequest {
     if (self.adReward) {
         [self.adReward load];
     }
@@ -71,7 +67,7 @@ static NSMutableArray *_stockInstance;
  * リワード広告の表示を行う
  *
  */
-- (BOOL)show{
+- (BOOL)show {
     if (self.adReward) {
         return [self.adReward show];
     }
@@ -82,13 +78,12 @@ static NSMutableArray *_stockInstance;
  * 呼び出し元のオブジェクト名があるかのチェック
  *
  */
-- (BOOL)canUseGameObj{
-    if(!self.gameObjName)return NO;
+- (BOOL)canUseGameObj {
+    if (!self.gameObjName) return NO;
     return [self.gameObjName length] > 0;
 }
 
--(void) addIntance
-{
+- (void)addIntance {
     if (!_stockInstance) {
         _stockInstance = [NSMutableArray array];
     }
@@ -96,52 +91,41 @@ static NSMutableArray *_stockInstance;
     [_stockInstance addObject:self];
 }
 
-+ (void)setTestMode:(BOOL)enableTestMode
-{
++ (void)setTestMode:(BOOL)enableTestMode {
     [VAMP setTestMode:enableTestMode];
 }
 
-+ (BOOL)isTestMode
-{
++ (BOOL)isTestMode {
     return [VAMP isTestMode];
 }
 
-+ (void)setDebugMode:(BOOL)enableDebugMode
-{
-    
++ (void)setDebugMode:(BOOL)enableDebugMode {
     [VAMP setDebugMode:enableDebugMode];
 }
 
-+ (BOOL)isDebugMode
-{
++ (BOOL)isDebugMode {
     return [VAMP isDebugMode];
 }
 
-+ (float)supportedOSVersion
-{
++ (float)supportedOSVersion {
     return [VAMP SupportedOSVersion];
 }
 
-+ (BOOL)isSupportedOSVersion
-{
++ (BOOL)isSupportedOSVersion {
     return [VAMP isSupportedOSVersion];
 }
 
-+ (NSString *)SDKVersion
-{
++ (NSString *)SDKVersion {
     return [VAMP SDKVersion];
 }
 
--(void)initializeAdnwSDK:(NSString *)pubId
-{
+- (void)initializeAdnwSDK:(NSString *)pubId {
     if (self.adReward) {
         [self.adReward initializeAdnwSDK:pubId];
     }
-    
 }
 
--(void) initializeAdnwSDK:(NSString *)pubId state:(NSString *)state duration:(int)duration
-{
+- (void)initializeAdnwSDK:(NSString *)pubId state:(NSString *)state duration:(int)duration {
     if (self.adReward) {
         VAMPInitializeState initializeState = kVAMPInitializeStateAUTO;
         
@@ -159,31 +143,23 @@ static NSMutableArray *_stockInstance;
         
         [self.adReward initializeAdnwSDK:pubId initializeState:initializeState duration:duration];
     }
-    
 }
 
--(void) setMediationTimeout:(int)timeout
-{
-    
+- (void)setMediationTimeout:(int)timeout {
     [VAMP setMediationTimeout:(float)timeout];
 }
 
-- (BOOL)isReady
-{
+- (BOOL)isReady {
     if (self.adReward) {
         return [self.adReward isReady];
     }
     return NO;
 }
 
-+ (NSString *)ADNWSDKVersion:(NSString *)adnwName
-{
++ (NSString *)ADNWSDKVersion:(NSString *)adnwName {
     NSString* version = @"nothing";
     if ([adnwName isEqualToString:@"VAMP"]) {
         version = [VAMP SDKVersion];
-    }
-    else if ([adnwName isEqualToString:@"ADGPlayer"]) {
-        version = [ADGPlayer sdkVersion];
     }
     else if ([adnwName isEqualToString:@"Admob"]) {
         version = [NSString stringWithCString:(const char *) GoogleMobileAdsVersionString
@@ -226,8 +202,7 @@ static NSMutableArray *_stockInstance;
     return version;
 }
 
-+ (NSString *)SDKInfo:(NSString *)infoName
-{
++ (NSString *)SDKInfo:(NSString *)infoName {
     NSString* info = @"nothing";
     if ([infoName isEqualToString:@"DeviceName"]) {
         info = [[UIDevice currentDevice] name];
@@ -269,79 +244,67 @@ static NSMutableArray *_stockInstance;
     return info;
 }
 
-
-
-
-#pragma mark ADGManagerViewControllerDelegate
+#pragma mark VAMPDelegate
 
 // load完了して、広告表示できる状態になったことを通知します
--(void) vampDidReceive:(NSString *)placementId adnwName:(NSString *)adnwName
-{
-    if([self canUseGameObj]){
-        NSString *str = [NSString stringWithFormat:@"vampDidReceive from iOS %@" , adnwName];
-        UnitySendMessage([self.gameObjName UTF8String] , "VAMPDidReceive" , [str UTF8String]);
+- (void)vampDidReceive:(NSString *)placementId adnwName:(NSString *)adnwName {
+    if ([self canUseGameObj]) {
+        NSString *str = [NSString stringWithFormat:@"vampDidReceive from iOS %@", adnwName];
+        UnitySendMessage([self.gameObjName UTF8String], "VAMPDidReceive", [str UTF8String]);
     }
-    
 }
 
 // エラー
--(void) vampDidFail:(NSString *)placementId error:(VAMPError *)error
-{
+- (void)vampDidFail:(NSString *)placementId error:(VAMPError *)error {
     NSString *codeString = [error kVAMPErrorString];
     
-    if([self canUseGameObj]){
-        NSString *str = [NSString stringWithFormat:@"vampDidFail(%@)(%@)" , placementId,codeString];
-        UnitySendMessage([self.gameObjName UTF8String] , "VAMPDidFail" , [str UTF8String]);
+    if ([self canUseGameObj]) {
+        NSString *str = [NSString stringWithFormat:@"vampDidFail(%@)(%@)", placementId,codeString];
+        UnitySendMessage([self.gameObjName UTF8String], "VAMPDidFail", [str UTF8String]);
     }
-    
 }
 
 // インセンティブ付与可能になったタイミングで通知されます
--(void) vampDidComplete:(NSString *)placementId adnwName:(NSString *)adnwName
-{
-    if([self canUseGameObj]){
+- (void)vampDidComplete:(NSString *)placementId adnwName:(NSString *)adnwName {
+    if ([self canUseGameObj]) {
         NSString *str = [NSString stringWithFormat:@"vampDidComplete(%@)", adnwName];
-        UnitySendMessage([self.gameObjName UTF8String] , "VAMPDidComplete" , [str UTF8String]);
+        UnitySendMessage([self.gameObjName UTF8String], "VAMPDidComplete", [str UTF8String]);
     }
 }
 
 // 広告が閉じられた時に呼ばれます
--(void)vampDidClose:(NSString *)placementId adnwName:(NSString *)adnwName
-{
-    if([self canUseGameObj]){
+- (void)vampDidClose:(NSString *)placementId adnwName:(NSString *)adnwName {
+    if ([self canUseGameObj]) {
         NSString *str = [NSString stringWithFormat:@"vampDidClose(%@)", adnwName];
-        UnitySendMessage([self.gameObjName UTF8String] , "VAMPDidClose" , [str UTF8String]);
+        UnitySendMessage([self.gameObjName UTF8String], "VAMPDidClose", [str UTF8String]);
     }
 }
 
 // アドネットワークごとの広告取得が開始されたときに通知されます
--(void)vampLoadStart:(NSString *)placementId adnwName:(NSString *)adnwName
-{
-    if([self canUseGameObj]){
+- (void)vampLoadStart:(NSString *)placementId adnwName:(NSString *)adnwName {
+    if ([self canUseGameObj]) {
         NSString *str = [NSString stringWithFormat:@"vampLoadStart(%@)", adnwName];
-        UnitySendMessage([self.gameObjName UTF8String] , "VAMPLoadStart" , [str UTF8String]);
+        UnitySendMessage([self.gameObjName UTF8String], "VAMPLoadStart", [str UTF8String]);
     }
-    
 }
 
 // アドネットワークごとの広告取得結果を通知する。（success,failedどちらも通知）
 // この通知をもとにshowしないようご注意ください。showする判定は、onReceiveを受け取ったタイミングで判断ください。
--(void)vampLoadResult:(NSString *)placementId success:(BOOL)success adnwName:(NSString *)adnwName message:(NSString *)message
-{
-    if([self canUseGameObj]){
-        NSString *str = [NSString stringWithFormat:@"vampLoadResult(%@ success:%@)", adnwName, success?@"YES":@"NO"];
-        UnitySendMessage([self.gameObjName UTF8String] , "VAMPLoadResult" , [str UTF8String]);
-    }
+- (void)vampLoadResult:(NSString *)placementId success:(BOOL)success adnwName:(NSString *)adnwName
+               message:(NSString *)message {
     
+    if ([self canUseGameObj]) {
+        NSString *str = [NSString stringWithFormat:@"vampLoadResult(%@ success:%@)", adnwName, success?@"YES":@"NO"];
+        UnitySendMessage([self.gameObjName UTF8String], "VAMPLoadResult", [str UTF8String]);
+    }
 }
 
 // 広告準備完了から55分経つと取得した広告が表示はできてもRTBの収益は発生しません
 // この通知を受け取ったら、もう一度loadからやり直す必要があります。
--(void)vampDidExpired:(NSString *)placementId
-{
-    if([self canUseGameObj]){
+- (void)vampDidExpired:(NSString *)placementId {
+    if ([self canUseGameObj]) {
         NSString *str = [NSString stringWithFormat:@"vampDidExpired(%@)\n", placementId];
-        UnitySendMessage([self.gameObjName UTF8String] , "VAMPDidExpired" , [str UTF8String]);
+        UnitySendMessage([self.gameObjName UTF8String], "VAMPDidExpired", [str UTF8String]);
     }
 }
 
@@ -351,8 +314,8 @@ static NSMutableArray *_stockInstance;
 
 #pragma mark definition for NativeInterface
 
-extern "C"{
-    void *_initVAMP(void *vampni , const char* pubId , bool enableTest, bool enableDebug, const char* objName);
+extern "C" {
+    void *_initVAMP(void *vampni , const char *pubId , bool enableTest, bool enableDebug, const char *objName);
     void _loadVAMP(void *vampni);
     bool _showVAMP(void *vampni);
     void _setTestModeVAMP(bool enableTest);
@@ -361,164 +324,155 @@ extern "C"{
     bool _isDebugModeVAMP();
     float _supportedOSVersionVAMP();
     bool _isSupportedOSVersionVAMP();
-    void  _initializeAdnwSDK(void *vampni,const char* pubId);
-    void _initializeAdnwSDKState(void *vampni,const char* pubId, const char* state, int duration);
+    void _initializeAdnwSDK(void *vampni,const char *pubId);
+    void _initializeAdnwSDKState(void *vampni,const char *pubId, const char *state, int duration);
     void _setMediationTimeoutVAMP(void *vampni, int timeout);
-    char* _SDKVersionVAMP();
+    void _getCountryCodeVAMP(const char *objName);
+    char *_SDKVersionVAMP();
     bool _isReadyVAMP(void *vampni);
-    char* _ADNWSDKVersionVAMP (const char* adnwName);
-    char* _SDKInfoVAMP (const char* infoName);
-    
+    char *_ADNWSDKVersionVAMP(const char *adnwName);
+    char *_SDKInfoVAMP(const char *infoName);
 }
 
 #pragma mark method for NativeInterface
 
-void *_initVAMP(void *vampni , const char* pubId , bool enableTest, bool enableDebug, const char* objName)
-{
+void *_initVAMP(void *vampni , const char *pubId , bool enableTest, bool enableDebug, const char *objName) {
     NSString *adidStr = [NSString stringWithCString:pubId encoding:NSUTF8StringEncoding];
     
     VAMPNI *vampni_temp;
     NSString *objNameStr = [NSString stringWithCString:objName encoding:NSUTF8StringEncoding];
     
-    if(vampni == NULL){
+    if (vampni == NULL) {
         vampni_temp = [[VAMPNI alloc] init];
     }
-    else{
+    else {
         vampni_temp = (__bridge VAMPNI *)vampni;
     }
     
-    [vampni_temp setParams:UnityGetGLViewController() pubId:adidStr enableTestMode:enableTest enableDebugMode:enableDebug objName:objNameStr];
+    [vampni_temp setParams:UnityGetGLViewController() pubId:adidStr enableTestMode:enableTest
+           enableDebugMode:enableDebug objName:objNameStr];
     
     [vampni_temp addIntance];
     
-    
-    return (__bridge void *)vampni_temp;
+    return (__bridge void *) vampni_temp;
 }
 
-void _loadVAMP(void *vampni){
-    VAMPNI *vampni_temp = (__bridge VAMPNI *)vampni;
+void _loadVAMP(void *vampni) {
+    VAMPNI *vampni_temp = (__bridge VAMPNI *) vampni;
     [vampni_temp loadRequest];
 }
 
-bool _showVAMP(void *vampni){
-    VAMPNI *vampni_temp = (__bridge VAMPNI *)vampni;
+bool _showVAMP(void *vampni) {
+    VAMPNI *vampni_temp = (__bridge VAMPNI *) vampni;
     return [vampni_temp show];
 }
 
-void _setTestModeVAMP(bool enableTest){
+void _setTestModeVAMP(bool enableTest) {
     [VAMPNI setTestMode:enableTest];
 }
 
-bool _isTestModeVAMP()
-{
+bool _isTestModeVAMP() {
     return [VAMPNI isTestMode];
 }
 
-
-void _setDebugModeVAMP(bool enableTest){
+void _setDebugModeVAMP(bool enableTest) {
     [VAMPNI setDebugMode:enableTest];
 }
 
-bool _isDebugModeVAMP()
-{
+bool _isDebugModeVAMP() {
     return [VAMPNI isDebugMode];
 }
 
-float _supportedOSVersionVAMP()
-{
+float _supportedOSVersionVAMP() {
     return [VAMPNI supportedOSVersion];
-    
 }
 
-bool _isSupportedOSVersionVAMP()
-{
+bool _isSupportedOSVersionVAMP() {
     return [VAMPNI isSupportedOSVersion];
 }
 
-char* _SDKVersionVAMP()
-{
+char *_SDKVersionVAMP() {
     NSString *version = [VAMPNI SDKVersion];
-    if ( version == nil ) {
+    if (version == nil) {
         version = @"";
     }
     
-    char *charVersion = (char *)[version UTF8String];
-    char* res = (char*)malloc(strlen(charVersion) + 1);
+    char *charVersion = (char *) [version UTF8String];
+    char *res = (char *) malloc(strlen(charVersion) + 1);
     strcpy(res, charVersion);
     
     return res;
-    
 }
 
-void _initializeAdnwSDK(void *vampni,const char* pubId)
-{
-    VAMPNI *vampni_temp = (__bridge VAMPNI *)vampni;
+void _initializeAdnwSDK(void *vampni, const char *pubId) {
+    VAMPNI *vampni_temp = (__bridge VAMPNI *) vampni;
     NSString *adidStr = [NSString stringWithCString:pubId encoding:NSUTF8StringEncoding];
-    if(vampni == NULL){
+    if (vampni == NULL) {
         vampni_temp = [[VAMPNI alloc] init];
-        [vampni_temp setParams:UnityGetGLViewController() pubId:adidStr enableTestMode:[VAMPNI isTestMode] enableDebugMode:[VAMPNI isDebugMode] objName:@""];
+        [vampni_temp setParams:UnityGetGLViewController() pubId:adidStr enableTestMode:[VAMPNI isTestMode]
+               enableDebugMode:[VAMPNI isDebugMode] objName:@""];
     }
     [vampni_temp initializeAdnwSDK:adidStr];
 }
 
-void _initializeAdnwSDKState(void *vampni,const char* pubId, const char* state, int duration)
-{
-    VAMPNI *vampni_temp = (__bridge VAMPNI *)vampni;
+void _initializeAdnwSDKState(void *vampni, const char *pubId, const char *state, int duration) {
+    VAMPNI *vampni_temp = (__bridge VAMPNI *) vampni;
     NSString *adidStr = [NSString stringWithCString:pubId encoding:NSUTF8StringEncoding];
     NSString *stateStr = [NSString stringWithCString:state encoding:NSUTF8StringEncoding];
-    if(vampni == NULL){
+    if (vampni == NULL) {
         vampni_temp = [[VAMPNI alloc] init];
-        [vampni_temp setParams:UnityGetGLViewController() pubId:adidStr enableTestMode:[VAMPNI isTestMode] enableDebugMode:[VAMPNI isDebugMode] objName:@""];
+        [vampni_temp setParams:UnityGetGLViewController() pubId:adidStr enableTestMode:[VAMPNI isTestMode]
+               enableDebugMode:[VAMPNI isDebugMode] objName:@""];
     }
     
     [vampni_temp initializeAdnwSDK:adidStr state:stateStr duration:duration];
 }
 
-void _setMediationTimeoutVAMP(void *vampni, int timeout){
-    VAMPNI *vampni_temp = (__bridge VAMPNI *)vampni;
+void _setMediationTimeoutVAMP(void *vampni, int timeout) {
+    VAMPNI *vampni_temp = (__bridge VAMPNI *) vampni;
     [vampni_temp setMediationTimeout:timeout];
 }
 
+void _getCountryCodeVAMP(const char *objName) {
+    NSString *name = [NSString stringWithCString:objName encoding:NSUTF8StringEncoding];
+    [VAMP getCountryCode:^(NSString *countryCode) {
+        UnitySendMessage(name.UTF8String, "VAMPCountryCode", countryCode.UTF8String);
+    }];
+}
 
-bool _isReadyVAMP(void *vampni)
-{
-    VAMPNI *vampni_temp = (__bridge VAMPNI *)vampni;
+bool _isReadyVAMP(void *vampni) {
+    VAMPNI *vampni_temp = (__bridge VAMPNI *) vampni;
     return [vampni_temp isReady];
 }
 
-
-char* _ADNWSDKVersionVAMP (const char* adnwName) {
+char *_ADNWSDKVersionVAMP(const char *adnwName) {
     NSString *adnwNameStr = [NSString stringWithCString:adnwName encoding:NSUTF8StringEncoding];
     
     NSString *version = [VAMPNI ADNWSDKVersion:adnwNameStr];
     
-    if ( version == nil ) {
+    if (version == nil) {
         version = @"";
     }
     
-    char *charVersion = (char *)[version UTF8String];
-    char* res = (char*)malloc(strlen(charVersion) + 1);
+    char *charVersion = (char *) [version UTF8String];
+    char *res = (char *) malloc(strlen(charVersion) + 1);
     strcpy(res, charVersion);
     
     return res;
-    
 }
 
-char* _SDKInfoVAMP (const char* infoName) {
+char *_SDKInfoVAMP(const char *infoName) {
     NSString *infoNameStr = [NSString stringWithCString:infoName encoding:NSUTF8StringEncoding];
     
     NSString *info = [VAMPNI SDKInfo:infoNameStr];
     
-    if ( info == nil ) {
+    if (info == nil) {
         info = @"";
     }
     
-    char *charInfo = (char *)[info UTF8String];
-    char* res = (char*)malloc(strlen(charInfo) + 1);
+    char *charInfo = (char *) [info UTF8String];
+    char *res = (char *) malloc(strlen(charInfo) + 1);
     strcpy(res, charInfo);
     
     return res;
-    
 }
-
-

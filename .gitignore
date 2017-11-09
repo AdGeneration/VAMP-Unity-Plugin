@@ -1,0 +1,5 @@
+*.meta
+sampleApp/Temp
+sampleApp/Library
+sampleApp/Assets/plugins/Android/libs
+sampleApp/Assets/plugins/iOS/sdk
