@@ -20,21 +20,8 @@ public class SDKTest : MonoBehaviour {
 	public Texture btnOnTexture;
 	public Texture btnOffTexture;
 
-	public enum InitializeState {
-		AUTO = 0,
-		WEIGHT,
-		ALL,
-		WIFIONLY
-	};
-	public InitializeState initializeState;	// デフォルトはAUTO
-	public int initializeDuration;	// 秒単位で指定する。最小4秒、最大60秒。デフォルトは10秒。
-
-	private string[] state = new string[] {
-		InitializeState.AUTO.ToString(),
-		InitializeState.WEIGHT.ToString(),
-		InitializeState.ALL.ToString(),
-		InitializeState.WIFIONLY.ToString()
-	};
+	public VAMPUnitySDK.InitializeState initializeState;    // デフォルトはAUTO
+	public int initializeDuration;                          // 秒単位で指定する。最小4秒、最大60秒。デフォルトは10秒。
 
 	private const float SCREEN_WIDTH = 540f;
 	private const float SCREEN_HEIGHT = 960f;
@@ -60,6 +47,29 @@ public class SDKTest : MonoBehaviour {
 	private Vector3 angle = new Vector3(0.0f, -90.0f, 0.0f);
 	private Vector2 infoPosition = Vector2.zero;
 	private Vector2 logPosition = Vector2.zero;
+
+    private static EdgeInsets safeAreaInsets {
+        get {
+            #if UNITY_IOS
+            // for iPhone X
+            if (Mathf.Min(Screen.width, Screen.height) == 1125 && Mathf.Max(Screen.width, Screen.height) == 2436)
+            {
+                if (Screen.width > Screen.height)
+                {
+                    // Landscape
+                    return new EdgeInsets(0, 44, 21, 44);
+                }
+                else
+                {
+                    // Portrait
+                    return new EdgeInsets(44, 0, 34, 0);
+                }
+            }
+            #endif
+            // for others
+            return new EdgeInsets(0, 0, 0, 0);
+        }
+    }
 
 	// Use this for initialization
 	void Start() {
@@ -119,17 +129,19 @@ public class SDKTest : MonoBehaviour {
 
 		GUI.matrix = Matrix4x4.Scale(scaleV3);
 
+        EdgeInsets safeAreaInsets = SDKTest.safeAreaInsets;
+
 		if (blk == (int)Block.Title) {
 			// キューブ
 			logoCube.SetActive(false);
 
 			// タイトル
-			GUI.Label(new Rect(0, 0, width, 60), "VAMP-Unity-Plugin");
+            GUI.Label(new Rect(0, safeAreaInsets.Top, width, 60), "VAMP-Unity-Plugin");
 
 			labelStyle.fontSize = 25;
 
 			// アプリバージョン、SDKバージョン
-			GUI.Label(new Rect(0, height-60, width, 50), "APP " + appVersion + " / SDK " + VAMPUnitySDK.SDKVersion());
+            GUI.Label(new Rect(0, height-60-safeAreaInsets.Bottom, width, 50), "APP " + appVersion + " / SDK " + VAMPUnitySDK.SDKVersion());
 
 			labelStyle.fontSize = 30;
 
@@ -166,22 +178,22 @@ public class SDKTest : MonoBehaviour {
 
 			labelStyle.fontSize = 18;
 
-			if (GUI.Button(new Rect(35, 40, 40, 40), initializeState == InitializeState.AUTO ? btnOnTexture : btnOffTexture)) {
-				initializeState = InitializeState.AUTO;
+            if (GUI.Button(new Rect(35, 40, 40, 40), initializeState == VAMPUnitySDK.InitializeState.AUTO ? btnOnTexture : btnOffTexture)) {
+                initializeState = VAMPUnitySDK.InitializeState.AUTO;
 			}
-			GUI.Label(new Rect(10, 85, 90, 30), state[(int)InitializeState.AUTO]);
-			if (GUI.Button(new Rect(125, 40, 40, 40), initializeState == InitializeState.WEIGHT ? btnOnTexture : btnOffTexture)) {
-				initializeState = InitializeState.WEIGHT;
+            GUI.Label(new Rect(10, 85, 90, 30), VAMPUnitySDK.InitializeState.AUTO.ToString());
+            if (GUI.Button(new Rect(125, 40, 40, 40), initializeState == VAMPUnitySDK.InitializeState.WEIGHT ? btnOnTexture : btnOffTexture)) {
+                initializeState = VAMPUnitySDK.InitializeState.WEIGHT;
 			}
-			GUI.Label(new Rect(100, 85, 90, 30), state[(int)InitializeState.WEIGHT]);
-			if (GUI.Button(new Rect(225, 40, 40, 40), initializeState == InitializeState.ALL ? btnOnTexture : btnOffTexture)) {
-				initializeState = InitializeState.ALL;
+            GUI.Label(new Rect(100, 85, 90, 30), VAMPUnitySDK.InitializeState.WEIGHT.ToString());
+            if (GUI.Button(new Rect(225, 40, 40, 40), initializeState == VAMPUnitySDK.InitializeState.ALL ? btnOnTexture : btnOffTexture)) {
+                initializeState = VAMPUnitySDK.InitializeState.ALL;
 			}
-			GUI.Label(new Rect(200, 85, 90, 30), state[(int)InitializeState.ALL]);
-			if (GUI.Button(new Rect(325, 40, 40, 40), initializeState == InitializeState.WIFIONLY ? btnOnTexture : btnOffTexture)) {
-				initializeState = InitializeState.WIFIONLY;
+            GUI.Label(new Rect(200, 85, 90, 30), VAMPUnitySDK.InitializeState.ALL.ToString());
+            if (GUI.Button(new Rect(325, 40, 40, 40), initializeState == VAMPUnitySDK.InitializeState.WIFIONLY ? btnOnTexture : btnOffTexture)) {
+                initializeState = VAMPUnitySDK.InitializeState.WIFIONLY;
 			}
-			GUI.Label(new Rect(300, 85, 90, 30), state[(int)InitializeState.WIFIONLY]);
+            GUI.Label(new Rect(300, 85, 90, 30), VAMPUnitySDK.InitializeState.WIFIONLY.ToString());
 
 			if (GUI.Button(new Rect(30, 125, 340, 60), "ADNW SDK INIT")) {
 				isInitVamp = true;
@@ -212,7 +224,7 @@ public class SDKTest : MonoBehaviour {
 			logoCube.SetActive(true);
 
 			// 戻るボタン
-			if (GUI.Button(new Rect(0, 0, 120, 60), "＜戻る")) {
+            if (GUI.Button(new Rect(0, safeAreaInsets.Top, 120, 60), "＜戻る")) {
 				blk = (int)Block.Title;
 				VAMPUnitySDK.clearLoaded();
 				loading = false;
@@ -220,15 +232,21 @@ public class SDKTest : MonoBehaviour {
 				logPosition = Vector2.zero;
 			}
 			// LOADボタン
-			if (GUI.Button(new Rect(140, 0, 120, 60), "LOAD")) {
+            if (GUI.Button(new Rect(140, safeAreaInsets.Top, 120, 60), "LOAD")) {
                 AddMessage("click load button.");
+                #if UNITY_ANDROID
 				if (!VAMPUnitySDK.isReady()) {
 					VAMPUnitySDK.load();
 					loading = true;
 				}
+                #elif UNITY_IPHONE
+                // iOSは連続でボタンを押せるようにする(Native版サンプルと仕様をあわせるため)
+                VAMPUnitySDK.load();
+                loading = true;
+                #endif
 			}
 			// SHOWボタン
-			if (GUI.Button(new Rect(280, 0, 120, 60), "SHOW")) {
+            if (GUI.Button(new Rect(280, safeAreaInsets.Top, 120, 60), "SHOW")) {
                 AddMessage("click show button.");
 				if (VAMPUnitySDK.isReady()) {
 				    VAMPUnitySDK.show();
@@ -237,7 +255,7 @@ public class SDKTest : MonoBehaviour {
 			}
 			#if UNITY_ANDROID
 			// CLEARボタン（※現状Androidのみの機能なのでAndroidの時のみ表示）
-			if (GUI.Button(new Rect(420, 0, 120, 60), "CLEAR")) {
+			if (GUI.Button(new Rect(420, safeAreaInsets.Top, 120, 60), "CLEAR")) {
                 AddMessage("click clear button.");
 				VAMPUnitySDK.clearLoaded();
 				loading = false;
@@ -247,11 +265,11 @@ public class SDKTest : MonoBehaviour {
 			labelStyle.fontSize = 25;
 
 			// 設定されているtestMode、debugMode表示
-			GUI.Label(new Rect(0, 70, width, 50), "[Test:" + testMode + "] [Debug:" + debugMode + "]");
+            GUI.Label(new Rect(0, 70+safeAreaInsets.Top, width, 50), "[Test:" + testMode + "] [Debug:" + debugMode + "]");
 			// 設定しているPlacementID表示
-			GUI.Label(new Rect(0, 120, width, 50), "ID:" + placementID);
+            GUI.Label(new Rect(0, 120+safeAreaInsets.Top, width, 50), "ID:" + placementID);
 			// ログ
-			GUILayout.BeginArea(new Rect(20, 170, width-40, height-190));
+            GUILayout.BeginArea(new Rect(20, 170+safeAreaInsets.Top, width-40, height-190-safeAreaInsets.Bottom));
 			logPosition = GUILayout.BeginScrollView(logPosition);
 			CreateLogs();
 			GUILayout.EndScrollView();
@@ -262,12 +280,12 @@ public class SDKTest : MonoBehaviour {
 			logoCube.SetActive(false);
 
 			// 戻るボタン
-			if (GUI.Button(new Rect(0, 0, 120, 60), "＜戻る")) {
+            if (GUI.Button(new Rect(0, safeAreaInsets.Top, 120, 60), "＜戻る")) {
 				blk = (int)Block.Title;
 			}
 
 			// 端末情報
-			GUILayout.BeginArea(new Rect(20, 70, width-40, height-90));
+            GUILayout.BeginArea(new Rect(20, 70+safeAreaInsets.Top, width-40, height-90-safeAreaInsets.Bottom));
 			infoPosition = GUILayout.BeginScrollView(infoPosition);
 			CreateInfos();
 			GUILayout.EndScrollView();
@@ -423,3 +441,19 @@ public class SDKTest : MonoBehaviour {
 		messages.Add(System.DateTime.Now.ToString("MM/dd HH:mm:ss ") + str);
 	}
 }
+
+public struct EdgeInsets {
+
+    public float Top { get; }
+    public float Left { get; }
+    public float Bottom { get; }
+    public float Right { get; }
+
+    public EdgeInsets(float top, float left, float bottom, float right) {
+        Top = top;
+        Left = left;
+        Bottom = bottom;
+        Right = right;
+    }
+}
+

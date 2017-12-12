@@ -5,6 +5,13 @@ using System.Runtime.InteropServices;
 
 public class  VAMPUnitySDK : VAMPMonoBehaviour {
 
+    public enum InitializeState {
+        AUTO = 0,
+        WEIGHT,
+        ALL,
+        WIFIONLY
+    }
+
 	//パラメータ
 	private static GameObject messageObj = null;
     private static GameObject countryCodeObj = null;
