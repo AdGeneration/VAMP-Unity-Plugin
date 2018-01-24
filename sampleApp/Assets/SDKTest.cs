@@ -4,52 +4,58 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-public class SDKTest : MonoBehaviour {
-	// iOS
-	public string iosPlacementID;
-	// Android
-	public string androidPlacementID;
-
+public class SDKTest : MonoBehaviour
+{
+    // iOS 広告枠ID
+    public string iosPlacementID;
+    // Android 広告枠ID
+    public string androidPlacementID;
     // FAN's device ID hash to enable test mode on Android
     public string androidFANHashedID = "HASHED ID";
+    // Test mode flag
+    public bool testMode;
+    // Debug mode flag
+    public bool debugMode;
+    // アドネットワークSDKの初期化モード
+    public VAMPUnitySDK.InitializeState initializeState;
+    // アドネットワークSDKの初期化実行間隔 (単位:秒)
+    public int initializeDuration;
 
-	public bool testMode;
-	public bool debugMode;
+    public Texture logoTexture;
+    public Texture btnOnTexture;
+    public Texture btnOffTexture;
 
-	public Texture logoTexture;
-	public Texture btnOnTexture;
-	public Texture btnOffTexture;
+    private enum Block
+    {
+        Title = 0,
+        Ad1,
+        Info
+    }
 
-	public VAMPUnitySDK.InitializeState initializeState;    // デフォルトはAUTO
-	public int initializeDuration;                          // 秒単位で指定する。最小4秒、最大60秒。デフォルトは10秒。
+    private const float SCREEN_WIDTH = 540f;
+    private const float SCREEN_HEIGHT = 960f;
 
-	private const float SCREEN_WIDTH = 540f;
-	private const float SCREEN_HEIGHT = 960f;
+    private string placementID;
+    private bool isVampInitialized;
+    private bool isLoading;
+    private string sdkVersion;
+    private string appVersion;
+    private List<string> messages = new List<string>();
+    private List<string> infos;
+    private int blk;
+    private Vector3 scaleV3;
+    private float width;
+    private float height;
+    private Matrix4x4 matrix;
+    private GameObject logoCube;
+    private Vector3 angle = new Vector3(0.0f, -90.0f, 0.0f);
+    private Vector2 infoPosition = Vector2.zero;
+    private Vector2 logPosition = Vector2.zero;
 
-	public enum Block {
-		Title = 0,
-		Ad1,
-		Info
-	};
-
-	private string appVersion;
-	private List<string> messages = new List<string>();
-	private List<string> infos = new List<string>();
-	private int blk;
-	private string placementID;
-	private Vector3 scaleV3;
-	private float width;
-	private float height;
-	private Matrix4x4 matrix;
-	private bool isInitVamp;
-	private GameObject logoCube;
-	private bool loading;
-	private Vector3 angle = new Vector3(0.0f, -90.0f, 0.0f);
-	private Vector2 infoPosition = Vector2.zero;
-	private Vector2 logPosition = Vector2.zero;
-
-    private static EdgeInsets safeAreaInsets {
-        get {
+    private static EdgeInsets safeAreaInsets
+    {
+        get
+        {
             #if UNITY_IOS
             // for iPhone X
             if (Mathf.Min(Screen.width, Screen.height) == 1125 && Mathf.Max(Screen.width, Screen.height) == 2436)
@@ -71,389 +77,422 @@ public class SDKTest : MonoBehaviour {
         }
     }
 
-	// Use this for initialization
-	void Start() {
-		#if UNITY_IPHONE
-		placementID = iosPlacementID;
-		#elif UNITY_ANDROID
-		placementID = androidPlacementID;
-		#endif
-
-		blk = (int)Block.Title;
-		isInitVamp = false;
-		logoCube = GameObject.Find("LogoCube");
-		logoCube.SetActive(false);
-		loading = false;
-
-		float scaleX = Screen.width / SCREEN_WIDTH;
-		float scaleY = Screen.height / SCREEN_HEIGHT;
-		float scale = scaleX < scaleY ? scaleX : scaleY;
-		scaleV3 = new Vector3(scale, scale, 1.0f);
-		matrix = Matrix4x4.TRS(
-			new Vector2((Screen.width - (SCREEN_WIDTH * scale)) / 2, (Screen.height - (SCREEN_HEIGHT * scale)) / 2), Quaternion.identity, scaleV3);
-		width = Screen.width / scale;
-		height = Screen.height / scale;
-
-		appVersion = SDKTestUtil.GetInfo(infos);
+    void Start()
+    {
+        #if UNITY_IPHONE
+        placementID = iosPlacementID;
+        #elif UNITY_ANDROID
+        placementID = androidPlacementID;
+        #endif
 
         #if UNITY_ANDROID
         // Android FANのテストデバイスIDを登録
-        if (androidFANHashedID != null && androidFANHashedID.Length > 0) {
+        if (androidFANHashedID != null && androidFANHashedID.Length > 0)
+        {
             SDKTestUtil.AddFANTestDevice(androidFANHashedID);
         }
         #endif
-	}
 
-	// Update is called once per frame
-	void Update() {
-		if (loading) {
-			logoCube.transform.Rotate(angle * Time.deltaTime, Space.World);
-		}
-	}
+        blk = (int)Block.Title;
+        isVampInitialized = false;
+        logoCube = GameObject.Find("LogoCube");
+        logoCube.SetActive(false);
+        isLoading = false;
 
-	void OnGUI() {
-		// Buttonのスタイル
-		GUIStyle btnStyle = GUI.skin.GetStyle("Button");
-		btnStyle.alignment = TextAnchor.MiddleCenter;
-		btnStyle.fontSize = 30;
+        float scaleX = Screen.width / SCREEN_WIDTH;
+        float scaleY = Screen.height / SCREEN_HEIGHT;
+        float scale = scaleX < scaleY ? scaleX : scaleY;
+        scaleV3 = new Vector3(scale, scale, 1.0f);
+        matrix = Matrix4x4.TRS(
+            new Vector2(
+                (Screen.width - SCREEN_WIDTH * scale) / 2,
+                (Screen.height - SCREEN_HEIGHT * scale) / 2
+            ),
+            Quaternion.identity, scaleV3
+        );
+        width = Screen.width / scale;
+        height = Screen.height / scale;
 
-		// Labelのスタイル
-		GUIStyle labelStyle = GUI.skin.GetStyle("Label");
-		labelStyle.alignment = TextAnchor.MiddleCenter;
-		labelStyle.fontSize = 30;
+        sdkVersion = VAMPUnitySDK.SDKVersion();
+        appVersion = SDKTestUtil.GetAppVersion();
+        infos = SDKTestUtil.GetDeviceInfo();
+    }
 
-		// TextFieldのスタイル
-		GUIStyle textFStyle = GUI.skin.GetStyle("TextField");
-		textFStyle.alignment = TextAnchor.MiddleCenter;
-		textFStyle.fontSize = 30;
+    void Update()
+    {
+        if (isLoading)
+        {
+            logoCube.transform.Rotate(angle * Time.deltaTime, Space.World);
+        }
+    }
 
-		GUI.matrix = Matrix4x4.Scale(scaleV3);
+    void OnGUI()
+    {
+        GUIStyle btnStyle = GUI.skin.GetStyle("Button");
+        btnStyle.alignment = TextAnchor.MiddleCenter;
+        btnStyle.fontSize = 30;
+
+        GUIStyle labelStyle = GUI.skin.GetStyle("Label");
+        labelStyle.alignment = TextAnchor.MiddleCenter;
+        labelStyle.fontSize = 30;
+
+        GUIStyle textFStyle = GUI.skin.GetStyle("TextField");
+        textFStyle.alignment = TextAnchor.MiddleCenter;
+        textFStyle.fontSize = 30;
+
+        GUI.matrix = Matrix4x4.Scale(scaleV3);
 
         EdgeInsets safeAreaInsets = SDKTest.safeAreaInsets;
 
-		if (blk == (int)Block.Title) {
-			// キューブ
-			logoCube.SetActive(false);
+        if (blk == (int)Block.Title)
+        {
+            logoCube.SetActive(false);
 
-			// タイトル
             GUI.Label(new Rect(0, safeAreaInsets.Top, width, 60), "VAMP-Unity-Plugin");
 
-			labelStyle.fontSize = 25;
+            labelStyle.fontSize = 25;
 
-			// アプリバージョン、SDKバージョン
-            GUI.Label(new Rect(0, height-60-safeAreaInsets.Bottom, width, 50), "APP " + appVersion + " / SDK " + VAMPUnitySDK.SDKVersion());
+            GUI.Label(new Rect(0, height - 60 - safeAreaInsets.Bottom, width, 50),
+                "APP " + appVersion + " / SDK " + sdkVersion);
 
-			labelStyle.fontSize = 30;
+            labelStyle.fontSize = 30;
 
-			GUI.matrix = matrix;
+            GUI.matrix = matrix;
 
-			// ロゴ
-			GUI.DrawTexture(new Rect(190, 490, 160, 160), logoTexture);
+            GUI.DrawTexture(new Rect(190, 490, 160, 160), logoTexture);
 
-			labelStyle.alignment = TextAnchor.MiddleRight;
+            labelStyle.alignment = TextAnchor.MiddleRight;
 
-			GUI.enabled = !isInitVamp;
+            GUI.enabled = !isVampInitialized;
 
-			// PlacementID
-			GUI.Label(new Rect(100, 90, 80, 60), "ID:");
-			placementID = GUI.TextField(new Rect(200, 90, 240, 60), placementID);
-			// TestMode
-			GUI.Label(new Rect(100, 170, 240, 60), "TestMode:");
-			if (GUI.Button(new Rect(350, 180, 40, 40), testMode == true ? btnOnTexture : btnOffTexture)) {
-				testMode = !testMode;
-			}
-			// DebugMode
-			GUI.Label(new Rect(100, 250, 240, 60), "DebugMode:");
-			if (GUI.Button(new Rect(350, 260, 40, 40), debugMode == true ? btnOnTexture : btnOffTexture)) {
-				debugMode = !debugMode;
-			}
+            GUI.Label(new Rect(100, 90, 80, 60), "ID:");
+            placementID = GUI.TextField(new Rect(200, 90, 240, 60), placementID);
 
-			labelStyle.fontSize = 20;
-			labelStyle.alignment = TextAnchor.MiddleCenter;
+            GUI.Label(new Rect(100, 170, 240, 60), "TestMode:");
 
-			// 各アドネットワークのSDK初期化
-			GUI.Box(new Rect(65, 670, 410, 215), "");
-			GUILayout.BeginArea(new Rect(75, 680, 400, 195));
-			GUI.Label(new Rect(10, 0, 380, 30), "ADNW SDK Initialize State");
+            if (GUI.Button(new Rect(350, 180, 40, 40), testMode ? btnOnTexture : btnOffTexture))
+            {
+                testMode = !testMode;
+            }
 
-			labelStyle.fontSize = 18;
+            GUI.Label(new Rect(100, 250, 240, 60), "DebugMode:");
 
-            if (GUI.Button(new Rect(35, 40, 40, 40), initializeState == VAMPUnitySDK.InitializeState.AUTO ? btnOnTexture : btnOffTexture)) {
+            if (GUI.Button(new Rect(350, 260, 40, 40), debugMode ? btnOnTexture : btnOffTexture))
+            {
+                debugMode = !debugMode;
+            }
+
+            labelStyle.fontSize = 20;
+            labelStyle.alignment = TextAnchor.MiddleCenter;
+
+            GUI.Box(new Rect(65, 670, 410, 215), "");
+            GUILayout.BeginArea(new Rect(75, 680, 400, 195));
+            GUI.Label(new Rect(10, 0, 380, 30), "ADNW SDK Initialize State");
+
+            labelStyle.fontSize = 18;
+
+            if (GUI.Button(new Rect(35, 40, 40, 40), initializeState == VAMPUnitySDK.InitializeState.AUTO ? btnOnTexture : btnOffTexture))
+            {
                 initializeState = VAMPUnitySDK.InitializeState.AUTO;
-			}
+            }
+
             GUI.Label(new Rect(10, 85, 90, 30), VAMPUnitySDK.InitializeState.AUTO.ToString());
-            if (GUI.Button(new Rect(125, 40, 40, 40), initializeState == VAMPUnitySDK.InitializeState.WEIGHT ? btnOnTexture : btnOffTexture)) {
+
+            if (GUI.Button(new Rect(125, 40, 40, 40), initializeState == VAMPUnitySDK.InitializeState.WEIGHT ? btnOnTexture : btnOffTexture))
+            {
                 initializeState = VAMPUnitySDK.InitializeState.WEIGHT;
-			}
+            }
+
             GUI.Label(new Rect(100, 85, 90, 30), VAMPUnitySDK.InitializeState.WEIGHT.ToString());
-            if (GUI.Button(new Rect(225, 40, 40, 40), initializeState == VAMPUnitySDK.InitializeState.ALL ? btnOnTexture : btnOffTexture)) {
+
+            if (GUI.Button(new Rect(225, 40, 40, 40), initializeState == VAMPUnitySDK.InitializeState.ALL ? btnOnTexture : btnOffTexture))
+            {
                 initializeState = VAMPUnitySDK.InitializeState.ALL;
-			}
+            }
+
             GUI.Label(new Rect(200, 85, 90, 30), VAMPUnitySDK.InitializeState.ALL.ToString());
-            if (GUI.Button(new Rect(325, 40, 40, 40), initializeState == VAMPUnitySDK.InitializeState.WIFIONLY ? btnOnTexture : btnOffTexture)) {
+
+            if (GUI.Button(new Rect(325, 40, 40, 40), initializeState == VAMPUnitySDK.InitializeState.WIFIONLY ? btnOnTexture : btnOffTexture))
+            {
                 initializeState = VAMPUnitySDK.InitializeState.WIFIONLY;
-			}
+            }
+
             GUI.Label(new Rect(300, 85, 90, 30), VAMPUnitySDK.InitializeState.WIFIONLY.ToString());
 
-			if (GUI.Button(new Rect(30, 125, 340, 60), "ADNW SDK INIT")) {
-				isInitVamp = true;
-				VAMPUnitySDK.setTestMode(testMode);
-				VAMPUnitySDK.setDebugMode(debugMode);
-				VAMPUnitySDK.initializeAdnwSDK(placementID, initializeState.ToString(), initializeDuration);
-			}
-			GUILayout.EndArea();
+            if (GUI.Button(new Rect(30, 125, 340, 60), "ADNW SDK INIT"))
+            {
+                isVampInitialized = true;
 
-			GUI.enabled = true;
+                VAMPUnitySDK.setTestMode(testMode);
+                VAMPUnitySDK.setDebugMode(debugMode);
 
-			// AD1ボタン
-			if (GUI.Button(new Rect(100, 330, 340, 60), "AD1")) {
-				blk = (int)Block.Ad1;
-				isInitVamp = true;
-				// VAMP初期化
-				VAMPUnitySDK.setTestMode(testMode);
-				VAMPUnitySDK.setDebugMode(debugMode);
-				VAMPUnitySDK.initVAMP(GameObject.Find("SDKTest"), placementID);
-			}
-			// Infoボタン
-			if (GUI.Button(new Rect(100, 410, 340, 60), "INFO")) {
-				blk = (int)Block.Info;
-			}
+                // アドネットワークSDKを事前に初期化しておくことができます。
+                // アプリ起動時などのタイミングで1度だけ使用してください
+                VAMPUnitySDK.initializeAdnwSDK(placementID, initializeState.ToString(), initializeDuration);
+            }
 
-		} else if (blk == (int)Block.Ad1) {
-			// キューブ
-			logoCube.SetActive(true);
+            GUILayout.EndArea();
 
-			// 戻るボタン
-            if (GUI.Button(new Rect(0, safeAreaInsets.Top, 120, 60), "＜戻る")) {
-				blk = (int)Block.Title;
-				VAMPUnitySDK.clearLoaded();
-				loading = false;
-				messages.Clear();
-				logPosition = Vector2.zero;
-			}
-			// LOADボタン
-            if (GUI.Button(new Rect(140, safeAreaInsets.Top, 120, 60), "LOAD")) {
+            GUI.enabled = true;
+
+            if (GUI.Button(new Rect(100, 330, 340, 60), "AD1"))
+            {
+                blk = (int)Block.Ad1;
+
+                isVampInitialized = true;
+
+                // trueを指定すると収益が発生しないテスト広告が配信されるようになります。
+                // ストアに申請する際は必ずfalseを設定してください
+                VAMPUnitySDK.setTestMode(testMode);
+
+                // trueを指定するとログを詳細に出力するデバッグモードになります
+                VAMPUnitySDK.setDebugMode(debugMode);
+
+                // VAMPを初期化します。必ずLoadより先に実行してください
+                VAMPUnitySDK.initVAMP(gameObject, placementID);
+            }
+
+            if (GUI.Button(new Rect(100, 410, 340, 60), "INFO"))
+            {
+                blk = (int)Block.Info;
+            }
+        }
+        else if (blk == (int)Block.Ad1)
+        {
+            logoCube.SetActive(true);
+
+            if (GUI.Button(new Rect(0, safeAreaInsets.Top, 120, 60), "＜戻る"))
+            {
+                blk = (int)Block.Title;
+
+                VAMPUnitySDK.clearLoaded();
+
+                isLoading = false;
+
+                messages.Clear();
+
+                logPosition = Vector2.zero;
+            }
+
+            if (GUI.Button(new Rect(140, safeAreaInsets.Top, 120, 60), "LOAD"))
+            {
                 AddMessage("click load button.");
-                #if UNITY_ANDROID
-				if (!VAMPUnitySDK.isReady()) {
-					VAMPUnitySDK.load();
-					loading = true;
-				}
-                #elif UNITY_IPHONE
-                // iOSは連続でボタンを押せるようにする(Native版サンプルと仕様をあわせるため)
-                VAMPUnitySDK.load();
-                loading = true;
-                #endif
-			}
-			// SHOWボタン
-            if (GUI.Button(new Rect(280, safeAreaInsets.Top, 120, 60), "SHOW")) {
+
+                // 動画広告がまだ準備されていないときはロードを開始します
+                if (!VAMPUnitySDK.isReady())
+                {
+                    Debug.Log("[VAMPUnitySDK] VAMPUnitySDK.load()");
+
+                    VAMPUnitySDK.load();
+
+                    isLoading = true;
+                }
+            }
+
+            if (GUI.Button(new Rect(280, safeAreaInsets.Top, 120, 60), "SHOW"))
+            {
                 AddMessage("click show button.");
-				if (VAMPUnitySDK.isReady()) {
-				    VAMPUnitySDK.show();
-				}
 
-			}
-			#if UNITY_ANDROID
-			// CLEARボタン（※現状Androidのみの機能なのでAndroidの時のみ表示）
-			if (GUI.Button(new Rect(420, safeAreaInsets.Top, 120, 60), "CLEAR")) {
+                // 動画広告が準備できているときは広告を表示します
+                if (VAMPUnitySDK.isReady())
+                {
+                    Debug.Log("[VAMPUnitySDK] VAMPUnitySDK.show()");
+
+                    VAMPUnitySDK.show();
+                }
+            }
+
+            if (GUI.Button(new Rect(420, safeAreaInsets.Top, 120, 60), "CLEAR"))
+            {
                 AddMessage("click clear button.");
-				VAMPUnitySDK.clearLoaded();
-				loading = false;
-			}
-			#endif
 
-			labelStyle.fontSize = 25;
+                // ロード済みの広告を破棄します。このメソッドを実行した後はLoadからやり直してください
+                VAMPUnitySDK.clearLoaded();
 
-			// 設定されているtestMode、debugMode表示
-            GUI.Label(new Rect(0, 70+safeAreaInsets.Top, width, 50), "[Test:" + testMode + "] [Debug:" + debugMode + "]");
-			// 設定しているPlacementID表示
-            GUI.Label(new Rect(0, 120+safeAreaInsets.Top, width, 50), "ID:" + placementID);
-			// ログ
-            GUILayout.BeginArea(new Rect(20, 170+safeAreaInsets.Top, width-40, height-190-safeAreaInsets.Bottom));
-			logPosition = GUILayout.BeginScrollView(logPosition);
-			CreateLogs();
-			GUILayout.EndScrollView();
-			GUILayout.EndArea();
+                isLoading = false;
+            }
 
-		} else if (blk == (int)Block.Info) {
-			// キューブ
-			logoCube.SetActive(false);
+            labelStyle.fontSize = 25;
 
-			// 戻るボタン
-            if (GUI.Button(new Rect(0, safeAreaInsets.Top, 120, 60), "＜戻る")) {
-				blk = (int)Block.Title;
-			}
+            GUI.Label(new Rect(0, 70 + safeAreaInsets.Top, width, 50),
+                "[Test:" + testMode + "] [Debug:" + debugMode + "]");
 
-			// 端末情報
-            GUILayout.BeginArea(new Rect(20, 70+safeAreaInsets.Top, width-40, height-90-safeAreaInsets.Bottom));
-			infoPosition = GUILayout.BeginScrollView(infoPosition);
-			CreateInfos();
-			GUILayout.EndScrollView();
-			GUILayout.EndArea();
+            GUI.Label(new Rect(0, 120 + safeAreaInsets.Top, width, 50),
+                "ID:" + placementID);
 
-		}
+            GUILayout.BeginArea(new Rect(20, 170 + safeAreaInsets.Top, width - 40, height - 190 - safeAreaInsets.Bottom));
 
-		// GUIの設定を元に戻す
-		GUI.matrix = Matrix4x4.identity;
-		GUI.skin = null;
-	}
+            logPosition = GUILayout.BeginScrollView(logPosition);
 
-	// ログ表示を行う
-	private void CreateLogs() {
-		// 入力されたメッセージを逆順に200表示
-		GUIStyle style = GUI.skin.GetStyle("Label");
-		style.alignment = TextAnchor.MiddleLeft;
-		style.fontSize = 20;
+            labelStyle.alignment = TextAnchor.MiddleLeft;
+            labelStyle.fontSize = 20;
 
-		int count = 1;
-		for (int i = messages.Count - 1; i >= 0; i--) {
-			GUILayout.Label(messages[i], style);
-			count ++;
-			if (count > 200) break;
-		}
-	}
+            int count = 0;
 
-	// 端末情報表示を行う
-	private void CreateInfos() {
-		GUIStyle style = GUI.skin.GetStyle("Label");
-		style.alignment = TextAnchor.MiddleLeft;
-		style.fontSize = 20;
+            for (int i = messages.Count - 1; i >= 0; i--)
+            {
+                GUILayout.Label(messages[i], labelStyle);
+                count++;
 
-		for (int i = 0; i < infos.Count; i++) {
-			GUILayout.Label(infos[i], style);
-		}
-	}
+                if (count >= 200)
+                    break;
+            }
 
-	/**
-	 * 動画表示の準備完了
-	 */
-	void VAMPDidReceive(string str) {
-		#if UNITY_IPHONE
-        AddMessage(str);
-		#elif UNITY_ANDROID
-		string[] param = VampParam(str);
-		// param[0]:placementId
-		// param[1]:adnwName
-        AddMessage("onReceive(" + param[1] + ")");
-		#endif
-		loading = false;
-	}
+            GUILayout.EndScrollView();
+            GUILayout.EndArea();
+        }
+        else if (blk == (int)Block.Info)
+        {
+            logoCube.SetActive(false);
 
-	/**
-	 * 動画準備or表示失敗
-	 */
-	void VAMPDidFail(string str) {
-		#if UNITY_IPHONE
-        AddMessage(str);
-		#elif UNITY_ANDROID
-		string[] param = VampParam(str);
-		// param[0]:placementId
-		// param[1]:error
-        AddMessage("onFail() " + param[1]);
-		#endif
-		loading = false;
-	}
+            if (GUI.Button(new Rect(0, safeAreaInsets.Top, 120, 60), "＜戻る"))
+            {
+                blk = (int)Block.Title;
+            }
 
-	/**
-	 * 動画再生正常終了（インセンティブ付与可能）
-	 */
-	void VAMPDidComplete(string str) {
-		#if UNITY_IPHONE
-        AddMessage(str);
-		#elif UNITY_ANDROID
-		string[] param = VampParam(str);
-		// param[0]:placementId
-		// param[1]:adnwName
-        AddMessage("onComplete(" + param[1] + ")");
-		#endif
-	}
+            GUILayout.BeginArea(new Rect(20, 70 + safeAreaInsets.Top, width - 40, height - 90 - safeAreaInsets.Bottom));
 
-	/**
-	 * 動画プレーヤーやエンドカードが表示終了
-	 * ＜注意：ユーザキャンセルなども含むので、インセンティブ付与はonCompleteで判定すること＞
-	 */
-	void VAMPDidClose(string str) {
-		#if UNITY_IPHONE
-        AddMessage(str);
-		#elif UNITY_ANDROID
-		string[] param = VampParam(str);
-		// param[0]:placementId
-		// param[1]:adnwName
-        AddMessage("onClose(" + param[1] + ")");
-		#endif
-	}
+            infoPosition = GUILayout.BeginScrollView(infoPosition);
 
-	/**
-	 * 有効期限オーバー
-	 * ＜注意：onReceiveを受けてからの有効期限が切れました。showするには再度loadを行う必要が有ります＞
-	 */
-	void VAMPDidExpired(string str) {
-		#if UNITY_IPHONE
-        AddMessage(str);
-		#elif UNITY_ANDROID
-		// param[0]:placementId
-        AddMessage("onExpired()");
-		#endif
-		loading = false;
-	}
+            labelStyle.alignment = TextAnchor.MiddleLeft;
+            labelStyle.fontSize = 20;
 
-	/**
-	 * 優先順位順にアドネットワークごとの広告取得を開始
-	 */
-	void VAMPLoadStart(string str) {
-		#if UNITY_IPHONE
-        AddMessage(str);
-		#elif UNITY_ANDROID
-		string[] param = VampParam(str);
-		// param[0]:placementId
-		// param[1]:adnwName
-        AddMessage("onLoadStart(" + param[1] + ")");
-		#endif
-	}
+            for (int i = 0; i < infos.Count; i++)
+            {
+                GUILayout.Label(infos[i], labelStyle);
+            }
 
-	/**
-	 * アドネットワークごとの広告取得結果
-	 */
-	void VAMPLoadResult(string str) {
-		#if UNITY_IPHONE
-        AddMessage(str);
-		#elif UNITY_ANDROID
-		string[] param = VampParam(str);
-		// param[0]:placementId
-		// param[1]:success
-		// param[2]:adnwName
-		// param[3]:message
-        AddMessage("onLoadResult(" + param[2] + ") " + param[3]);
-		#endif
-	}
+            GUILayout.EndScrollView();
+            GUILayout.EndArea();
+        }
 
-	#if UNITY_ANDROID
-	private string[] VampParam(string str) {
-		if (str != null && str.Length > 0) {
-			string[] paramList = str.Split(',');
-			return paramList;
-		}
-		return null;
-	}
-	#endif
+        GUI.matrix = Matrix4x4.identity;
+        GUI.skin = null;
+    }
 
-	private void AddMessage(string str) {
-		messages.Add(System.DateTime.Now.ToString("MM/dd HH:mm:ss ") + str);
-	}
+    private void AddMessage(string str)
+    {
+        messages.Add(System.DateTime.Now.ToString("MM/dd HH:mm:ss ") + str);
+    }
+
+    //
+    // VAMPからのメッセージを受け取る場合は以下のメソッドを実装してください
+    //
+
+    // ロードが完了し、広告表示できる状態になった時に通知されます
+    void VAMPDidReceive(string msg)
+    {
+        string[] param = VAMPUnitySDK.MessageUtil.ParseMessage(msg);
+        // param[0]:placementId
+        // param[1]:adnwName
+        AddMessage(string.Format("Receive {0} {1}", param[0], param[1]));
+
+        isLoading = false;
+
+        Debug.Log("[VAMPUnitySDK] VAMPDidReceive: " + msg);
+    }
+
+    // 広告のロード時や表示時にエラーが発生した時に通知されます
+    void VAMPDidFail(string msg)
+    {
+        string[] param = VAMPUnitySDK.MessageUtil.ParseMessage(msg);
+        // param[0]:placementId
+        // param[1]:error
+        AddMessage(string.Format("Fail {0} {1}", param[0], param[1]));
+
+        isLoading = false;
+
+        Debug.Log("[VAMPUnitySDK] VAMPDidFail: " + msg);
+    }
+
+    // インセンティブ付与可能になったタイミングで通知されます
+    void VAMPDidComplete(string msg)
+    {
+        string[] param = VAMPUnitySDK.MessageUtil.ParseMessage(msg);
+        // param[0]:placementId
+        // param[1]:adnwName
+        AddMessage(string.Format("Complete {0} {1}", param[0], param[1]));
+
+        Debug.Log("[VAMPUnitySDK] VAMPDidComplete: " + msg);
+    }
+
+    // 広告が閉じられた時に通知されます。
+    // ユーザキャンセルなども含まれるのため、インセンティブ付与はVAMPDidCompleteで判定してください
+    void VAMPDidClose(string msg)
+    {
+        string[] param = VAMPUnitySDK.MessageUtil.ParseMessage(msg);
+        // param[0]:placementId
+        // param[1]:adnwName
+        AddMessage(string.Format("Close {0} {1}", param[0], param[1]));
+
+        Debug.Log("[VAMPUnitySDK] VAMPDidClose: " + msg);
+    }
+
+    // 広告準備完了から55分経つと取得した広告の表示はできてもRTBの収益は発生しません。
+    // この通知を受け取ったら、もう一度Loadからやり直す必要があります
+    void VAMPDidExpired(string msg)
+    {
+        string[] param = VAMPUnitySDK.MessageUtil.ParseMessage(msg);
+        // param[0]:placementId
+        AddMessage(string.Format("Expire {0}", param[0]));
+
+        isLoading = false;
+
+        Debug.Log("[VAMPUnitySDK] VAMPDidExpired: " + msg);
+    }
+
+    // アドネットワークごとの広告取得が開始された時に通知されます
+    void VAMPLoadStart(string msg)
+    {
+        string[] param = VAMPUnitySDK.MessageUtil.ParseMessage(msg);
+        // param[0]:placementId
+        AddMessage(string.Format("LoadStart {0} {1}", param[0], param[1]));
+
+        Debug.Log("[VAMPUnitySDK] VAMPLoadStart: " + msg);
+    }
+
+    // アドネットワークごとの広告取得結果が通知されます(成功/失敗どちらも通知)。
+    // この通知をもとにShowしないようご注意ください。Showする判定は、VAMPDidReceiveを受け取ったタイミングで判断してください
+    void VAMPLoadResult(string msg)
+    {
+        string[] param = VAMPUnitySDK.MessageUtil.ParseMessage(msg);
+        // param[0]:placementId
+        // param[1]:success
+        // param[2]:adnwName
+        // param[3]:message
+        AddMessage(string.Format("LoadResult {0} {2} success={1} message={3}",
+                param[0], param[1], param[2], param[3]));
+
+        Debug.Log("[VAMPUnitySDK] VAMPLoadResult: " + msg);
+    }
+
+    // VAMPUnitySDK.getCountryCodeメソッドの取得結果が通知されます
+    void VAMPCountryCode(string msg)
+    {
+        string[] param = VAMPUnitySDK.MessageUtil.ParseMessage(msg);
+        // param[0]:isoCode
+        AddMessage(string.Format("CountryCode {0}", param[0]));
+
+        Debug.Log("[VAMPUnitySDK] VAMPCountryCode: " + msg);
+    }
 }
 
-public struct EdgeInsets {
+public struct EdgeInsets
+{
 
     public float Top { get; }
+
     public float Left { get; }
+
     public float Bottom { get; }
+
     public float Right { get; }
 
-    public EdgeInsets(float top, float left, float bottom, float right) {
+    public EdgeInsets(float top, float left, float bottom, float right)
+    {
         Top = top;
         Left = left;
         Bottom = bottom;
         Right = right;
     }
 }
-

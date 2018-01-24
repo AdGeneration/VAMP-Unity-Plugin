@@ -3,443 +3,675 @@ using System;
 using System.Collections;
 using System.Runtime.InteropServices;
 
-public class  VAMPUnitySDK : VAMPMonoBehaviour {
+/// <summary>
+///
+/// VAMP-Unity-Plugin ver.2.0.3+
+///
+/// Created by AdGeneratioin.
+/// Copyright 2018 Supership Inc. All rights reserved.
+///
+/// </summary>
+public class  VAMPUnitySDK : MonoBehaviour
+{
+    #if UNITY_IPHONE
+    
+    [DllImport("__Internal")]
+    private static extern IntPtr VAMPUnityInit(IntPtr vampni, string placementId, string gameObjName);
 
-    public enum InitializeState {
+    [DllImport("__Internal")]
+    private static extern void VAMPUnityLoad(IntPtr vampni);
+
+    [DllImport("__Internal")]
+    private static extern bool VAMPUnityShow(IntPtr vampni);
+
+    [DllImport("__Internal")]
+    private static extern bool VAMPUnityIsReady(IntPtr vampni);
+
+    [DllImport("__Internal")]
+    private static extern void VAMPUnityClearLoaded(IntPtr vampni);
+
+    [DllImport("__Internal")]
+    private static extern void VAMPUnityInitializeAdnwSDK(string placementId);
+
+    [DllImport("__Internal")]
+    private static extern void VAMPUnityInitializeAdnwSDKWithConfig(string placementId, string state, int duration);
+
+    [DllImport("__Internal")]
+    private static extern void VAMPUnitySetTestMode(bool enableTest);
+
+    [DllImport("__Internal")]
+    private static extern bool VAMPUnityIsTestMode();
+
+    [DllImport("__Internal")]
+    private static extern void VAMPUnitySetDebugMode(bool enableDebug);
+
+    [DllImport("__Internal")]
+    private static extern bool VAMPUnityIsDebugMode();
+
+    [DllImport("__Internal")]
+    private static extern float VAMPUnitySupportedOSVersion();
+
+    [DllImport("__Internal")]
+    private static extern bool VAMPUnityIsSupportedOSVersion();
+
+    [DllImport("__Internal")]
+    private static extern string VAMPUnitySDKVersion();
+
+    [DllImport("__Internal")]
+    private static extern void VAMPUnitySetMediationTimeout(int timeout);
+
+    [DllImport("__Internal")]
+    private static extern void VAMPUnityGetCountryCode(string gameObjName);
+
+    [DllImport("__Internal")]
+    private static extern string VAMPUnityAdnwSDKVersion(string adnwName);
+
+    [DllImport("__Internal")]
+    private static extern string VAMPUnityDeviceInfo(string infoName);
+
+    #endif
+
+    public enum InitializeState
+    {
+        /// <summary>
+        /// 接続環境によって、WEIGHTとALL設定お自動的に切り替えます
+        /// Wi-Fi: ALL
+        /// キャリア回線: WEIGHT
+        /// </summary>
         AUTO = 0,
+        /// <summary>
+        /// 配信比率が高いものをひとつ初期化します
+        /// </summary>
         WEIGHT,
+        /// <summary>
+        /// 全アドネットワークを初期化します
+        /// </summary>
         ALL,
+        /// <summary>
+        /// Wi-Fi接続時のみ全アドネットワークを初期化します
+        /// </summary>
         WIFIONLY
     }
 
-	//パラメータ
-	private static GameObject messageObj = null;
+    #if UNITY_ANDROID
+    private const string VampClass = "jp.supership.vamp.VAMP";
+    private const string UnityPlayerClass = "com.unity3d.player.UnityPlayer";
+    #endif
+
+    #if UNITY_IPHONE
+    private static IntPtr vampni = IntPtr.Zero;
+    
+#elif UNITY_ANDROID
+    private static AndroidJavaObject vampObj = null;
+    #endif
+
+    private static GameObject messageObj = null;
     private static GameObject countryCodeObj = null;
-	private static bool isEnableTest = false;
-	private static bool isEnableDebug = false;
-	private static string placementID = "";
-	//パラメータ
 
-	#if UNITY_IPHONE
-	private static IntPtr vampni = IntPtr.Zero;
-	#elif UNITY_ANDROID
-	private const string VAMP_CLASS = "jp.supership.vamp.VAMP";
-	private const string UNITYPLAYER_CLASS = "com.unity3d.player.UnityPlayer";
+    /// <summary>
+    /// VAMPUnitySDKクラスの準備を行います
+    /// </summary>
+    /// <param name="obj">GameObject</param>
+    /// <param name="placementID">広告枠ID</param>
+    public static void initVAMP(GameObject obj, string placementID)
+    {
+        if (placementID == null || placementID.Length <= 0)
+        {
+            Debug.LogError("PlacementID is not set.");
+            return;
+        }
 
-	private static AndroidJavaObject vampObj = null;
-	#endif
+        messageObj = obj;
 
-	private static VAMPUnitySDK myInstance;
-
-	private static bool noInstance {
-		get {
-            return myInstance == null || Application.isEditor;
-		}
-	}
-
-	public static void initVAMP(GameObject obj, string _placementID) {
-		messageObj = obj;
-		placementID = _placementID;
-		initVAMPCommon();
-		#if UNITY_IPHONE
-		if (Application.platform == RuntimePlatform.IPhonePlayer) {
-			vampni = _initVAMP(vampni, placementID, isEnableTest, isEnableDebug, messageObj.name);
-		}
-		#elif UNITY_ANDROID
-		if (Application.platform == RuntimePlatform.Android) {
-			if (placementID != null && placementID.Length > 0) {
-				if (vampObj == null) {
-					AndroidJavaClass player = new AndroidJavaClass(UNITYPLAYER_CLASS);
-					AndroidJavaObject activity = player.GetStatic<AndroidJavaObject>("currentActivity");
-					AndroidJavaClass vampCls = new AndroidJavaClass(VAMP_CLASS);
-					vampObj = vampCls.CallStatic<AndroidJavaObject>("getVampInstance", activity, placementID);
-					vampObj.Call("setVAMPListener", new AdListener());
-					vampObj.Call("setAdvancedListner", new AdvListener());
-				}
-			} else {
-				Debug.LogError("PlacementID is not set.");
-			}
-		}
-		#endif
-	}
-
-	private static void initVAMPCommon() {
-		if (myInstance == null) {
-			GameObject gameObject = new GameObject("VAMPForUnity");
-			DontDestroyOnLoad(gameObject);//Makes the object target not be destroyed automatically when loading a new scene.
-			gameObject.hideFlags = HideFlags.HideAndDontSave;//A combination of not shown in the hierarchy and not saved to to scenes.
-			myInstance = gameObject.AddComponent<VAMPUnitySDK>();
-		}
-	}
-
-	//ここからVAMPメソッド--------------
-	public static void setTestMode(bool testMode) {
-		#if UNITY_IPHONE
-		if (Application.platform == RuntimePlatform.IPhonePlayer) {
-			_setTestModeVAMP(testMode);
-		}
-		#elif UNITY_ANDROID
-		if (Application.platform == RuntimePlatform.Android) {
-			AndroidJavaClass vampCls = new AndroidJavaClass(VAMP_CLASS);
-			vampCls.CallStatic("setTestMode",testMode);
-		}
-		#endif
-		isEnableTest = testMode;
-	}
-
-	public static bool isTestMode() {
-		#if UNITY_IPHONE
-		if (Application.platform == RuntimePlatform.IPhonePlayer) {
-			isEnableTest = _isTestModeVAMP();
-		}
-		#elif UNITY_ANDROID
-		if (Application.platform == RuntimePlatform.Android) {
-			AndroidJavaClass vampCls = new AndroidJavaClass(VAMP_CLASS);
-			isEnableTest = vampCls.CallStatic<bool>("isTestMode");
-		}
-		#endif
-		return isEnableTest;
-	}
-
-	public static void setDebugMode(bool debugMode) {
-		#if UNITY_IPHONE
-		if (Application.platform == RuntimePlatform.IPhonePlayer) {
-			_setDebugModeVAMP(debugMode);
-		}
-		#elif UNITY_ANDROID
-		if (Application.platform == RuntimePlatform.Android) {
-			AndroidJavaClass vampCls = new AndroidJavaClass(VAMP_CLASS);
-			vampCls.CallStatic("setDebugMode",debugMode);
-		}
-		#endif
-		isEnableDebug = debugMode;
-	}
-
-	public static bool isDebugMode() {
-		#if UNITY_IPHONE
-		if (Application.platform == RuntimePlatform.IPhonePlayer) {
-			isEnableDebug = _isDebugModeVAMP();
-		}
-		#elif UNITY_ANDROID
-		if (Application.platform == RuntimePlatform.Android) {
-			AndroidJavaClass vampCls = new AndroidJavaClass(VAMP_CLASS);
-			isEnableDebug = vampCls.CallStatic<bool>("isDebugMode");
-		}
-		#endif
-		return isEnableDebug;
-	}
-
-	public static string SDKVersion() {
-		string ret = "unknown";
-		#if UNITY_IPHONE
-		if (Application.platform == RuntimePlatform.IPhonePlayer) {
-			ret = _SDKVersionVAMP();
-		}
-		#elif UNITY_ANDROID
-		if (Application.platform == RuntimePlatform.Android) {
-			AndroidJavaClass vampCls = new AndroidJavaClass(VAMP_CLASS);
-			ret = vampCls.CallStatic<string>("SDKVersion");
-		}
-		#endif
-		return ret;
-	}
-
-	public static float SupportedOSVersion() {
-		float ret = 0;
-		#if UNITY_IPHONE
-		if (Application.platform == RuntimePlatform.IPhonePlayer) {
-			// iOSの場合float
-			ret =  _supportedOSVersionVAMP();
-		}
-		#elif UNITY_ANDROID
-		if (Application.platform == RuntimePlatform.Android) {
-			AndroidJavaClass vampCls = new AndroidJavaClass(VAMP_CLASS);
-			ret = vampCls.CallStatic<int>("SupportedOSVersion");
-		}
-		#endif
-		return ret;
-	}
-
-	public static bool isSupportedOSVersion() {
-		bool ret = false;
-		#if UNITY_IPHONE
-		if (Application.platform == RuntimePlatform.IPhonePlayer) {
-			ret =  _isSupportedOSVersionVAMP();
-		}
-		#elif UNITY_ANDROID
-		if (Application.platform == RuntimePlatform.Android) {
-			AndroidJavaClass vampCls = new AndroidJavaClass(VAMP_CLASS);
-			ret = vampCls.CallStatic<bool>("isSupportedOSVersion");
-		}
-		#endif
-		return ret;
-	}
-
-	public static void initializeAdnwSDK(string _placementID) {
-		#if UNITY_IPHONE
-		if (Application.platform == RuntimePlatform.IPhonePlayer) {
-			_initializeAdnwSDK(vampni, _placementID);
-		}
-		#elif UNITY_ANDROID
-		if (Application.platform == RuntimePlatform.Android) {
-			if (_placementID != null && _placementID.Length > 0) {
-				AndroidJavaClass player = new AndroidJavaClass(UNITYPLAYER_CLASS);
-				AndroidJavaObject activity = player.GetStatic<AndroidJavaObject>("currentActivity");
-				AndroidJavaClass vampCls = new AndroidJavaClass(VAMP_CLASS);
-				vampCls.CallStatic("initializeAdnwSDK", activity, _placementID);
-			} else {
-				Debug.LogError("PlacementID is not set.");
-			}
-		}
-		#endif
-	}
-
-	public static void initializeAdnwSDK(string _placementID, string state, int duration) {
-		#if UNITY_IPHONE
-		if (Application.platform == RuntimePlatform.IPhonePlayer) {
-			_initializeAdnwSDKState(vampni, _placementID, state, duration);
-		}
-		#elif UNITY_ANDROID
-		if (Application.platform == RuntimePlatform.Android) {
-			if (_placementID != null && _placementID.Length > 0) {
-				AndroidJavaClass player = new AndroidJavaClass(UNITYPLAYER_CLASS);
-				AndroidJavaObject activity = player.GetStatic<AndroidJavaObject>("currentActivity");
-				AndroidJavaClass vampCls = new AndroidJavaClass(VAMP_CLASS);
-				AndroidJavaClass initStateCls = new AndroidJavaClass("jp.supership.vamp.VAMP$VAMPInitializeState");
-				vampCls.CallStatic("initializeAdnwSDK", activity, _placementID, initStateCls.GetStatic<AndroidJavaObject>(state), duration);
-			} else {
-				Debug.LogError("PlacementID is not set.");
-			}
-		}
-		#endif
-	}
-
-	public static void load() {
-		if (noInstance) return;
-
-		#if UNITY_IPHONE
-		if (Application.platform == RuntimePlatform.IPhonePlayer) {
-			_loadVAMP(vampni);
-		}
-		#elif UNITY_ANDROID
-		if (Application.platform == RuntimePlatform.Android) {
-			if (vampObj != null) {
-				vampObj.Call("load");
-			}
-		}
-		#endif
-	}
-
-	public static bool isReady() {
-		if (noInstance) return false;
-
-		bool ret = false;
-		#if UNITY_IPHONE
-		if (Application.platform == RuntimePlatform.IPhonePlayer) {
-			// isReady に該当するものがないため
-			ret = _isReadyVAMP(vampni);
-		}
-		#elif UNITY_ANDROID
-		if (Application.platform == RuntimePlatform.Android) {
-			if (vampObj != null) {
-				ret = vampObj.Call<bool>("isReady");
-			}
-		}
-		#endif
-		return ret;
-	}
-
-	public static bool show() {
-		if (noInstance) return false;
-
-		bool ret = false;
-		#if UNITY_IPHONE
-		if (Application.platform == RuntimePlatform.IPhonePlayer) {
-			ret = _showVAMP(vampni);
-		}
-		#elif UNITY_ANDROID
-		if (Application.platform == RuntimePlatform.Android) {
-			if (vampObj != null) {
-				ret = vampObj.Call<bool>("show");
-			}
-		}
-		#endif
-		return ret;
-	}
-
-	public static void clearLoaded() {
-		if (noInstance) return;
-
-		#if UNITY_IPHONE
-        // Nothing to do
-		#elif UNITY_ANDROID
-		if (Application.platform == RuntimePlatform.Android) {
-			if (vampObj != null) {
-				vampObj.Call("clearLoaded");
-			}
-		}
-		#endif
-	}
-
-	public static void setMediationTimeout(int timeout) {
-		#if UNITY_IPHONE
-		if (Application.platform == RuntimePlatform.IPhonePlayer) {
-			_setMediationTimeoutVAMP(vampni, timeout);
-		}
-		#elif UNITY_ANDROID
-		if (Application.platform == RuntimePlatform.Android) {
-			AndroidJavaClass vampCls = new AndroidJavaClass(VAMP_CLASS);
-			vampCls.CallStatic("setMediationTimeout",timeout);
-		}
-		#endif
-	}
-
-    public static void getCountryCode(GameObject obj) {
-        countryCodeObj = obj;
         #if UNITY_IPHONE
-        if (Application.platform == RuntimePlatform.IPhonePlayer) {
-            _getCountryCodeVAMP(countryCodeObj.name);
+        if (Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            vampni = VAMPUnityInit(vampni, placementID, messageObj.name);
         }
         #elif UNITY_ANDROID
-        if (Application.platform == RuntimePlatform.Android) {
-            AndroidJavaClass player = new AndroidJavaClass(UNITYPLAYER_CLASS);
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            if (vampObj == null)
+            {
+                AndroidJavaClass player = new AndroidJavaClass(UnityPlayerClass);
+                AndroidJavaObject activity = player.GetStatic<AndroidJavaObject>("currentActivity");
+                AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
+                vampObj = vampCls.CallStatic<AndroidJavaObject>("getVampInstance", activity, placementID);
+                vampObj.Call("setVAMPListener", new AdListener());
+                vampObj.Call("setAdvancedListner", new AdvListener());
+            }
+        }
+        #endif
+    }
+
+    /// <summary>
+    /// 広告をロードします
+    /// </summary>
+    public static void load()
+    {
+        #if UNITY_IPHONE
+        if (Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            VAMPUnityLoad(vampni);
+        }
+        #elif UNITY_ANDROID
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            if (vampObj != null)
+            {
+                vampObj.Call("load");
+            }
+        }
+        #endif
+    }
+
+    /// <summary>
+    /// 広告を表示します
+    /// </summary>
+    public static bool show()
+    {
+        bool ret = false;
+
+        #if UNITY_IPHONE
+        if (Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            ret = VAMPUnityShow(vampni);
+        }
+        #elif UNITY_ANDROID
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            if (vampObj != null)
+            {
+                ret = vampObj.Call<bool>("show");
+            }
+        }
+        #endif
+
+        return ret;
+    }
+
+    /// <summary>
+    /// 広告の表示が可能ならばtrueを返し、それ以外はfalseを返します
+    /// </summary>
+    public static bool isReady()
+    {
+        bool ret = false;
+
+        #if UNITY_IPHONE
+        if (Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            ret = VAMPUnityIsReady(vampni);
+        }
+        #elif UNITY_ANDROID
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            if (vampObj != null)
+            {
+                ret = vampObj.Call<bool>("isReady");
+            }
+        }
+        #endif
+
+        return ret;
+    }
+
+    /// <summary>
+    /// ロード済みの広告を破棄します
+    /// </summary>
+    public static void clearLoaded()
+    {
+        #if UNITY_IPHONE
+        if (Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            VAMPUnityClearLoaded(vampni);
+        }
+        #elif UNITY_ANDROID
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            if (vampObj != null)
+            {
+                vampObj.Call("clearLoaded");
+            }
+        }
+        #endif
+    }
+
+    /// <summary>
+    /// アプリ起動時などのタイミングでアドネットワーク側のSDKを初期化しておきたいときに使います
+    /// </summary>
+    /// <param name="placementID">広告枠ID</param>
+    public static void initializeAdnwSDK(string placementID)
+    {
+        if (placementID == null || placementID.Length <= 0)
+        {
+            Debug.LogError("PlacementID is not set.");
+            return;
+        }
+
+        #if UNITY_IPHONE
+        if (Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            VAMPUnityInitializeAdnwSDK(placementID);
+        }
+        #elif UNITY_ANDROID
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            AndroidJavaClass player = new AndroidJavaClass(UnityPlayerClass);
             AndroidJavaObject activity = player.GetStatic<AndroidJavaObject>("currentActivity");
-            AndroidJavaClass vampCls = new AndroidJavaClass(VAMP_CLASS);
+            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
+            vampCls.CallStatic("initializeAdnwSDK", activity, placementID);
+        }
+        #endif
+    }
+
+    /// <summary>
+    /// アプリ起動時などのタイミングでアドネットワーク側のSDKを初期化しておきたいときに使います
+    /// </summary>
+    /// <param name="placementID">広告枠ID</param>
+    /// <param name="state">InitializeState string</param>
+    /// <param name="duration">アドネットワークSDKの初期化実行間隔</param>
+    public static void initializeAdnwSDK(string placementID, string state, int duration)
+    {
+        if (placementID == null || placementID.Length <= 0)
+        {
+            Debug.LogError("PlacementID is not set.");
+            return;
+        }
+
+        #if UNITY_IPHONE
+        if (Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            VAMPUnityInitializeAdnwSDKWithConfig(placementID, state, duration);
+        }
+        #elif UNITY_ANDROID
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            AndroidJavaClass player = new AndroidJavaClass(UnityPlayerClass);
+            AndroidJavaObject activity = player.GetStatic<AndroidJavaObject>("currentActivity");
+            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
+            AndroidJavaClass initStateCls = new AndroidJavaClass("jp.supership.vamp.VAMP$VAMPInitializeState");
+            vampCls.CallStatic("initializeAdnwSDK", activity, placementID, initStateCls.GetStatic<AndroidJavaObject>(state), duration);
+        }
+        #endif
+    }
+
+    /// <summary>
+    /// trueを指定すると収益が発生しないテスト広告が配信されるようになります。
+    /// ストアに申請する際は必ずfalseを設定してください。
+    /// デフォルト値はfalseです
+    /// </summary>
+    /// <param name="testMode"></param>
+    public static void setTestMode(bool testMode)
+    {
+        #if UNITY_IPHONE
+        if (Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            VAMPUnitySetTestMode(testMode);
+        }
+        #elif UNITY_ANDROID
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
+            vampCls.CallStatic("setTestMode", testMode);
+        }
+        #endif
+    }
+
+    /// <summary>
+    /// テストモードのときはtrueを返し、それ以外はfalseを返します
+    /// </summary>
+    public static bool isTestMode()
+    {
+        bool ret = false;
+
+        #if UNITY_IPHONE
+        if (Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            ret = VAMPUnityIsTestMode();
+        }
+        #elif UNITY_ANDROID
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
+            ret = vampCls.CallStatic<bool>("isTestMode");
+        }
+        #endif
+
+        return ret;
+    }
+
+    /// <summary>
+    /// trueを指定するとログを詳細に出力するデバッグモードになります。
+    /// デフォルト値はfalseです
+    /// </summary>
+    /// <param name="debugMode"></param>
+    public static void setDebugMode(bool debugMode)
+    {
+        #if UNITY_IPHONE
+        if (Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            VAMPUnitySetDebugMode(debugMode);
+        }
+        #elif UNITY_ANDROID
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
+            vampCls.CallStatic("setDebugMode", debugMode);
+        }
+        #endif
+    }
+
+    /// <summary>
+    /// デバッグモードのときはtrueを返し、それ以外はfalseを返します
+    /// </summary>
+    public static bool isDebugMode()
+    {
+        bool ret = false;
+
+        #if UNITY_IPHONE
+        if (Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            ret = VAMPUnityIsDebugMode();
+        }
+        #elif UNITY_ANDROID
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
+            ret = vampCls.CallStatic<bool>("isDebugMode");
+        }
+        #endif
+
+        return ret;
+    }
+
+    /// <summary>
+    /// VAMPのSDKバージョンを返します。この返却される値は、Androidの場合はVAMP.jarのバージョン、
+    /// iOSの場合はVAMP.frameworkのバージョンになります
+    /// </summary>
+    public static string SDKVersion()
+    {
+        string ret = "unknown";
+
+        #if UNITY_IPHONE
+        if (Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            ret = VAMPUnitySDKVersion();
+        }
+        #elif UNITY_ANDROID
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
+            ret = vampCls.CallStatic<string>("SDKVersion");
+        }
+        #endif
+
+        return ret;
+    }
+
+    /// <summary>
+    /// VAMP SDKがサポートするOSの最低バージョンを返します。Androidの場合はAPIレベルの返却になります
+    /// </summary>
+    public static float SupportedOSVersion()
+    {
+        float ret = 0;
+
+        #if UNITY_IPHONE
+        if (Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            ret = VAMPUnitySupportedOSVersion();
+        }
+        #elif UNITY_ANDROID
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
+            ret = vampCls.CallStatic<int>("SupportedOSVersion");
+        }
+        #endif
+
+        return ret;
+    }
+
+    /// <summary>
+    /// VAMP SDKがサポートするOSバージョンのときはtrueを返します。サポート外のときはfalseを返します
+    /// </summary>
+    public static bool isSupportedOSVersion()
+    {
+        bool ret = false;
+
+        #if UNITY_IPHONE
+        if (Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            ret = VAMPUnityIsSupportedOSVersion();
+        }
+        #elif UNITY_ANDROID
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
+            ret = vampCls.CallStatic<bool>("isSupportedOSVersion");
+        }
+        #endif
+
+        return ret;
+    }
+
+    /// <summary>
+    /// アドネットワーク側の広告取得を待つタイムアウト時間を秒単位で指定します
+    /// </summary>
+    /// <param name="timeout">単位:秒</param>
+    public static void setMediationTimeout(int timeout)
+    {
+        #if UNITY_IPHONE
+        if (Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            VAMPUnitySetMediationTimeout(timeout);
+        }
+        #elif UNITY_ANDROID
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
+            vampCls.CallStatic("setMediationTimeout", timeout);
+        }
+        #endif
+    }
+
+    /// <summary>
+    /// 2文字の国コード(JP, USなど)を取得します。IPから国を判別できなかった、リクエストがタイムアウトしたなど、
+    /// 正常に値が返せないケースは"99"が返却されます。
+    /// 結果はVAMPCountryCodeメソッドを通じて返却されます
+    /// </summary>
+    /// <param name="obj">GameObject</param>
+    public static void getCountryCode(GameObject obj)
+    {
+        countryCodeObj = obj;
+
+        #if UNITY_IPHONE
+        if (Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            VAMPUnityGetCountryCode(countryCodeObj.name);
+        }
+        #elif UNITY_ANDROID
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            AndroidJavaClass player = new AndroidJavaClass(UnityPlayerClass);
+            AndroidJavaObject activity = player.GetStatic<AndroidJavaObject>("currentActivity");
+            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
             vampCls.CallStatic("getCountryCode", activity, new GetCountryCodeListener());
         }
         #endif
     }
-	//-----------------ここまでVAMPメソッド
 
-	#if UNITY_IPHONE
-    // Nothing to do
-	#elif UNITY_ANDROID
-    class GetCountryCodeListener : AndroidJavaProxy {
-        
-        public GetCountryCodeListener() : base("jp.supership.vamp.VAMPGetCountryCodeListener") {
+    #if UNITY_ANDROID
+    
+    private static string JoinParams(params string[] args)
+    {
+        if (args.Length <= 0)
+        {
+            return "";
         }
 
-        // null引数エラー回避の為のoverride
-        public override AndroidJavaObject Invoke(string methodName, object[] javaArgs) {
-            switch (methodName) {
+        return string.Join(",", args);
+    }
+
+    class GetCountryCodeListener : AndroidJavaProxy
+    {
+
+        public GetCountryCodeListener()
+            : base("jp.supership.vamp.VAMPGetCountryCodeListener")
+        {
+        }
+
+        public override AndroidJavaObject Invoke(string methodName, object[] javaArgs)
+        {
+            switch (methodName)
+            {
                 case "onCountryCode":
                     // javaArgs[0]:isoCode
-                    countryCodeObj.SendMessage("VAMPCountryCode", joinParam((string)javaArgs[0]));
+                    countryCodeObj.SendMessage("VAMPCountryCode", JoinParams((string)javaArgs[0]));
                     break;
                 default:
                     return base.Invoke(methodName, javaArgs);
             }
+
             return null;
         }
     }
 
-	class AdListener : AndroidJavaProxy {
-        
-		public AdListener() : base("jp.supership.vamp.VAMPListener") {
-		}
+    class AdListener : AndroidJavaProxy
+    {
 
-		// null引数エラー回避の為のoverride
-		public override AndroidJavaObject Invoke(string methodName, object[] javaArgs) {
-			switch (methodName) {
-			case "onReceive":
-				// javaArgs[0]:placementId
-				// javaArgs[1]:adnwName
-				messageObj.SendMessage("VAMPDidReceive", joinParam((string)javaArgs[0], (string)javaArgs[1]));
-				break;
-			case "onFail":
-				// javaArgs[0]:placementId
-				// javaArgs[1]:error
-				messageObj.SendMessage("VAMPDidFail", joinParam((string)javaArgs[0], ((AndroidJavaObject)javaArgs[1]).Call<string>("name")));
-				break;
-			case "onComplete":
-				// javaArgs[0]:placementId
-				// javaArgs[1]:adnwName
-				messageObj.SendMessage("VAMPDidComplete", joinParam((string)javaArgs[0], (string)javaArgs[1]));
-				break;
-			case "onClose":
-				// javaArgs[0]:placementId
-				// javaArgs[1]:adnwName
-				messageObj.SendMessage("VAMPDidClose", joinParam((string)javaArgs[0], (string)javaArgs[1]));
-				break;
-			case "onExpired":
-				// javaArgs[0]:placementId
-				messageObj.SendMessage("VAMPDidExpired", joinParam((string)javaArgs[0]));
-				break;
-			default:
-				return base.Invoke(methodName, javaArgs);
-			}
-			return null;
-		}
-	}
+        public AdListener()
+            : base("jp.supership.vamp.VAMPListener")
+        {
+        }
 
-	class AdvListener : AndroidJavaProxy {
-        
-		public AdvListener() : base("jp.supership.vamp.AdvancedListener") {
-		}
+        public override AndroidJavaObject Invoke(string methodName, object[] javaArgs)
+        {
+            switch (methodName)
+            {
+                case "onReceive":
+                // javaArgs[0]:placementId
+                // javaArgs[1]:adnwName
+                    messageObj.SendMessage("VAMPDidReceive",
+                        JoinParams((string)javaArgs[0], (string)javaArgs[1]));
+                    break;
+                case "onFail":
+                // javaArgs[0]:placementId
+                // javaArgs[1]:error
+                    messageObj.SendMessage("VAMPDidFail",
+                        JoinParams((string)javaArgs[0], ((AndroidJavaObject)javaArgs[1]).Call<string>("name")));
+                    break;
+                case "onComplete":
+                // javaArgs[0]:placementId
+                // javaArgs[1]:adnwName
+                    messageObj.SendMessage("VAMPDidComplete",
+                        JoinParams((string)javaArgs[0], (string)javaArgs[1]));
+                    break;
+                case "onClose":
+                // javaArgs[0]:placementId
+                // javaArgs[1]:adnwName
+                    messageObj.SendMessage("VAMPDidClose",
+                        JoinParams((string)javaArgs[0], (string)javaArgs[1]));
+                    break;
+                case "onExpired":
+                // javaArgs[0]:placementId
+                    messageObj.SendMessage("VAMPDidExpired",
+                        JoinParams((string)javaArgs[0]));
+                    break;
+                default:
+                    return base.Invoke(methodName, javaArgs);
+            }
 
-		// null引数エラー回避の為のoverride
-		public override AndroidJavaObject Invoke(string methodName, object[] javaArgs) {
-			switch (methodName) {
-			case "onLoadStart":
-				// javaArgs[0]:placementId
-				// javaArgs[1]:adnwName
-				messageObj.SendMessage("VAMPLoadStart", joinParam((string)javaArgs[0], (string)javaArgs[1]));
-				break;
-			case "onLoadResult":
-				// javaArgs[0]:placementId
-				// javaArgs[1]:success
-				// javaArgs[2]:adnwName
-				// javaArgs[3]:message
-				messageObj.SendMessage("VAMPLoadResult", joinParam((string)javaArgs[0], ((bool)javaArgs[1]).ToString(), (string)javaArgs[2], (string)javaArgs[3]));
-				break;
-			default:
-				return base.Invoke(methodName, javaArgs);
-			}
-			return null;
-		}
-	}
+            return null;
+        }
+    }
 
-	private static string joinParam(params string[] arg) {
-		System.Text.StringBuilder buffer = new System.Text.StringBuilder();
-		for (int i = 0; i < arg.Length; i++) {
-			if (i > 0) {
-				buffer.Append(",");
-			}
-			buffer.Append(arg[i]);
-		}
-		return buffer.ToString();
-	}
+    class AdvListener : AndroidJavaProxy
+    {
+
+        public AdvListener()
+            : base("jp.supership.vamp.AdvancedListener")
+        {
+        }
+
+        public override AndroidJavaObject Invoke(string methodName, object[] javaArgs)
+        {
+            switch (methodName)
+            {
+                case "onLoadStart":
+                // javaArgs[0]:placementId
+                // javaArgs[1]:adnwName
+                    messageObj.SendMessage("VAMPLoadStart",
+                        JoinParams((string)javaArgs[0], (string)javaArgs[1]));
+                    break;
+                case "onLoadResult":
+                // javaArgs[0]:placementId
+                // javaArgs[1]:success
+                // javaArgs[2]:adnwName
+                // javaArgs[3]:message
+                    messageObj.SendMessage("VAMPLoadResult",
+                        JoinParams((string)javaArgs[0], ((bool)javaArgs[1]).ToString(), (string)javaArgs[2], (string)javaArgs[3]));
+                    break;
+                default:
+                    return base.Invoke(methodName, javaArgs);
+            }
+
+            return null;
+        }
+    }
+
     #endif  // end UNITY_ANDROID
 
-	// Use this for initialization
-	void Start() {
-	}
+    public class MessageUtil
+    {
 
-	// Update is called once per frame
-	void Update() {
-	}
+        public static string[] ParseMessage(string msg)
+        {
+            if (msg != null && msg.Length > 0)
+            {
+                return msg.Split(',');
+            }
 
-	public static string ADNWSDKVersion(string adnw) {
-		string ret = "unknown";
-		#if UNITY_IPHONE
-		if (Application.platform == RuntimePlatform.IPhonePlayer) {
-			ret = _ADNWSDKVersionVAMP(adnw);
-		}
-		#elif UNITY_ANDROID
-        // Nothing to do
-		#endif
-		return ret;
-	}
+            return null;
+        }
+    }
 
-	public static string SDKInfo(string infoname) {
-		string ret = "unknown";
-		#if UNITY_IPHONE
-		if (Application.platform == RuntimePlatform.IPhonePlayer) {
-			ret = _SDKInfoVAMP(infoname);
-		}
-		#elif UNITY_ANDROID
-        // Nothing to do
-		#endif
-		return ret;
-	}
+    public class SDKUtil
+    {
+
+        public static string GetAdnwSDKVersion(string adnw)
+        {
+            string ret = "unknown";
+
+            #if UNITY_IPHONE
+            if (Application.platform == RuntimePlatform.IPhonePlayer)
+            {
+                ret = VAMPUnityAdnwSDKVersion(adnw);
+            }
+            #elif UNITY_ANDROID
+            // Nothing to do
+            #endif
+
+            return ret;
+        }
+    }
+
+    public class DeviceUtil
+    {
+
+        public static string GetInfo(string infoName)
+        {
+            string ret = "unknown";
+
+            #if UNITY_IPHONE
+            if (Application.platform == RuntimePlatform.IPhonePlayer)
+            {
+                ret = VAMPUnityDeviceInfo(infoName);
+            }
+            #elif UNITY_ANDROID
+            // Nothing to do
+            #endif
+
+            return ret;
+        }
+    }
 }
