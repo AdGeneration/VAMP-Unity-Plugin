@@ -6,10 +6,17 @@ using System.Runtime.InteropServices;
 
 public class SDKTest : MonoBehaviour
 {
+    /**
+     * テスト用広告枠IDを使用して広告表示を確認することができます
+     * iOS: 59755
+     * Android: 59756
+     * (テストIDのままリリースしないでください)
+     */
+
     // iOS 広告枠ID
-    public string iosPlacementID;
+    public string iosPlacementID = "59755";
     // Android 広告枠ID
-    public string androidPlacementID;
+    public string androidPlacementID = "59756";
     // FAN's device ID hash to enable test mode on Android
     public string androidFANHashedID = "HASHED ID";
     // Test mode flag
@@ -20,6 +27,12 @@ public class SDKTest : MonoBehaviour
     public VAMPUnitySDK.InitializeState initializeState;
     // アドネットワークSDKの初期化実行間隔 (単位:秒)
     public int initializeDuration;
+    // ターゲティング属性 ユーザの性別
+    public VAMPUnitySDK.Gender userGender = VAMPUnitySDK.Gender.UNKNOWN;
+    // ターゲティング属性 ユーザの誕生日
+    public int userBirthYear = 1980;
+    public int userBirthMonth = 2;
+    public int userBirthDay = 20;
 
     public Texture logoTexture;
     public Texture btnOnTexture;
@@ -92,6 +105,12 @@ public class SDKTest : MonoBehaviour
             SDKTestUtil.AddFANTestDevice(androidFANHashedID);
         }
         #endif
+
+        // ユーザ属性をセットします
+        var targeting = new VAMPUnitySDK.Targeting();
+        targeting.Gender = userGender;
+        targeting.Birthday = new VAMPUnitySDK.Birthday(userBirthYear, userBirthMonth, userBirthDay);
+        VAMPUnitySDK.setTargeting(targeting);
 
         blk = (int)Block.Title;
         isVampInitialized = false;

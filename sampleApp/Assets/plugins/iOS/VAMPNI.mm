@@ -1,6 +1,6 @@
 //
 //  VAMPNI.mm
-//  VAMP-Unity-Plugin ver.2.0.3+
+//  VAMP-Unity-Plugin ver.2.0.4
 //
 //  Created by AdGeneratioin.
 //  Copyright © 2018年 Supership Inc. All rights reserved.
@@ -303,137 +303,160 @@ static VAMPNI *_vampInstance = nil;
 
 extern "C" {
 
-void *VAMPUnityInit(void *vampni , const char *cPlacementId , const char *cObjName) {
-    NSString *placementId = [NSString stringWithCString:cPlacementId encoding:NSUTF8StringEncoding];
-    NSString *objName = [NSString stringWithCString:cObjName encoding:NSUTF8StringEncoding];
-    
-    VAMPNI *vampniTemp;
-    
-    if (vampni == NULL) {
-        vampniTemp = [VAMPNI new];
+    void *VAMPUnityInit(void *vampni , const char *cPlacementId , const char *cObjName) {
+        NSString *placementId = [NSString stringWithCString:cPlacementId encoding:NSUTF8StringEncoding];
+        NSString *objName = [NSString stringWithCString:cObjName encoding:NSUTF8StringEncoding];
+        
+        VAMPNI *vampniTemp;
+        
+        if (vampni == NULL) {
+            vampniTemp = [VAMPNI new];
+        }
+        else {
+            vampniTemp = (__bridge VAMPNI *) vampni;
+        }
+        
+        [vampniTemp setVAMPWithGameObjectName:objName rootViewController:UnityGetGLViewController()
+                                  placementId:placementId];
+        
+        [VAMPNI retainInstance:vampniTemp];
+        
+        return (__bridge void *) vampniTemp;
     }
-    else {
-        vampniTemp = (__bridge VAMPNI *) vampni;
+
+    void VAMPUnityLoad(void *vampni) {
+        [((__bridge VAMPNI *) vampni) load];
     }
-    
-    [vampniTemp setVAMPWithGameObjectName:objName rootViewController:UnityGetGLViewController()
-                              placementId:placementId];
-    
-    [VAMPNI retainInstance:vampniTemp];
-    
-    return (__bridge void *) vampniTemp;
-}
 
-void VAMPUnityLoad(void *vampni) {
-    [((__bridge VAMPNI *) vampni) load];
-}
-
-bool VAMPUnityShow(void *vampni) {
-    return [((__bridge VAMPNI *) vampni) show];
-}
-
-bool VAMPUnityIsReady(void *vampni) {
-    return [((__bridge VAMPNI *) vampni) isReady];
-}
-
-void VAMPUnityClearLoaded(void *vampni) {
-    [((__bridge VAMPNI *) vampni) clearLoaded];
-}
-
-void VAMPUnityInitializeAdnwSDK(const char *cPlacementId) {
-    NSString *placementId = [NSString stringWithCString:cPlacementId encoding:NSUTF8StringEncoding];
-    
-    [VAMPNI initializeAdnwSDK:placementId];
-}
-
-void VAMPUnityInitializeAdnwSDKWithConfig(const char *cPlacementId, const char *cState, int duration) {
-    NSString *placementId = [NSString stringWithCString:cPlacementId encoding:NSUTF8StringEncoding];
-    NSString *state = [NSString stringWithCString:cState encoding:NSUTF8StringEncoding];
-    
-    [VAMPNI initializeAdnwSDK:placementId state:state duration:duration];
-}
-
-void VAMPUnitySetTestMode(bool enableTest) {
-    [VAMP setTestMode:enableTest];
-}
-
-bool VAMPUnityIsTestMode() {
-    return [VAMP isTestMode];
-}
-
-void VAMPUnitySetDebugMode(bool enableDebug) {
-    [VAMP setDebugMode:enableDebug];
-}
-
-bool VAMPUnityIsDebugMode() {
-    return [VAMP isDebugMode];
-}
-
-float VAMPUnitySupportedOSVersion() {
-    return [VAMP SupportedOSVersion];
-}
-
-bool VAMPUnityIsSupportedOSVersion() {
-    return [VAMP isSupportedOSVersion];
-}
-
-char *VAMPUnitySDKVersion() {
-    NSString *version = [VAMP SDKVersion];
-    
-    if (!version) {
-        version = @"";
+    bool VAMPUnityShow(void *vampni) {
+        return [((__bridge VAMPNI *) vampni) show];
     }
-    
-    char *cVersion = (char *) version.UTF8String;
-    char *res = (char *) malloc(strlen(cVersion) + 1);
-    strcpy(res, cVersion);
-    
-    return res;
-}
 
-void VAMPUnitySetMediationTimeout(int timeout) {
-    [VAMP setMediationTimeout:(float) timeout];
-}
-
-void VAMPUnityGetCountryCode(const char *cObjName) {
-    NSString *objName = [NSString stringWithCString:cObjName encoding:NSUTF8StringEncoding];
-    
-    [VAMP getCountryCode:^(NSString *countryCode) {
-        UnitySendMessage(objName.UTF8String, "VAMPCountryCode", countryCode.UTF8String);
-    }];
-}
-
-char *VAMPUnityAdnwSDKVersion(const char *cAdnwName) {
-    NSString *adnwName = [NSString stringWithCString:cAdnwName encoding:NSUTF8StringEncoding];
-    
-    NSString *version = VAMPNIGetAdnwSDKVersion(adnwName);
-    
-    if (!version) {
-        version = @"";
+    bool VAMPUnityIsReady(void *vampni) {
+        return [((__bridge VAMPNI *) vampni) isReady];
     }
-    
-    char *cVersion = (char *) version.UTF8String;
-    char *res = (char *) malloc(strlen(cVersion) + 1);
-    strcpy(res, cVersion);
-    
-    return res;
-}
 
-char *VAMPUnityDeviceInfo(const char *cInfoName) {
-    NSString *infoName = [NSString stringWithCString:cInfoName encoding:NSUTF8StringEncoding];
-    
-    NSString *info = VAMPNIGetDeviceInfo(infoName);
-    
-    if (!info) {
-        info = @"";
+    void VAMPUnityClearLoaded(void *vampni) {
+        [((__bridge VAMPNI *) vampni) clearLoaded];
     }
-    
-    char *cInfo = (char *) info.UTF8String;
-    char *res = (char *) malloc(strlen(cInfo) + 1);
-    strcpy(res, cInfo);
-    
-    return res;
-}
+
+    void VAMPUnityInitializeAdnwSDK(const char *cPlacementId) {
+        NSString *placementId = [NSString stringWithCString:cPlacementId encoding:NSUTF8StringEncoding];
+        
+        [VAMPNI initializeAdnwSDK:placementId];
+    }
+
+    void VAMPUnityInitializeAdnwSDKWithConfig(const char *cPlacementId, const char *cState, int duration) {
+        NSString *placementId = [NSString stringWithCString:cPlacementId encoding:NSUTF8StringEncoding];
+        NSString *state = [NSString stringWithCString:cState encoding:NSUTF8StringEncoding];
+        
+        [VAMPNI initializeAdnwSDK:placementId state:state duration:duration];
+    }
+
+    void VAMPUnitySetTestMode(bool enableTest) {
+        [VAMP setTestMode:enableTest];
+    }
+
+    bool VAMPUnityIsTestMode() {
+        return [VAMP isTestMode];
+    }
+
+    void VAMPUnitySetDebugMode(bool enableDebug) {
+        [VAMP setDebugMode:enableDebug];
+    }
+
+    bool VAMPUnityIsDebugMode() {
+        return [VAMP isDebugMode];
+    }
+
+    float VAMPUnitySupportedOSVersion() {
+        return [VAMP SupportedOSVersion];
+    }
+
+    bool VAMPUnityIsSupportedOSVersion() {
+        return [VAMP isSupportedOSVersion];
+    }
+
+    char *VAMPUnitySDKVersion() {
+        NSString *version = [VAMP SDKVersion];
+        
+        if (!version) {
+            version = @"";
+        }
+        
+        char *cVersion = (char *) version.UTF8String;
+        char *res = (char *) malloc(strlen(cVersion) + 1);
+        strcpy(res, cVersion);
+        
+        return res;
+    }
+
+    void VAMPUnitySetMediationTimeout(int timeout) {
+        [VAMP setMediationTimeout:(float) timeout];
+    }
+
+    void VAMPUnityGetCountryCode(const char *cObjName) {
+        NSString *objName = [NSString stringWithCString:cObjName encoding:NSUTF8StringEncoding];
+        
+        [VAMP getCountryCode:^(NSString *countryCode) {
+            UnitySendMessage(objName.UTF8String, "VAMPCountryCode", countryCode.UTF8String);
+        }];
+    }
+
+    void VAMPUnitySetTargeting(int gender, int birthYear, int birthMonth, int birthDay) {
+        switch (gender) {
+            case 1:
+                [VAMP setGender:kVAMPGenderMale];
+                break;
+            case 2:
+                [VAMP setGender:kVAMPGenderFemale];
+                break;
+            default:
+                [VAMP setGender:kVAMPGenderUnknown];
+        }
+        
+        if (birthYear > 0 && birthMonth > 0 && birthDay > 0) {
+            NSDateComponents *components = [NSDateComponents new];
+            components.year = birthYear;
+            components.month = birthMonth;
+            components.day = birthDay;
+            NSDate *date = [[[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian]
+                            dateFromComponents:components];
+            [VAMP setBirthday:date];
+        }
+    }
+
+    char *VAMPUnityAdnwSDKVersion(const char *cAdnwName) {
+        NSString *adnwName = [NSString stringWithCString:cAdnwName encoding:NSUTF8StringEncoding];
+        
+        NSString *version = VAMPNIGetAdnwSDKVersion(adnwName);
+        
+        if (!version) {
+            version = @"";
+        }
+        
+        char *cVersion = (char *) version.UTF8String;
+        char *res = (char *) malloc(strlen(cVersion) + 1);
+        strcpy(res, cVersion);
+        
+        return res;
+    }
+
+    char *VAMPUnityDeviceInfo(const char *cInfoName) {
+        NSString *infoName = [NSString stringWithCString:cInfoName encoding:NSUTF8StringEncoding];
+        
+        NSString *info = VAMPNIGetDeviceInfo(infoName);
+        
+        if (!info) {
+            info = @"";
+        }
+        
+        char *cInfo = (char *) info.UTF8String;
+        char *res = (char *) malloc(strlen(cInfo) + 1);
+        strcpy(res, cInfo);
+        
+        return res;
+    }
 
 }   // end extern "C"
 

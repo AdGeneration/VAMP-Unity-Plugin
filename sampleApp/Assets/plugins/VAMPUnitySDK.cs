@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 /// <summary>
 ///
-/// VAMP-Unity-Plugin ver.2.0.3+
+/// VAMP-Unity-Plugin
 ///
 /// Created by AdGeneratioin.
 /// Copyright 2018 Supership Inc. All rights reserved.
@@ -64,6 +64,9 @@ public class  VAMPUnitySDK : MonoBehaviour
     private static extern void VAMPUnityGetCountryCode(string gameObjName);
 
     [DllImport("__Internal")]
+    private static extern void VAMPUnitySetTargeting(int gender, int birthYear, int birthMonth, int birthDay);
+
+    [DllImport("__Internal")]
     private static extern string VAMPUnityAdnwSDKVersion(string adnwName);
 
     [DllImport("__Internal")]
@@ -100,13 +103,21 @@ public class  VAMPUnitySDK : MonoBehaviour
 
     #if UNITY_IPHONE
     private static IntPtr vampni = IntPtr.Zero;
-    
+
 #elif UNITY_ANDROID
     private static AndroidJavaObject vampObj = null;
     #endif
 
     private static GameObject messageObj = null;
     private static GameObject countryCodeObj = null;
+
+    public static string VAMPUnityPluginVersion
+    {
+        get
+        {
+            return "2.0.4";
+        }
+    }
 
     /// <summary>
     /// VAMPUnitySDKクラスの準備を行います
@@ -115,6 +126,8 @@ public class  VAMPUnitySDK : MonoBehaviour
     /// <param name="placementID">広告枠ID</param>
     public static void initVAMP(GameObject obj, string placementID)
     {
+        Debug.Log("VAMP-Unity-Plugin version: " + VAMPUnityPluginVersion);
+
         if (placementID == null || placementID.Length <= 0)
         {
             Debug.LogError("PlacementID is not set.");
@@ -500,6 +513,36 @@ public class  VAMPUnitySDK : MonoBehaviour
         #endif
     }
 
+    /// <summary>
+    /// ユーザ属性を指定します
+    /// </summary>
+    /// <param name="targeting"></param>
+    public static void setTargeting(Targeting targeting)
+    {
+        #if UNITY_IPHONE
+        if (Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            VAMPUnitySetTargeting((int)targeting.Gender, 
+                targeting.Birthday.Year, targeting.Birthday.Month, targeting.Birthday.Day);
+        }
+        #elif UNITY_ANDROID
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            AndroidJavaObject user = new AndroidJavaObject("jp.supership.vamp.VAMPTargeting");
+
+            AndroidJavaClass genderCls = new AndroidJavaClass("jp.supership.vamp.VAMPTargeting$Gender");
+            user.Call<AndroidJavaObject>("setGender", genderCls.GetStatic<AndroidJavaObject>(targeting.Gender.ToString()));
+
+            AndroidJavaObject calendar = new AndroidJavaObject("java.util.GregorianCalendar", 
+                                             targeting.Birthday.Year, targeting.Birthday.Month, targeting.Birthday.Day);
+            user.Call<AndroidJavaObject>("setBirthday", calendar.Call<AndroidJavaObject>("getTime"));
+
+            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
+            vampCls.CallStatic("setTargeting", user);
+        }
+        #endif
+    }
+
     #if UNITY_ANDROID
     
     private static string JoinParams(params string[] args)
@@ -620,6 +663,66 @@ public class  VAMPUnitySDK : MonoBehaviour
     }
 
     #endif  // end UNITY_ANDROID
+
+    public enum Gender
+    {
+        /// <summary>
+        /// 性別不明
+        /// </summary>
+        UNKNOWN = 0,
+        /// <summary>
+        /// 男性
+        /// </summary>
+        MALE,
+        /// <summary>
+        /// 女性
+        /// </summary>
+        FEMALE
+    }
+
+    public class Targeting
+    {
+
+        public Gender Gender { get; set; }
+
+        public Birthday Birthday { get; set; }
+
+        public Targeting()
+        {
+            Gender = Gender.UNKNOWN;
+            Birthday = new Birthday();
+        }
+    }
+
+    public class Birthday
+    {
+
+        public int Year { get; }
+
+        public int Month { get; }
+
+        public int Day { get; }
+
+        public Birthday()
+        {
+            Year = 0;
+            Month = 0;
+            Day = 0;
+        }
+
+        /// <summary>
+        /// ユーザの誕生日を指定います
+        /// </summary>
+        /// <param name="year">誕生日 年(西暦)</param>
+        /// <param name="month">誕生日 月</param>
+        /// <param name="day">誕生日 日</param>
+        public Birthday(int year, int month, int day)
+        {
+            Year = year;
+            Month = month;
+            Day = day;
+        }
+    }
 
     public class MessageUtil
     {
