@@ -1,6 +1,6 @@
 //
 //  VAMPNI.mm
-//  VAMP-Unity-Plugin ver.2.0.4
+//  VAMP-Unity-Plugin ver.3.0.3
 //
 //  Created by AdGeneratioin.
 //  Copyright © 2018年 Supership Inc. All rights reserved.
@@ -17,6 +17,7 @@
 #import <FBAudienceNetwork/FBAudienceNetwork.h>
 #import <GoogleMobileAds/GoogleMobileAds.h>
 #import <Maio/Maio.h>
+#import <MVSDK/MVSDK.h>
 #import <NendAd/NendAd.h>
 #import <Tapjoy/Tapjoy.h>
 #import <UnityAds/UnityAds.h>
@@ -51,6 +52,8 @@ NSString *VAMPNIGetErrorMessage(NSInteger code) {
             return @"NO_ADSTOCK";
         case VAMPErrorCodeAdnetworkError:
             return @"ADNETWORK_ERROR";
+        case VAMPErrorCodeNotLoadedAd:
+            return @"NOT_LOADED_AD";
         default:
             return @"UNKNOWN";
     }
@@ -76,6 +79,9 @@ NSString *VAMPNIGetAdnwSDKVersion(NSString *adnwName) {
 #endif
     else if ([adnwName isEqualToString:@"Maio"]) {
         version = [Maio sdkVersion];
+    }
+    else if ([adnwName isEqualToString:@"Mintegral"]) {
+        version = MVSDKVersion;
     }
     else if ([adnwName isEqualToString:@"Nend"]) {
         NSString *ver = [NSString stringWithCString:(const char *) NendAdVersionString
@@ -156,6 +162,9 @@ static NSString * const kVAMPNIInitializeStateStringAll = @"ALL";
 static NSString * const kVAMPNIInitializeStateStringWeight = @"WEIGHT";
 static NSString * const kVAMPNIInitializeStateStringWifiOnly = @"WIFIONLY";
 
+static NSString * const kBoolMessage_True = @"True";
+static NSString * const kBoolMessage_False = @"False";
+
 @interface VAMPNI : NSObject <VAMPDelegate>
 
 @property (nonatomic) VAMP *vamp;
@@ -188,6 +197,13 @@ static VAMPNI *_vampInstance = nil;
     self.gameObjName = gameObjName;
 }
 
+- (void)preload {
+    if (self.vamp) {
+        // VAMP ver.3.0.0から追加されたメソッドです
+        [self.vamp preload];
+    }
+}
+
 - (void)load {
     if (self.vamp) {
         [self.vamp load];
@@ -211,7 +227,7 @@ static VAMPNI *_vampInstance = nil;
 - (void)clearLoaded {
     if (self.vamp) {
         // VAMP ver.2.0.3から追加されたメソッドです。
-        // ver.2.0.2以下のVAMP SDKではビルドエラーとなります
+        // ver.3.0.0からdeprecatedになりました
         [self.vamp clearLoaded];
     }
 }
@@ -251,10 +267,20 @@ static VAMPNI *_vampInstance = nil;
     }
 }
 
-- (void)vampDidFail:(NSString *)placementId error:(VAMPError *)error {
+- (void)vamp:(VAMP *)vamp didFailToLoadWithError:(VAMPError *)error withPlacementId:(NSString *)placementId {
     if (self.canUseGameObj) {
-        NSString *msg = [NSString stringWithFormat:@"%@,%@", placementId,
-                         VAMPNIGetErrorMessage(error.code)];
+        NSString *msg = [NSString stringWithFormat:@"%@,%@", VAMPNIGetErrorMessage(error.code), placementId];
+        UnitySendMessage(self.gameObjName.UTF8String, "VAMPDidFailToLoad", msg.UTF8String);
+        // v3.0.0からVAMPDidFailはdeprecatedです。代わりにVAMPDidFailToLoadを使用してください
+        UnitySendMessage(self.gameObjName.UTF8String, "VAMPDidFail", msg.UTF8String);
+    }
+}
+
+- (void)vamp:(VAMP *)vamp didFailToShowWithError:(VAMPError *)error withPlacementId:(NSString *)placementId {
+    if (self.canUseGameObj) {
+        NSString *msg = [NSString stringWithFormat:@"%@,%@", VAMPNIGetErrorMessage(error.code), placementId];
+        UnitySendMessage(self.gameObjName.UTF8String, "VAMPDidFailToShow", msg.UTF8String);
+        // v3.0.0からVAMPDidFailはdeprecatedです。代わりにVAMPDidFailToShowを使用してください
         UnitySendMessage(self.gameObjName.UTF8String, "VAMPDidFail", msg.UTF8String);
     }
 }
@@ -285,7 +311,7 @@ static VAMPNI *_vampInstance = nil;
     
     if (self.canUseGameObj) {
         NSString *msg = [NSString stringWithFormat:@"%@,%@,%@,%@",
-                         placementId, (success ? @"True" : @"False"), adnwName, message];
+                         placementId, (success ? kBoolMessage_True : kBoolMessage_False), adnwName, message];
         UnitySendMessage(self.gameObjName.UTF8String, "VAMPLoadResult", msg.UTF8String);
     }
 }
@@ -322,6 +348,10 @@ extern "C" {
         [VAMPNI retainInstance:vampniTemp];
         
         return (__bridge void *) vampniTemp;
+    }
+    
+    void VAMPUnityPreload(void *vampni) {
+        [((__bridge VAMPNI *) vampni) preload];
     }
 
     void VAMPUnityLoad(void *vampni) {
@@ -401,6 +431,40 @@ extern "C" {
         [VAMP getCountryCode:^(NSString *countryCode) {
             UnitySendMessage(objName.UTF8String, "VAMPCountryCode", countryCode.UTF8String);
         }];
+    }
+
+    // VAMP v3.0.1から追加されたメソッドです
+    void VAMPUnityIsEUAccess(const char *cObjName) {
+        if (![[VAMP class] respondsToSelector:@selector(isEUAccess:)]) {
+            NSLog(@"VAMPUnityPlugin requires VAMP SDK v3.0.1 or higher.");
+            return;
+        }
+        
+        NSString *objName = [NSString stringWithCString:cObjName encoding:NSUTF8StringEncoding];
+        
+        [VAMP isEUAccess:^(BOOL access) {
+            NSString *msg = access ? kBoolMessage_True : kBoolMessage_False;
+            UnitySendMessage(objName.UTF8String, "VAMPIsEUAccess", msg.UTF8String);
+        }];
+    }
+
+    // VAMP v3.0.1から追加されたメソッドです
+    void VAMPUnitySetUserConsent(int consentStatus) {
+        if (![[VAMP class] respondsToSelector:@selector(setUserConsent:)]) {
+            NSLog(@"VAMPUnityPlugin requires VAMP SDK v3.0.1 or higher.");
+            return;
+        }
+        
+        switch (consentStatus) {
+            case 1:
+                [VAMP setUserConsent:kVAMPConsentStatusAccepted];
+                break;
+            case 2:
+                [VAMP setUserConsent:kVAMPConsentStatusDenied];
+                break;
+            default:
+                [VAMP setUserConsent:kVAMPConsentStatusUnknown];
+        }
     }
 
     void VAMPUnitySetTargeting(int gender, int birthYear, int birthMonth, int birthDay) {

@@ -48,6 +48,7 @@ public class SDKTestUtil
             infos.Add("SDK_Ver(AppLovin)：" + GetAdnwSDKVersion("AppLovin"));
             infos.Add("SDK_Ver(FAN)：" + GetAdnwSDKVersion("FAN"));
             infos.Add("SDK_Ver(Maio)：" + GetAdnwSDKVersion("Maio"));
+            infos.Add("SDK_Ver(Mintegral)：" + GetAdnwSDKVersion("Mintegral"));
             infos.Add("SDK_Ver(Nend)：" + GetAdnwSDKVersion("Nend"));
             infos.Add("SDK_Ver(Tapjoy)：" + GetAdnwSDKVersion("Tapjoy"));
             infos.Add("SDK_Ver(UnityAds)：" + GetAdnwSDKVersion("UnityAds"));
@@ -110,6 +111,7 @@ public class SDKTestUtil
             infos.Add("SDK_Ver(AppLovin)：" + GetAdnwSDKVersion("AppLovin"));
             infos.Add("SDK_Ver(FAN)：" + GetAdnwSDKVersion("FAN"));
             infos.Add("SDK_Ver(Maio)：" + GetAdnwSDKVersion("Maio"));
+            infos.Add("SDK_Ver(Mintegral)：" + GetAdnwSDKVersion("Mintegral"));
             infos.Add("SDK_Ver(Nend)：" + GetAdnwSDKVersion("Nend"));
             infos.Add("SDK_Ver(Tapjoy)：" + GetAdnwSDKVersion("Tapjoy"));
             infos.Add("SDK_Ver(UnityAds)：" + GetAdnwSDKVersion("UnityAds"));
@@ -169,15 +171,20 @@ public class SDKTestUtil
                         version = cls.GetStatic<string>("VERSION");
                         break;
                     case "FAN":
-                        cls = new AndroidJavaClass("com.facebook.ads.internal.AdSdkVersion");
-                        version = cls.GetStatic<string>("BUILD");
+                        cls = new AndroidJavaClass("com.facebook.ads.BuildConfig");
+                        version = cls.GetStatic<string>("VERSION_NAME");
                         break;
                     case "Maio":
                         cls = new AndroidJavaClass("jp.maio.sdk.android.MaioAds");
                         version = cls.CallStatic<string>("getSdkVersion");
                         break;
+                    case "Mintegral":
+                        cls = new AndroidJavaClass("com.mobvista.msdk.out.MVConfiguration");
+                        version = cls.GetStatic<string>("SDK_VERSION");
+                        break;
                     case "Nend":
-                        version = "Unknown";
+                        cls = new AndroidJavaClass("net.nend.android.BuildConfig");
+                        version = cls.GetStatic<string>("VERSION_NAME");
                         break;
                     case "Tapjoy":
                         cls = new AndroidJavaClass("com.tapjoy.Tapjoy");
@@ -188,8 +195,8 @@ public class SDKTestUtil
                         version = cls.CallStatic<string>("getVersion");
                         break;
                     case "Vungle":
-                        cls = new AndroidJavaClass("com.vungle.publisher.VunglePub");
-                        version = cls.GetStatic<string>("VERSION");
+                        cls = new AndroidJavaClass("com.vungle.warren.BuildConfig");
+                        version = cls.GetStatic<string>("VERSION_NAME");
                         break;
                 }
             }

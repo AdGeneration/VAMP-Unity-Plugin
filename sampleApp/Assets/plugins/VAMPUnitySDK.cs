@@ -11,12 +11,15 @@ using System.Runtime.InteropServices;
 /// Copyright 2018 Supership Inc. All rights reserved.
 ///
 /// </summary>
-public class  VAMPUnitySDK : MonoBehaviour
+public class VAMPUnitySDK : MonoBehaviour
 {
-    #if UNITY_IPHONE
-    
+#if UNITY_IPHONE
+
     [DllImport("__Internal")]
     private static extern IntPtr VAMPUnityInit(IntPtr vampni, string placementId, string gameObjName);
+
+    [DllImport("__Internal")]
+    private static extern void VAMPUnityPreload(IntPtr vampni);
 
     [DllImport("__Internal")]
     private static extern void VAMPUnityLoad(IntPtr vampni);
@@ -64,6 +67,12 @@ public class  VAMPUnitySDK : MonoBehaviour
     private static extern void VAMPUnityGetCountryCode(string gameObjName);
 
     [DllImport("__Internal")]
+    private static extern void VAMPUnityIsEUAccess(string gameObjName);
+
+    [DllImport("__Internal")]
+    private static extern void VAMPUnitySetUserConsent(int consentStatus);
+
+    [DllImport("__Internal")]
     private static extern void VAMPUnitySetTargeting(int gender, int birthYear, int birthMonth, int birthDay);
 
     [DllImport("__Internal")]
@@ -72,7 +81,7 @@ public class  VAMPUnitySDK : MonoBehaviour
     [DllImport("__Internal")]
     private static extern string VAMPUnityDeviceInfo(string infoName);
 
-    #endif
+#endif
 
     public enum InitializeState
     {
@@ -96,26 +105,43 @@ public class  VAMPUnitySDK : MonoBehaviour
         WIFIONLY
     }
 
-    #if UNITY_ANDROID
+    public enum ConsentStatus
+    {
+        /// <summary>
+        /// ユーザの同意が不明です(デフォルト)
+        /// </summary>
+        UNKNOWN = 0,
+        /// <summary>
+        /// ユーザは同意しています
+        /// </summary>
+        ACCEPTED,
+        /// <summary>
+        /// ユーザは拒否しています
+        /// </summary>
+        DENIED
+    }
+
+#if UNITY_ANDROID
     private const string VampClass = "jp.supership.vamp.VAMP";
     private const string UnityPlayerClass = "com.unity3d.player.UnityPlayer";
-    #endif
+#endif
 
-    #if UNITY_IPHONE
+#if UNITY_IPHONE
     private static IntPtr vampni = IntPtr.Zero;
 
 #elif UNITY_ANDROID
     private static AndroidJavaObject vampObj = null;
-    #endif
+#endif
 
     private static GameObject messageObj = null;
     private static GameObject countryCodeObj = null;
+    private static GameObject userConsentObj = null;
 
     public static string VAMPUnityPluginVersion
     {
         get
         {
-            return "2.0.4";
+            return "3.0.3";
         }
     }
 
@@ -136,12 +162,12 @@ public class  VAMPUnitySDK : MonoBehaviour
 
         messageObj = obj;
 
-        #if UNITY_IPHONE
+#if UNITY_IPHONE
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             vampni = VAMPUnityInit(vampni, placementID, messageObj.name);
         }
-        #elif UNITY_ANDROID
+#elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
             if (vampObj == null)
@@ -151,10 +177,32 @@ public class  VAMPUnitySDK : MonoBehaviour
                 AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
                 vampObj = vampCls.CallStatic<AndroidJavaObject>("getVampInstance", activity, placementID);
                 vampObj.Call("setVAMPListener", new AdListener());
-                vampObj.Call("setAdvancedListner", new AdvListener());
+                vampObj.Call("setAdvancedListener", new AdvListener());
             }
         }
-        #endif
+#endif
+    }
+
+    /// <summary>
+    /// 広告をロードします。
+    /// ロードする際にVAMPからの通知を受け取る必要がないときに使います
+    /// </summary>
+    public static void preload()
+    {
+#if UNITY_IPHONE
+        if (Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            VAMPUnityPreload(vampni);
+        }
+#elif UNITY_ANDROID
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            if (vampObj != null)
+            {
+                vampObj.Call("preload");
+            }
+        }
+#endif
     }
 
     /// <summary>
@@ -162,12 +210,12 @@ public class  VAMPUnitySDK : MonoBehaviour
     /// </summary>
     public static void load()
     {
-        #if UNITY_IPHONE
+#if UNITY_IPHONE
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             VAMPUnityLoad(vampni);
         }
-        #elif UNITY_ANDROID
+#elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
             if (vampObj != null)
@@ -175,7 +223,7 @@ public class  VAMPUnitySDK : MonoBehaviour
                 vampObj.Call("load");
             }
         }
-        #endif
+#endif
     }
 
     /// <summary>
@@ -185,12 +233,12 @@ public class  VAMPUnitySDK : MonoBehaviour
     {
         bool ret = false;
 
-        #if UNITY_IPHONE
+#if UNITY_IPHONE
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             ret = VAMPUnityShow(vampni);
         }
-        #elif UNITY_ANDROID
+#elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
             if (vampObj != null)
@@ -198,7 +246,7 @@ public class  VAMPUnitySDK : MonoBehaviour
                 ret = vampObj.Call<bool>("show");
             }
         }
-        #endif
+#endif
 
         return ret;
     }
@@ -210,12 +258,12 @@ public class  VAMPUnitySDK : MonoBehaviour
     {
         bool ret = false;
 
-        #if UNITY_IPHONE
+#if UNITY_IPHONE
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             ret = VAMPUnityIsReady(vampni);
         }
-        #elif UNITY_ANDROID
+#elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
             if (vampObj != null)
@@ -223,7 +271,7 @@ public class  VAMPUnitySDK : MonoBehaviour
                 ret = vampObj.Call<bool>("isReady");
             }
         }
-        #endif
+#endif
 
         return ret;
     }
@@ -231,14 +279,15 @@ public class  VAMPUnitySDK : MonoBehaviour
     /// <summary>
     /// ロード済みの広告を破棄します
     /// </summary>
+    [Obsolete("Deprecated")]
     public static void clearLoaded()
     {
-        #if UNITY_IPHONE
+#if UNITY_IPHONE
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             VAMPUnityClearLoaded(vampni);
         }
-        #elif UNITY_ANDROID
+#elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
             if (vampObj != null)
@@ -246,7 +295,7 @@ public class  VAMPUnitySDK : MonoBehaviour
                 vampObj.Call("clearLoaded");
             }
         }
-        #endif
+#endif
     }
 
     /// <summary>
@@ -261,12 +310,12 @@ public class  VAMPUnitySDK : MonoBehaviour
             return;
         }
 
-        #if UNITY_IPHONE
+#if UNITY_IPHONE
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             VAMPUnityInitializeAdnwSDK(placementID);
         }
-        #elif UNITY_ANDROID
+#elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
             AndroidJavaClass player = new AndroidJavaClass(UnityPlayerClass);
@@ -274,7 +323,7 @@ public class  VAMPUnitySDK : MonoBehaviour
             AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
             vampCls.CallStatic("initializeAdnwSDK", activity, placementID);
         }
-        #endif
+#endif
     }
 
     /// <summary>
@@ -291,12 +340,12 @@ public class  VAMPUnitySDK : MonoBehaviour
             return;
         }
 
-        #if UNITY_IPHONE
+#if UNITY_IPHONE
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             VAMPUnityInitializeAdnwSDKWithConfig(placementID, state, duration);
         }
-        #elif UNITY_ANDROID
+#elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
             AndroidJavaClass player = new AndroidJavaClass(UnityPlayerClass);
@@ -305,7 +354,7 @@ public class  VAMPUnitySDK : MonoBehaviour
             AndroidJavaClass initStateCls = new AndroidJavaClass("jp.supership.vamp.VAMP$VAMPInitializeState");
             vampCls.CallStatic("initializeAdnwSDK", activity, placementID, initStateCls.GetStatic<AndroidJavaObject>(state), duration);
         }
-        #endif
+#endif
     }
 
     /// <summary>
@@ -316,18 +365,18 @@ public class  VAMPUnitySDK : MonoBehaviour
     /// <param name="testMode"></param>
     public static void setTestMode(bool testMode)
     {
-        #if UNITY_IPHONE
+#if UNITY_IPHONE
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             VAMPUnitySetTestMode(testMode);
         }
-        #elif UNITY_ANDROID
+#elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
             AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
             vampCls.CallStatic("setTestMode", testMode);
         }
-        #endif
+#endif
     }
 
     /// <summary>
@@ -337,18 +386,18 @@ public class  VAMPUnitySDK : MonoBehaviour
     {
         bool ret = false;
 
-        #if UNITY_IPHONE
+#if UNITY_IPHONE
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             ret = VAMPUnityIsTestMode();
         }
-        #elif UNITY_ANDROID
+#elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
             AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
             ret = vampCls.CallStatic<bool>("isTestMode");
         }
-        #endif
+#endif
 
         return ret;
     }
@@ -360,18 +409,18 @@ public class  VAMPUnitySDK : MonoBehaviour
     /// <param name="debugMode"></param>
     public static void setDebugMode(bool debugMode)
     {
-        #if UNITY_IPHONE
+#if UNITY_IPHONE
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             VAMPUnitySetDebugMode(debugMode);
         }
-        #elif UNITY_ANDROID
+#elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
             AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
             vampCls.CallStatic("setDebugMode", debugMode);
         }
-        #endif
+#endif
     }
 
     /// <summary>
@@ -381,18 +430,18 @@ public class  VAMPUnitySDK : MonoBehaviour
     {
         bool ret = false;
 
-        #if UNITY_IPHONE
+#if UNITY_IPHONE
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             ret = VAMPUnityIsDebugMode();
         }
-        #elif UNITY_ANDROID
+#elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
             AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
             ret = vampCls.CallStatic<bool>("isDebugMode");
         }
-        #endif
+#endif
 
         return ret;
     }
@@ -405,18 +454,18 @@ public class  VAMPUnitySDK : MonoBehaviour
     {
         string ret = "unknown";
 
-        #if UNITY_IPHONE
+#if UNITY_IPHONE
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             ret = VAMPUnitySDKVersion();
         }
-        #elif UNITY_ANDROID
+#elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
             AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
             ret = vampCls.CallStatic<string>("SDKVersion");
         }
-        #endif
+#endif
 
         return ret;
     }
@@ -428,18 +477,18 @@ public class  VAMPUnitySDK : MonoBehaviour
     {
         float ret = 0;
 
-        #if UNITY_IPHONE
+#if UNITY_IPHONE
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             ret = VAMPUnitySupportedOSVersion();
         }
-        #elif UNITY_ANDROID
+#elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
             AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
             ret = vampCls.CallStatic<int>("SupportedOSVersion");
         }
-        #endif
+#endif
 
         return ret;
     }
@@ -451,18 +500,18 @@ public class  VAMPUnitySDK : MonoBehaviour
     {
         bool ret = false;
 
-        #if UNITY_IPHONE
+#if UNITY_IPHONE
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             ret = VAMPUnityIsSupportedOSVersion();
         }
-        #elif UNITY_ANDROID
+#elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
             AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
             ret = vampCls.CallStatic<bool>("isSupportedOSVersion");
         }
-        #endif
+#endif
 
         return ret;
     }
@@ -473,18 +522,18 @@ public class  VAMPUnitySDK : MonoBehaviour
     /// <param name="timeout">単位:秒</param>
     public static void setMediationTimeout(int timeout)
     {
-        #if UNITY_IPHONE
+#if UNITY_IPHONE
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             VAMPUnitySetMediationTimeout(timeout);
         }
-        #elif UNITY_ANDROID
+#elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
             AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
             vampCls.CallStatic("setMediationTimeout", timeout);
         }
-        #endif
+#endif
     }
 
     /// <summary>
@@ -497,12 +546,12 @@ public class  VAMPUnitySDK : MonoBehaviour
     {
         countryCodeObj = obj;
 
-        #if UNITY_IPHONE
+#if UNITY_IPHONE
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             VAMPUnityGetCountryCode(countryCodeObj.name);
         }
-        #elif UNITY_ANDROID
+#elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
             AndroidJavaClass player = new AndroidJavaClass(UnityPlayerClass);
@@ -510,7 +559,51 @@ public class  VAMPUnitySDK : MonoBehaviour
             AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
             vampCls.CallStatic("getCountryCode", activity, new GetCountryCodeListener());
         }
-        #endif
+#endif
+    }
+
+    /// <summary>
+    /// EU圏内からのアクセスか判定します。
+    /// 結果はVAMPIsEUAccessメソッドを通じて返却されます
+    /// </summary>
+    /// <param name="obj">GameObject</param>
+    public static void isEUAccess(GameObject obj)
+    {
+        userConsentObj = obj;
+
+#if UNITY_IPHONE
+        if (Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            VAMPUnityIsEUAccess(userConsentObj.name);
+        }
+#elif UNITY_ANDROID
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
+            vampCls.CallStatic("isEUAccess", new UserConsentListener());
+        }
+#endif
+    }
+
+    /// <summary>
+    /// ユーザの同意がある場合はConsentStatus.Acceptedをセットします
+    /// </summary>
+    /// <param name="status">ConsentStatus</param>
+    public static void setUserConsent(ConsentStatus status)
+    {
+#if UNITY_IPHONE
+        if (Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            VAMPUnitySetUserConsent((int)status);
+        }
+#elif UNITY_ANDROID
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            AndroidJavaClass consentStatusCls = new AndroidJavaClass("jp.supership.vamp.VAMPPrivacySettings$ConsentStatus");
+            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
+            vampCls.CallStatic("setUserConsent", consentStatusCls.GetStatic<AndroidJavaObject>(status.ToString()));
+        }
+#endif
     }
 
     /// <summary>
@@ -519,13 +612,13 @@ public class  VAMPUnitySDK : MonoBehaviour
     /// <param name="targeting"></param>
     public static void setTargeting(Targeting targeting)
     {
-        #if UNITY_IPHONE
+#if UNITY_IPHONE
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             VAMPUnitySetTargeting((int)targeting.Gender, 
                 targeting.Birthday.Year, targeting.Birthday.Month, targeting.Birthday.Day);
         }
-        #elif UNITY_ANDROID
+#elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
             AndroidJavaObject user = new AndroidJavaObject("jp.supership.vamp.VAMPTargeting");
@@ -533,18 +626,18 @@ public class  VAMPUnitySDK : MonoBehaviour
             AndroidJavaClass genderCls = new AndroidJavaClass("jp.supership.vamp.VAMPTargeting$Gender");
             user.Call<AndroidJavaObject>("setGender", genderCls.GetStatic<AndroidJavaObject>(targeting.Gender.ToString()));
 
-            AndroidJavaObject calendar = new AndroidJavaObject("java.util.GregorianCalendar", 
-                                             targeting.Birthday.Year, targeting.Birthday.Month, targeting.Birthday.Day);
+            AndroidJavaObject calendar = new AndroidJavaObject("java.util.GregorianCalendar",
+                                             targeting.Birthday.Year, targeting.Birthday.Month - 1, targeting.Birthday.Day);
             user.Call<AndroidJavaObject>("setBirthday", calendar.Call<AndroidJavaObject>("getTime"));
 
             AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
             vampCls.CallStatic("setTargeting", user);
         }
-        #endif
+#endif
     }
 
-    #if UNITY_ANDROID
-    
+#if UNITY_ANDROID
+
     private static string JoinParams(params string[] args)
     {
         if (args.Length <= 0)
@@ -579,6 +672,30 @@ public class  VAMPUnitySDK : MonoBehaviour
         }
     }
 
+    class UserConsentListener : AndroidJavaProxy
+    {
+
+        public UserConsentListener()
+            : base("jp.supership.vamp.VAMPPrivacySettings$UserConsentListener")
+        {
+        }
+
+        public override AndroidJavaObject Invoke(string methodName, object[] javaArgs)
+        {
+            switch (methodName)
+            {
+                case "onRequired":
+                    // javaArgs[0]:isRequired
+                    userConsentObj.SendMessage("VAMPIsEUAccess", JoinParams(((bool)javaArgs[0]).ToString()));
+                    break;
+                default:
+                    return base.Invoke(methodName, javaArgs);
+            }
+
+            return null;
+        }
+    }
+
     class AdListener : AndroidJavaProxy
     {
 
@@ -592,31 +709,43 @@ public class  VAMPUnitySDK : MonoBehaviour
             switch (methodName)
             {
                 case "onReceive":
-                // javaArgs[0]:placementId
-                // javaArgs[1]:adnwName
+                    // javaArgs[0]:placementId
+                    // javaArgs[1]:adnwName
                     messageObj.SendMessage("VAMPDidReceive",
                         JoinParams((string)javaArgs[0], (string)javaArgs[1]));
                     break;
-                case "onFail":
-                // javaArgs[0]:placementId
-                // javaArgs[1]:error
+                case "onFailedToLoad":
+                    // javaArgs[0]:error
+                    // javaArgs[1]:placementId
+                    messageObj.SendMessage("VAMPDidFailToLoad",
+                        JoinParams(((AndroidJavaObject)javaArgs[0]).Call<string>("name"), (string)javaArgs[1]));
+                    break;
+                case "onFailedToShow":
+                    // javaArgs[0]:error
+                    // javaArgs[1]:placementId
+                    messageObj.SendMessage("VAMPDidFailToShow",
+                        JoinParams(((AndroidJavaObject)javaArgs[0]).Call<string>("name"), (string)javaArgs[1]));
+                    break;
+                case "onFail":  // Deprecated
+                                // javaArgs[0]:placementId
+                                // javaArgs[1]:error
                     messageObj.SendMessage("VAMPDidFail",
                         JoinParams((string)javaArgs[0], ((AndroidJavaObject)javaArgs[1]).Call<string>("name")));
                     break;
                 case "onComplete":
-                // javaArgs[0]:placementId
-                // javaArgs[1]:adnwName
+                    // javaArgs[0]:placementId
+                    // javaArgs[1]:adnwName
                     messageObj.SendMessage("VAMPDidComplete",
                         JoinParams((string)javaArgs[0], (string)javaArgs[1]));
                     break;
                 case "onClose":
-                // javaArgs[0]:placementId
-                // javaArgs[1]:adnwName
+                    // javaArgs[0]:placementId
+                    // javaArgs[1]:adnwName
                     messageObj.SendMessage("VAMPDidClose",
                         JoinParams((string)javaArgs[0], (string)javaArgs[1]));
                     break;
                 case "onExpired":
-                // javaArgs[0]:placementId
+                    // javaArgs[0]:placementId
                     messageObj.SendMessage("VAMPDidExpired",
                         JoinParams((string)javaArgs[0]));
                     break;
@@ -641,16 +770,16 @@ public class  VAMPUnitySDK : MonoBehaviour
             switch (methodName)
             {
                 case "onLoadStart":
-                // javaArgs[0]:placementId
-                // javaArgs[1]:adnwName
+                    // javaArgs[0]:placementId
+                    // javaArgs[1]:adnwName
                     messageObj.SendMessage("VAMPLoadStart",
                         JoinParams((string)javaArgs[0], (string)javaArgs[1]));
                     break;
                 case "onLoadResult":
-                // javaArgs[0]:placementId
-                // javaArgs[1]:success
-                // javaArgs[2]:adnwName
-                // javaArgs[3]:message
+                    // javaArgs[0]:placementId
+                    // javaArgs[1]:success
+                    // javaArgs[2]:adnwName
+                    // javaArgs[3]:message
                     messageObj.SendMessage("VAMPLoadResult",
                         JoinParams((string)javaArgs[0], ((bool)javaArgs[1]).ToString(), (string)javaArgs[2], (string)javaArgs[3]));
                     break;
@@ -662,7 +791,7 @@ public class  VAMPUnitySDK : MonoBehaviour
         }
     }
 
-    #endif  // end UNITY_ANDROID
+#endif  // end UNITY_ANDROID
 
     public enum Gender
     {
@@ -714,7 +843,7 @@ public class  VAMPUnitySDK : MonoBehaviour
         /// ユーザの誕生日を指定います
         /// </summary>
         /// <param name="year">誕生日 年(西暦)</param>
-        /// <param name="month">誕生日 月</param>
+        /// <param name="month">誕生日 月. int型の1~12の範囲で指定します</param>
         /// <param name="day">誕生日 日</param>
         public Birthday(int year, int month, int day)
         {
@@ -745,14 +874,14 @@ public class  VAMPUnitySDK : MonoBehaviour
         {
             string ret = "unknown";
 
-            #if UNITY_IPHONE
+#if UNITY_IPHONE
             if (Application.platform == RuntimePlatform.IPhonePlayer)
             {
                 ret = VAMPUnityAdnwSDKVersion(adnw);
             }
-            #elif UNITY_ANDROID
+#elif UNITY_ANDROID
             // Nothing to do
-            #endif
+#endif
 
             return ret;
         }
@@ -765,14 +894,14 @@ public class  VAMPUnitySDK : MonoBehaviour
         {
             string ret = "unknown";
 
-            #if UNITY_IPHONE
+#if UNITY_IPHONE
             if (Application.platform == RuntimePlatform.IPhonePlayer)
             {
                 ret = VAMPUnityDeviceInfo(infoName);
             }
-            #elif UNITY_ANDROID
+#elif UNITY_ANDROID
             // Nothing to do
-            #endif
+#endif
 
             return ret;
         }
