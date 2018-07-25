@@ -7,14 +7,14 @@ using System.IO;
 
 public class PostBuildProcess
 {
-    #if UNITY_IPHONE
+    #if UNITY_IOS
 
     [PostProcessBuild]
     public static void OnPostProcessBuild(BuildTarget buildTarget, string path)
     {
         if (buildTarget == BuildTarget.iOS)
         {
-            string projPath = path + "/Unity-iPhone.xcodeproj/project.pbxproj";
+            string projPath = PBXProject.GetPBXProjectPath (path);
             PBXProject proj = new PBXProject();
             proj.ReadFromFile(projPath);
 

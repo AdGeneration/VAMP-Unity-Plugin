@@ -4,7 +4,18 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
+/// <summary>
+/// SDKTest class.
+/// </summary>
+/// <remarks>
+/// VAMP v3.0.4から大きくAPIが変更しているため、
+/// VAMP v3.0.3もしくはそれよりも古いバージョンで動作を確認する場合は
+/// Scripting Define SymbolsにVAMP_3_0_3_OR_OLDERを追加してください。
+/// </remarks>
 public class SDKTest : MonoBehaviour
+#if !VAMP_3_0_3_OR_OLDER
+, VAMPUnitySDK.IVAMPListener, VAMPUnitySDK.IVAMPAdvancedListener
+#endif
 {
     /**
      * テスト用広告枠IDを使用して広告表示を確認することができます
@@ -26,6 +37,7 @@ public class SDKTest : MonoBehaviour
     // アドネットワークSDKの初期化モード
     public VAMPUnitySDK.InitializeState initializeState;
     // アドネットワークSDKの初期化実行間隔 (単位:秒)
+    [Range(4, 60)]
     public int initializeDuration;
     // ターゲティング属性 ユーザの性別
     public VAMPUnitySDK.Gender userGender = VAMPUnitySDK.Gender.UNKNOWN;
@@ -34,15 +46,19 @@ public class SDKTest : MonoBehaviour
     public int userBirthMonth = 2;
     public int userBirthDay = 20;
 
+    public FrequencyCap frequencyCap;
+    public VAMPConfig vampConfig;
+
     public Texture logoTexture;
     public Texture btnOnTexture;
     public Texture btnOffTexture;
-
+    
     private enum Block
     {
         Title = 0,
         Ad1,
         Ad2,
+        Ad3,
         Info
     }
 
@@ -92,9 +108,19 @@ public class SDKTest : MonoBehaviour
         }
     }
 
+    void Awake()
+    {
+        Application.logMessageReceived += OnLogMessageReceived;
+    }
+
+    void OnDestroy()
+    {
+        Application.logMessageReceived -= OnLogMessageReceived;
+    }
+
     void Start()
     {
-#if UNITY_IPHONE
+#if UNITY_IOS
         placementID = iosPlacementID;
 #elif UNITY_ANDROID
         placementID = androidPlacementID;
@@ -113,6 +139,13 @@ public class SDKTest : MonoBehaviour
         //targeting.Gender = userGender;
         //targeting.Birthday = new VAMPUnitySDK.Birthday(userBirthYear, userBirthMonth, userBirthDay);
         //VAMPUnitySDK.setTargeting(targeting);
+
+        var vampConfiguration = VAMPUnitySDK.VAMPConfiguration.getInstance();
+        vampConfiguration.PlayerCancelable = vampConfig.playerCancelable;
+        vampConfiguration.PlayerAlertTitleText = vampConfig.playerAlertTitleText;
+        vampConfiguration.PlayerAlertBodyText = vampConfig.playerAlertBodyText;
+        vampConfiguration.PlayerAlertCloseButtonText = vampConfig.playerAlertCloseButtonText;
+        vampConfiguration.PlayerAlertContinueButtonText = vampConfig.playerAlertContinueButtonText;
 
         blk = Block.Title;
         isVampInitialized = false;
@@ -139,7 +172,23 @@ public class SDKTest : MonoBehaviour
         infos = SDKTestUtil.GetDeviceInfo();
 
         // EU圏内からのアクセスか判定します
-        //VAMPUnitySDK.isEUAccess(gameObject);
+//#if VAMP_3_0_3_OR_OLDER
+//        VAMPUnitySDK.isEUAccess(gameObject);
+//#else
+//        VAMPUnitySDK.isEUAccess((bool access) => {
+//            AddMessage(string.Format("IsEUAccess {0}", access));
+
+//            Debug.Log("[VAMPUnitySDK] VAMPIsEUAccess: " + access);
+
+//            if (access)
+//            {
+//                // TODO: ユーザに広告が個人に関連する情報を取得することの同意を求めます
+
+//                // ユーザの入力を受け付けACCEPTEDまたはDENIEDをセットします
+//                VAMPUnitySDK.setUserConsent(VAMPUnitySDK.ConsentStatus.ACCEPTED);
+//            }
+//        });
+//#endif
     }
 
     void Update()
@@ -178,7 +227,7 @@ public class SDKTest : MonoBehaviour
             labelStyle.fontSize = 25;
 
             GUI.Label(new Rect(0, height - 60 - safeAreaInsets.Bottom, width, 50),
-                      "APP " + appVersion + " / SDK " + sdkVersion);
+                "APP " + appVersion + " / SDK " + sdkVersion);
 
             labelStyle.fontSize = 30;
 
@@ -253,7 +302,11 @@ public class SDKTest : MonoBehaviour
 
                 // アドネットワークSDKを事前に初期化しておくことができます。
                 // アプリ起動時などのタイミングで1度だけ使用してください
+#if VAMP_3_0_3_OR_OLDER
                 VAMPUnitySDK.initializeAdnwSDK(placementID, initializeState.ToString(), initializeDuration);
+#else
+                VAMPUnitySDK.initializeAdnwSDK(placementID, initializeState, initializeDuration);
+#endif
             }
 
             GUILayout.EndArea();
@@ -274,7 +327,13 @@ public class SDKTest : MonoBehaviour
                 VAMPUnitySDK.setDebugMode(debugMode);
 
                 // VAMPを初期化します。必ずLoadより先に実行してください
+#if VAMP_3_0_3_OR_OLDER
                 VAMPUnitySDK.initVAMP(gameObject, placementID);
+#else
+                VAMPUnitySDK.initialize(placementID);
+                VAMPUnitySDK.setVAMPListener(this);
+                VAMPUnitySDK.setAdvancedListener(this);
+#endif
             }
 
             if (GUI.Button(new Rect(100, 410, 340, 60), "AD2"))
@@ -291,18 +350,57 @@ public class SDKTest : MonoBehaviour
                 VAMPUnitySDK.setDebugMode(debugMode);
 
                 // VAMPを初期化します。必ずLoadより先に実行してください
+#if VAMP_3_0_3_OR_OLDER
                 VAMPUnitySDK.initVAMP(gameObject, placementID);
-
+#else
+                VAMPUnitySDK.initialize(placementID);
+                VAMPUnitySDK.setVAMPListener(this);
+                VAMPUnitySDK.setAdvancedListener(this);
+#endif
                 // 広告のプリロードを開始します
                 VAMPUnitySDK.preload();
             }
 
-            if (GUI.Button(new Rect(100, 490, 340, 60), "INFO"))
+            if (GUI.Button(new Rect(100, 490, 340, 60), "AD3"))
+            {
+                blk = Block.Ad3;
+
+                isVampInitialized = true;
+
+                // trueを指定すると収益が発生しないテスト広告が配信されるようになります。
+                // ストアに申請する際は必ずfalseを設定してください
+                VAMPUnitySDK.setTestMode(testMode);
+
+                // trueを指定するとログを詳細に出力するデバッグモードになります
+                VAMPUnitySDK.setDebugMode(debugMode);
+
+                // VAMPを初期化します。必ずLoadより先に実行してください
+#if VAMP_3_0_3_OR_OLDER
+                VAMPUnitySDK.initVAMP(gameObject, placementID);
+#else
+                VAMPUnitySDK.initialize(placementID);
+                VAMPUnitySDK.setVAMPListener(this);
+                VAMPUnitySDK.setAdvancedListener(this);
+#endif
+            }
+           
+            if (GUI.Button(new Rect(100, 570, 340, 60), "INFO"))
             {
                 blk = Block.Info;
 
+
                 // 国コード取得サンプル
+#if VAMP_3_0_3_OR_LOWER
                 VAMPUnitySDK.getCountryCode(gameObject);
+#else
+                VAMPUnitySDK.getCountryCode((string countryCode) =>
+                    {
+                        this.countryCode = countryCode;
+                        AddMessage(string.Format("CountryCode {0}", countryCode));
+
+                        Debug.Log("[VAMPUnitySDK] VAMPCountryCode: " + countryCode);
+                    });
+#endif
             }
         }
         else if (blk == Block.Ad1)
@@ -330,7 +428,6 @@ public class SDKTest : MonoBehaviour
                 Debug.Log("[VAMPUnitySDK] VAMPUnitySDK.load()");
 
                 VAMPUnitySDK.load();
-
                 isLoading = true;
             }
 
@@ -444,6 +541,106 @@ public class SDKTest : MonoBehaviour
             GUILayout.EndScrollView();
             GUILayout.EndArea();
         }
+        else if (blk == Block.Ad3)
+        {
+            logoCube.SetActive(true);
+
+            if (GUI.Button(new Rect(0, safeAreaInsets.Top, 120, 60), "＜戻る"))
+            {
+                blk = Block.Title;
+
+                VAMPUnitySDK.clearLoaded();
+
+                isLoading = false;
+
+                messages.Clear();
+
+                logPosition = Vector2.zero;
+            }
+
+            if (GUI.Button(new Rect(140, safeAreaInsets.Top, 120, 60), "LOAD"))
+            {
+                AddMessage("click load button.");
+
+                // 動画広告ロードを開始します
+                Debug.Log("[VAMPUnitySDK] VAMPUnitySDK.load()");
+
+                VAMPUnitySDK.load();
+                isLoading = true;
+            }
+
+            if (GUI.Button(new Rect(280, safeAreaInsets.Top, 120, 60), "SHOW"))
+            {
+                AddMessage("click show button.");
+
+                // 動画広告が準備できているときは広告を表示します
+                if (VAMPUnitySDK.isReady())
+                {
+                    Debug.Log("[VAMPUnitySDK] VAMPUnitySDK.show()");
+
+                    VAMPUnitySDK.show();
+                }
+            }
+
+            if (GUI.Button(new Rect(70, 70 + safeAreaInsets.Top, 400, 60), "SetFrequencyCap"))
+            {
+                AddMessage("click SetFrequencyCap button.");
+
+                VAMPUnitySDK.setFrequencyCap(placementID, frequencyCap.impressions, frequencyCap.timeLimit);
+            }
+
+            if (GUI.Button(new Rect(70, 150 + safeAreaInsets.Top, 400, 60), "GetFrequencyCappedStatus"))
+            {
+                AddMessage("click GetFrequencyCappedStatus button.");
+
+                using (var fpStatus = VAMPUnitySDK.getFrequencyCappedStatus(placementID))
+                {
+                    AddMessage(string.Format("capped:{0}, impressions:{1}, remainingTime:{2}, impressionLimit:{3}, timeLimit:{4}", 
+                        fpStatus.IsCapped, fpStatus.Impressions, fpStatus.RemainingTime, fpStatus.ImpressionLimit, fpStatus.TimeLimit));
+                }
+            }
+
+            if (GUI.Button(new Rect(70, 230 + safeAreaInsets.Top, 400, 60), "ClearFrequencyCap"))
+            {
+                AddMessage("click clearFrequencyCap button");
+                VAMPUnitySDK.clearFrequencyCap(placementID);
+            }
+
+            if (GUI.Button(new Rect(70, 310 + safeAreaInsets.Top, 400, 60), "ResetFrequencyCap"))
+            {
+                AddMessage("click resetFrequencyCap button");
+                VAMPUnitySDK.resetFrequencyCap(placementID);
+            }
+
+            labelStyle.fontSize = 25;
+
+            GUI.Label(new Rect(0, 390 + safeAreaInsets.Top, width, 50),
+                "[Test:" + testMode + "] [Debug:" + debugMode + "]");
+
+            GUI.Label(new Rect(0, 440 + safeAreaInsets.Top, width, 50),
+                "ID:" + placementID);
+
+            GUILayout.BeginArea(new Rect(20, 490 + safeAreaInsets.Top, width - 40, height - 190 - safeAreaInsets.Bottom));
+
+            logPosition = GUILayout.BeginScrollView(logPosition);
+
+            labelStyle.alignment = TextAnchor.MiddleLeft;
+            labelStyle.fontSize = 20;
+
+            int count = 0;
+
+            for (int i = messages.Count - 1; i >= 0; i--)
+            {
+                GUILayout.Label(messages[i], labelStyle);
+                count++;
+
+                if (count >= 200)
+                    break;
+            }
+
+            GUILayout.EndScrollView();
+            GUILayout.EndArea();
+        }
         else if (blk == Block.Info)
         {
             logoCube.SetActive(false);
@@ -479,7 +676,96 @@ public class SDKTest : MonoBehaviour
     {
         messages.Add(System.DateTime.Now.ToString("MM/dd HH:mm:ss ") + str);
     }
+	
+    private void OnLogMessageReceived(string condition, string stackTrace, LogType type)
+    {
+        // エラーやワーニングはメッセージを出力する
+        switch (type)
+        {
+            case LogType.Warning:
+                AddMessage(string.Format("<color=yellow>{0}</color>", condition));
+                break;
+            case LogType.Error:
+            case LogType.Assert:
+            case LogType.Exception:
+                AddMessage(string.Format("<color=red>{0}</color>", condition));
+                break;
+        }
+    }
 
+    // IVAMPListener
+#if !VAMP_3_0_3_OR_OLDER
+    public void VAMPDidReceive(string placementId, string adnwName)
+    {
+        AddMessage(string.Format("Receive {0} {1}", placementId, adnwName));
+
+        isLoading = false;
+
+        Debug.LogFormat("[VAMPUnitySDK] VAMPDidReceive: {0} {1}", placementId, adnwName);
+
+        if (blk == Block.Ad2)
+        {
+            VAMPUnitySDK.show();
+        }
+
+    }
+
+    public void VAMPDidFailToLoad(VAMPUnitySDK.VAMPError error, string placementId)
+    {
+        AddMessage(string.Format("FailToLoad {0} {1}", error, placementId));
+
+        isLoading = false;
+
+        Debug.LogFormat("[VAMPUnitySDK] VAMPDidFailToLoad: {0} {1}", error, placementId);
+    }
+
+    public void VAMPDidFailToShow(VAMPUnitySDK.VAMPError error, string placementId)
+    {
+        AddMessage(string.Format("FailToShow {0} {1}", error, placementId));
+
+        Debug.LogFormat("[VAMPUnitySDK] VAMPDidFailToShow: {0} {1}", error, placementId);
+    }
+
+    public void VAMPDidComplete(string placementId, string adnwName)
+    {
+        AddMessage(string.Format("Complete {0} {1}", placementId, adnwName));
+
+        Debug.LogFormat("[VAMPUnitySDK] VAMPDidComplete: {0} {1}", placementId, adnwName);
+    }
+
+    public void VAMPDidClose(string placementId, string adnwName)
+    {
+        AddMessage(string.Format("Close {0} {1}", placementId, adnwName));
+
+        Debug.LogFormat("[VAMPUnitySDK] VAMPDidClose: {0} {1}", placementId, adnwName);
+    }
+
+    public void VAMPDidExpired(string placementId)
+    {
+        AddMessage(string.Format("Expire {0}", placementId));
+
+        isLoading = false;
+
+        Debug.LogFormat("[VAMPUnitySDK] VAMPDidExpired: {0}", placementId);
+    }
+
+    // IVAMPAdvancedListener
+    public void VAMPLoadStart(string placementId, string adnwName)
+    {
+        AddMessage(string.Format("LoadStart {0} {1}", placementId, adnwName));
+
+        Debug.LogFormat("[VAMPUnitySDK] VAMPLoadStart: {0} {1}", placementId, adnwName);
+    }
+
+    public void VAMPLoadResult(string placementId, bool success, string adnwName, string message)
+    {
+        AddMessage(string.Format("LoadResult {0} {2} success={1} message={3}",
+                placementId, success, adnwName, message));
+
+        Debug.LogFormat("[VAMPUnitySDK] VAMPLoadResult: {0} {1} {2} {3}", placementId, success, adnwName, message);
+    }
+
+#else
     //
     // VAMPからのメッセージを受け取る場合は以下のメソッドを実装してください
     //
@@ -607,22 +893,23 @@ public class SDKTest : MonoBehaviour
     }
 
     // VAMPUnitySDK.isEUAccessメソッドの取得結果が通知されます
-    //void VAMPIsEUAccess(string msg)
-    //{
-    //    string[] param = VAMPUnitySDK.MessageUtil.ParseMessage(msg);
-    //    // param[0]:access ("True"/"False")
-    //    AddMessage(string.Format("IsEUAccess {0}", param[0]));
+    void VAMPIsEUAccess(string msg)
+    {
+        string[] param = VAMPUnitySDK.MessageUtil.ParseMessage(msg);
+        // param[0]:access ("True"/"False")
+        AddMessage(string.Format("IsEUAccess {0}", param[0]));
 
-    //    Debug.Log("[VAMPUnitySDK] VAMPIsEUAccess: " + msg);
+        Debug.Log("[VAMPUnitySDK] VAMPIsEUAccess: " + msg);
 
-    //    if (param[0] == "True")
-    //    {
-    //        // TODO: ユーザに広告が個人に関連する情報を取得することの同意を求めます
+        if (param[0] == "True")
+        {
+            // TODO: ユーザに広告が個人に関連する情報を取得することの同意を求めます
 
-    //        // ユーザの入力を受け付けACCEPTEDまたはDENIEDをセットします
-    //        VAMPUnitySDK.setUserConsent(VAMPUnitySDK.ConsentStatus.ACCEPTED);
-    //    }
-    //}
+            // ユーザの入力を受け付けACCEPTEDまたはDENIEDをセットします
+            VAMPUnitySDK.setUserConsent(VAMPUnitySDK.ConsentStatus.ACCEPTED);
+        }
+    }
+#endif
 }
 
 public struct EdgeInsets
@@ -643,4 +930,21 @@ public struct EdgeInsets
         Bottom = bottom;
         Right = right;
     }
+}
+
+[System.Serializable]
+public class VAMPConfig
+{
+    public bool playerCancelable = true;
+    public string playerAlertTitleText = "注意!";
+    public string playerAlertBodyText = "視聴途中でキャンセルすると報酬がもらえません";
+    public string playerAlertCloseButtonText = "終了";
+    public string playerAlertContinueButtonText = "再開";
+}
+
+[System.Serializable]
+public class FrequencyCap
+{
+    public uint impressions = 3;
+    public uint timeLimit = 3;
 }

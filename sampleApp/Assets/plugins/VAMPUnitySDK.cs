@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 /// <summary>
@@ -13,7 +14,9 @@ using System.Runtime.InteropServices;
 /// </summary>
 public class VAMPUnitySDK : MonoBehaviour
 {
-#if UNITY_IPHONE
+#if UNITY_IOS
+    [DllImport("__Internal")]
+    private static extern IntPtr VAMPUnityInitialize(string placementId);
 
     [DllImport("__Internal")]
     private static extern IntPtr VAMPUnityInit(IntPtr vampni, string placementId, string gameObjName);
@@ -67,7 +70,13 @@ public class VAMPUnitySDK : MonoBehaviour
     private static extern void VAMPUnityGetCountryCode(string gameObjName);
 
     [DllImport("__Internal")]
+    private static extern void VAMPUnityGetCountryCode2(GetCountryCodeCallback callback);
+
+    [DllImport("__Internal")]
     private static extern void VAMPUnityIsEUAccess(string gameObjName);
+
+    [DllImport("__Internal")]
+    private static extern void VAMPUnityIsEUAccess2(IsEUAccessCallback callback);
 
     [DllImport("__Internal")]
     private static extern void VAMPUnitySetUserConsent(int consentStatus);
@@ -81,6 +90,86 @@ public class VAMPUnitySDK : MonoBehaviour
     [DllImport("__Internal")]
     private static extern string VAMPUnityDeviceInfo(string infoName);
 
+    [DllImport("__Internal")]
+    private static extern void VAMPUnitySetCallbacks(IntPtr vampni,
+                                                     InternalReceiveCallback receiveCallback,
+                                                     InternalFailToLoadCallback failToLoadCallback,
+                                                     InternalFailToShowCallback failToShowCallback,
+                                                     InternalCompleteCallback completeCallback,
+                                                     InternalCloseCallback closeCallback,
+                                                     InternalExpireCallback expireCallback,
+                                                     InternalLoadStartCallback loadStartCallback,
+                                                     InternalLoadResultCallback loadResultCallback
+    );
+
+    [DllImport("__Internal")]
+    private static extern void VAMPUnitySetFrequencyCap(string placementId, uint impressions, uint minutes);
+
+    [DllImport("__Internal")]
+    private static extern void VAMPUnityClearFrequencyCap(string placementId);
+
+    [DllImport("__Internal")]
+    private static extern bool VAMPUnityIsFrequencyCapped(string placementId);
+
+    [DllImport("__Internal")]
+    private static extern IntPtr VAMPUnityGetFrequencyCappedStatus(string placementId);
+
+    [DllImport("__Internal")]
+    private static extern void VAMPUnityResetFrequencyCap(string placementId);
+
+    [DllImport("__Internal")]
+    private static extern void VAMPUnityResetFrequencyCapAll();
+
+    [DllImport("__Internal")]
+    private static extern IntPtr VAMPUnityVAMPConfigurationDefaultConfiguration();
+
+    [DllImport("__Internal")]
+    private static extern bool VAMPUnityVAMPConfigurationIsPlayerCancelable(HandleRef config);
+
+    [DllImport("__Internal")]
+    private static extern void VAMPUnityVAMPConfigurationSetPlayerCancelable(HandleRef config, bool playerCancelable);
+
+    [DllImport("__Internal")]
+    private static extern string VAMPUnityVAMPConfigurationGetPlayerAlertTitleText(HandleRef config);
+
+    [DllImport("__Internal")]
+    private static extern void VAMPUnityVAMPConfigurationSetPlayerAlertTitleText(HandleRef config, string title);
+
+    [DllImport("__Internal")]
+    private static extern string VAMPUnityVAMPConfigurationGetPlayerAlertBodyText(HandleRef config);
+
+    [DllImport("__Internal")]
+    private static extern void VAMPUnityVAMPConfigurationSetPlayerAlertBodyText(HandleRef config, string body);
+
+    [DllImport("__Internal")]
+    private static extern string VAMPUnityVAMPConfigurationGetPlayerAlertCloseButtonText(HandleRef config);
+
+    [DllImport("__Internal")]
+    private static extern void VAMPUnityVAMPConfigurationSetPlayerAlertCloseButtonText(HandleRef config, string buttonText);
+
+    [DllImport("__Internal")]
+    private static extern string VAMPUnityVAMPConfigurationGetPlayerAlertContinueButtonText(HandleRef config);
+
+    [DllImport("__Internal")]
+    private static extern void VAMPUnityVAMPConfigurationSetPlayerAlertContinueButtonText(HandleRef config, string buttonText);
+
+    [DllImport("__Internal")]
+    private static extern bool VAMPUnityVAMPFrequencyCappedStatusIsCapped(HandleRef frequencyCappedStatus);
+
+    [DllImport("__Internal")]
+    private static extern uint VAMPUnityVAMPFrequencyCappedStatusImpressionLimit(HandleRef frequencyCappedStatus);
+
+    [DllImport("__Internal")]
+    private static extern uint VAMPUnityVAMPFrequencyCappedStatusTimeLimit(HandleRef frequencyCappedStatus);
+
+    [DllImport("__Internal")]
+    private static extern uint VAMPUnityVAMPFrequencyCappedStatusImpressions(HandleRef frequencyCappedStatus);
+
+    [DllImport("__Internal")]
+    private static extern uint VAMPUnityVAMPFrequencyCappedStatusRemainingTime(HandleRef frequencyCappedStatus);
+
+    [DllImport("__Internal")]
+    private static extern uint VAMPUnityDeleteVAMPFrequencyCappedStatus(HandleRef handle);
 #endif
 
     public enum InitializeState
@@ -126,8 +215,9 @@ public class VAMPUnitySDK : MonoBehaviour
     private const string UnityPlayerClass = "com.unity3d.player.UnityPlayer";
 #endif
 
-#if UNITY_IPHONE
+#if UNITY_IOS
     private static IntPtr vampni = IntPtr.Zero;
+
 
 #elif UNITY_ANDROID
     private static AndroidJavaObject vampObj = null;
@@ -137,12 +227,93 @@ public class VAMPUnitySDK : MonoBehaviour
     private static GameObject countryCodeObj = null;
     private static GameObject userConsentObj = null;
 
+    internal delegate void InternalReceiveCallback(string placementId,string adnwName);
+
+    internal delegate void InternalCompleteCallback(string placementId,string adnwName);
+
+    internal delegate void InternalCloseCallback(string placementId,string adnwName);
+
+    internal delegate void InternalLoadStartCallback(string placementId,string adnwName);
+
+    internal delegate void InternalLoadResultCallback(string placementId,bool success,string adnwName,string message);
+
+    internal delegate void InternalExpireCallback(string placementId);
+
+    internal delegate void InternalFailToLoadCallback(int errorCode,string placementId);
+
+    internal delegate void InternalFailToShowCallback(int errorCode,string placementId);
+
+    /// <summary>
+    /// getCountryCode コールバック.
+    /// </summary>
+    public delegate void GetCountryCodeCallback(string countryCode);
+
+    /// <summary>
+    /// isEUAccess コールバック.
+    /// </summary>
+    public delegate void IsEUAccessCallback(bool access);
+
+    private static IVAMPListener listener;
+    private static IVAMPAdvancedListener advancedListener;
+    private static GetCountryCodeCallback getCountryCodeCallback;
+    private static IsEUAccessCallback isEUAccessCallback;
+    private static readonly object lockObject = new object();
+
     public static string VAMPUnityPluginVersion
     {
         get
         {
-            return "3.0.3";
+            return "3.0.4";
         }
+    }
+
+    /// <summary>
+    /// VAMPUnitySDKクラスの準備を行います
+    /// </summary>
+    /// <param name="placementID">広告枠ID</param>
+    public static void initialize(string placementID)
+    {
+        Debug.Log("VAMP-Unity-Plugin version: " + VAMPUnityPluginVersion);
+
+        if (string.IsNullOrEmpty(placementID))
+        {
+            Debug.LogError("PlacementID is not set.");
+            return;
+        }
+#if UNITY_IOS
+        if (Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            vampni = VAMPUnityInitialize(placementID);
+            VAMPUnitySetCallbacks(vampni,
+                                  VAMPDidReceive,
+                                  VAMPDidFailToLoad,
+                                  VAMPDidFailToShow,
+                                  VAMPDidComplete,
+                                  VAMPDidClose,
+                                  VAMPDidExpire,
+                                  VAMPDidLoadStart,
+                                  VAMPDidLoadResult);
+        }
+#elif UNITY_ANDROID
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            if (vampObj == null)
+            {
+                using(var player = new AndroidJavaClass(UnityPlayerClass))
+                {
+                    using(var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
+                    {
+                        using(var vampCls = new AndroidJavaClass(VampClass))
+                        {
+                            vampObj = vampCls.CallStatic<AndroidJavaObject>("getVampInstance", activity, placementID);
+                            vampObj.Call("setVAMPListener", new AdListener());
+                            vampObj.Call("setAdvancedListener", new AdvListener());
+                        }
+                    }
+                }
+            }
+        }
+#endif
     }
 
     /// <summary>
@@ -150,6 +321,7 @@ public class VAMPUnitySDK : MonoBehaviour
     /// </summary>
     /// <param name="obj">GameObject</param>
     /// <param name="placementID">広告枠ID</param>
+    [Obsolete("Deprecated")]
     public static void initVAMP(GameObject obj, string placementID)
     {
         Debug.Log("VAMP-Unity-Plugin version: " + VAMPUnityPluginVersion);
@@ -162,25 +334,56 @@ public class VAMPUnitySDK : MonoBehaviour
 
         messageObj = obj;
 
-#if UNITY_IPHONE
+#if UNITY_IOS
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             vampni = VAMPUnityInit(vampni, placementID, messageObj.name);
+
         }
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
             if (vampObj == null)
             {
-                AndroidJavaClass player = new AndroidJavaClass(UnityPlayerClass);
-                AndroidJavaObject activity = player.GetStatic<AndroidJavaObject>("currentActivity");
-                AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
-                vampObj = vampCls.CallStatic<AndroidJavaObject>("getVampInstance", activity, placementID);
-                vampObj.Call("setVAMPListener", new AdListener());
-                vampObj.Call("setAdvancedListener", new AdvListener());
+                using(var player = new AndroidJavaClass(UnityPlayerClass))
+                {
+                    using(var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
+                    {
+                        using(var vampCls = new AndroidJavaClass(VampClass))
+                        {
+                            vampObj = vampCls.CallStatic<AndroidJavaObject>("getVampInstance", activity, placementID);
+                            vampObj.Call("setVAMPListener", new AdListener());
+                            vampObj.Call("setAdvancedListener", new AdvListener());
+                        }
+                    }
+                }
             }
         }
 #endif
+    }
+
+    /// <summary>
+    /// リスナーをセットします
+    /// </summary>
+    /// <param name="listener">Listener.</param>
+    public static void setVAMPListener(IVAMPListener listener)
+    {
+        lock (lockObject)
+        {
+            VAMPUnitySDK.listener = listener;
+        }
+    }
+
+    /// <summary>
+    /// リスナーをセットします
+    /// </summary>
+    /// <param name="listener">Listener.</param>
+    public static void setAdvancedListener(IVAMPAdvancedListener listener)
+    {
+        lock (lockObject)
+        {
+            VAMPUnitySDK.advancedListener = listener;
+        }
     }
 
     /// <summary>
@@ -189,7 +392,7 @@ public class VAMPUnitySDK : MonoBehaviour
     /// </summary>
     public static void preload()
     {
-#if UNITY_IPHONE
+#if UNITY_IOS
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             VAMPUnityPreload(vampni);
@@ -210,7 +413,7 @@ public class VAMPUnitySDK : MonoBehaviour
     /// </summary>
     public static void load()
     {
-#if UNITY_IPHONE
+#if UNITY_IOS
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             VAMPUnityLoad(vampni);
@@ -231,9 +434,9 @@ public class VAMPUnitySDK : MonoBehaviour
     /// </summary>
     public static bool show()
     {
-        bool ret = false;
+        var ret = false;
 
-#if UNITY_IPHONE
+#if UNITY_IOS
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             ret = VAMPUnityShow(vampni);
@@ -256,9 +459,9 @@ public class VAMPUnitySDK : MonoBehaviour
     /// </summary>
     public static bool isReady()
     {
-        bool ret = false;
+        var ret = false;
 
-#if UNITY_IPHONE
+#if UNITY_IOS
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             ret = VAMPUnityIsReady(vampni);
@@ -282,7 +485,7 @@ public class VAMPUnitySDK : MonoBehaviour
     [Obsolete("Deprecated")]
     public static void clearLoaded()
     {
-#if UNITY_IPHONE
+#if UNITY_IOS
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             VAMPUnityClearLoaded(vampni);
@@ -310,7 +513,7 @@ public class VAMPUnitySDK : MonoBehaviour
             return;
         }
 
-#if UNITY_IPHONE
+#if UNITY_IOS
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             VAMPUnityInitializeAdnwSDK(placementID);
@@ -318,10 +521,16 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            AndroidJavaClass player = new AndroidJavaClass(UnityPlayerClass);
-            AndroidJavaObject activity = player.GetStatic<AndroidJavaObject>("currentActivity");
-            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
-            vampCls.CallStatic("initializeAdnwSDK", activity, placementID);
+            using(var player = new AndroidJavaClass(UnityPlayerClass))
+            {
+                using(var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
+                {
+                    using(var vampCls = new AndroidJavaClass(VampClass))
+                    {
+                        vampCls.CallStatic("initializeAdnwSDK", activity, placementID);
+                    }
+                }
+            }
         }
 #endif
     }
@@ -332,6 +541,7 @@ public class VAMPUnitySDK : MonoBehaviour
     /// <param name="placementID">広告枠ID</param>
     /// <param name="state">InitializeState string</param>
     /// <param name="duration">アドネットワークSDKの初期化実行間隔</param>
+    [Obsolete("Deprecated")]
     public static void initializeAdnwSDK(string placementID, string state, int duration)
     {
         if (placementID == null || placementID.Length <= 0)
@@ -340,7 +550,7 @@ public class VAMPUnitySDK : MonoBehaviour
             return;
         }
 
-#if UNITY_IPHONE
+#if UNITY_IOS
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             VAMPUnityInitializeAdnwSDKWithConfig(placementID, state, duration);
@@ -348,11 +558,58 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            AndroidJavaClass player = new AndroidJavaClass(UnityPlayerClass);
-            AndroidJavaObject activity = player.GetStatic<AndroidJavaObject>("currentActivity");
-            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
-            AndroidJavaClass initStateCls = new AndroidJavaClass("jp.supership.vamp.VAMP$VAMPInitializeState");
-            vampCls.CallStatic("initializeAdnwSDK", activity, placementID, initStateCls.GetStatic<AndroidJavaObject>(state), duration);
+            using(var player = new AndroidJavaClass(UnityPlayerClass))
+            {
+                using(var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
+                {
+                    using(var vampCls = new AndroidJavaClass(VampClass))
+                    {
+                        using(var initStateCls = new AndroidJavaClass("jp.supership.vamp.VAMP$VAMPInitializeState"))
+                        {
+                            vampCls.CallStatic("initializeAdnwSDK", activity, placementID, initStateCls.GetStatic<AndroidJavaObject>(state), duration);
+                        }
+                    }
+                }
+            }
+        }
+#endif
+    }
+
+    /// <summary>
+    /// アプリ起動時などのタイミングでアドネットワーク側のSDKを初期化しておきたいときに使います
+    /// </summary>
+    /// <param name="placementID">広告枠ID</param>
+    /// <param name="state">InitializeState string</param>
+    /// <param name="duration">アドネットワークSDKの初期化実行間隔</param>
+    public static void initializeAdnwSDK(string placementID, InitializeState state, int duration)
+    {
+        if (string.IsNullOrEmpty(placementID))
+        {
+            Debug.LogError("PlacementID is not set.");
+            return;
+        }
+
+#if UNITY_IOS
+        if (Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            VAMPUnityInitializeAdnwSDKWithConfig(placementID, state.ToString(), duration);
+        }
+#elif UNITY_ANDROID
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            using(var player = new AndroidJavaClass(UnityPlayerClass))
+            {
+                using(var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
+                {
+                    using(var vampCls = new AndroidJavaClass(VampClass))
+                    {
+                        using(var initStateCls = new AndroidJavaClass("jp.supership.vamp.VAMP$VAMPInitializeState"))
+                        {
+                            vampCls.CallStatic("initializeAdnwSDK", activity, placementID, initStateCls.GetStatic<AndroidJavaObject>(state.ToString()), duration);
+                        }
+                    }
+                }
+            }
         }
 #endif
     }
@@ -365,7 +622,7 @@ public class VAMPUnitySDK : MonoBehaviour
     /// <param name="testMode"></param>
     public static void setTestMode(bool testMode)
     {
-#if UNITY_IPHONE
+#if UNITY_IOS
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             VAMPUnitySetTestMode(testMode);
@@ -373,8 +630,10 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
-            vampCls.CallStatic("setTestMode", testMode);
+            using(var vampCls = new AndroidJavaClass(VampClass))
+            {
+                vampCls.CallStatic("setTestMode", testMode);
+            }
         }
 #endif
     }
@@ -384,9 +643,9 @@ public class VAMPUnitySDK : MonoBehaviour
     /// </summary>
     public static bool isTestMode()
     {
-        bool ret = false;
+        var ret = false;
 
-#if UNITY_IPHONE
+#if UNITY_IOS
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             ret = VAMPUnityIsTestMode();
@@ -394,8 +653,10 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
-            ret = vampCls.CallStatic<bool>("isTestMode");
+            using(var vampCls = new AndroidJavaClass(VampClass))
+            {
+                ret = vampCls.CallStatic<bool>("isTestMode");
+            }
         }
 #endif
 
@@ -409,7 +670,7 @@ public class VAMPUnitySDK : MonoBehaviour
     /// <param name="debugMode"></param>
     public static void setDebugMode(bool debugMode)
     {
-#if UNITY_IPHONE
+#if UNITY_IOS
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             VAMPUnitySetDebugMode(debugMode);
@@ -417,8 +678,10 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
-            vampCls.CallStatic("setDebugMode", debugMode);
+            using(var vampCls = new AndroidJavaClass(VampClass))
+            {
+                vampCls.CallStatic("setDebugMode", debugMode);
+            }
         }
 #endif
     }
@@ -428,9 +691,9 @@ public class VAMPUnitySDK : MonoBehaviour
     /// </summary>
     public static bool isDebugMode()
     {
-        bool ret = false;
+        var ret = false;
 
-#if UNITY_IPHONE
+#if UNITY_IOS
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             ret = VAMPUnityIsDebugMode();
@@ -438,8 +701,10 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
-            ret = vampCls.CallStatic<bool>("isDebugMode");
+            using(var vampCls = new AndroidJavaClass(VampClass))
+            {
+                ret = vampCls.CallStatic<bool>("isDebugMode");
+            }
         }
 #endif
 
@@ -452,9 +717,9 @@ public class VAMPUnitySDK : MonoBehaviour
     /// </summary>
     public static string SDKVersion()
     {
-        string ret = "unknown";
+        var ret = "unknown";
 
-#if UNITY_IPHONE
+#if UNITY_IOS
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             ret = VAMPUnitySDKVersion();
@@ -462,8 +727,10 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
-            ret = vampCls.CallStatic<string>("SDKVersion");
+            using(var vampCls = new AndroidJavaClass(VampClass))
+            {
+                ret = vampCls.CallStatic<string>("SDKVersion");
+            }
         }
 #endif
 
@@ -475,9 +742,9 @@ public class VAMPUnitySDK : MonoBehaviour
     /// </summary>
     public static float SupportedOSVersion()
     {
-        float ret = 0;
+        var ret = 0f;
 
-#if UNITY_IPHONE
+#if UNITY_IOS
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             ret = VAMPUnitySupportedOSVersion();
@@ -485,8 +752,10 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
-            ret = vampCls.CallStatic<int>("SupportedOSVersion");
+            using(var vampCls = new AndroidJavaClass(VampClass))
+            {
+                ret = vampCls.CallStatic<int>("SupportedOSVersion");
+            }
         }
 #endif
 
@@ -498,9 +767,9 @@ public class VAMPUnitySDK : MonoBehaviour
     /// </summary>
     public static bool isSupportedOSVersion()
     {
-        bool ret = false;
+        var ret = false;
 
-#if UNITY_IPHONE
+#if UNITY_IOS
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             ret = VAMPUnityIsSupportedOSVersion();
@@ -508,8 +777,10 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
-            ret = vampCls.CallStatic<bool>("isSupportedOSVersion");
+            using(var vampCls = new AndroidJavaClass(VampClass))
+            {
+                ret = vampCls.CallStatic<bool>("isSupportedOSVersion");
+            }
         }
 #endif
 
@@ -522,7 +793,7 @@ public class VAMPUnitySDK : MonoBehaviour
     /// <param name="timeout">単位:秒</param>
     public static void setMediationTimeout(int timeout)
     {
-#if UNITY_IPHONE
+#if UNITY_IOS
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             VAMPUnitySetMediationTimeout(timeout);
@@ -530,8 +801,40 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
-            vampCls.CallStatic("setMediationTimeout", timeout);
+            using(var vampCls = new AndroidJavaClass(VampClass))
+            {
+                vampCls.CallStatic("setMediationTimeout", timeout);
+            }
+        }
+#endif
+    }
+
+    /// <summary>
+    /// 2文字の国コード(JP, USなど)を取得します。IPから国を判別できなかった、リクエストがタイムアウトしたなど、
+    /// 正常に値が返せないケースは"99"が返却されます。
+    /// </summary>
+    /// <param name="callback">コールバック</param>
+    public static void getCountryCode(GetCountryCodeCallback callback)
+    {
+        getCountryCodeCallback = callback;
+
+#if UNITY_IOS
+        if (Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            VAMPUnityGetCountryCode2(VAMPDidGetCountryCode);
+        }
+#elif UNITY_ANDROID
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            using(AndroidJavaClass player = new AndroidJavaClass(UnityPlayerClass))
+            {
+                using(AndroidJavaObject activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
+                {
+                    AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
+
+                    vampCls.CallStatic("getCountryCode", activity, new GetCountryCodeListener());
+                }
+            }
         }
 #endif
     }
@@ -542,11 +845,12 @@ public class VAMPUnitySDK : MonoBehaviour
     /// 結果はVAMPCountryCodeメソッドを通じて返却されます
     /// </summary>
     /// <param name="obj">GameObject</param>
+    [Obsolete("Deprecated")]
     public static void getCountryCode(GameObject obj)
     {
         countryCodeObj = obj;
 
-#if UNITY_IPHONE
+#if UNITY_IOS
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             VAMPUnityGetCountryCode(countryCodeObj.name);
@@ -554,10 +858,40 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            AndroidJavaClass player = new AndroidJavaClass(UnityPlayerClass);
-            AndroidJavaObject activity = player.GetStatic<AndroidJavaObject>("currentActivity");
-            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
-            vampCls.CallStatic("getCountryCode", activity, new GetCountryCodeListener());
+            using(AndroidJavaClass player = new AndroidJavaClass(UnityPlayerClass))
+            {
+                using(AndroidJavaObject activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
+                {
+                    using(AndroidJavaClass vampCls = new AndroidJavaClass(VampClass))
+                    {
+                        vampCls.CallStatic("getCountryCode", activity, new GetCountryCodeListener());
+                    }
+                }
+            }
+        }
+#endif
+    }
+
+    /// <summary>
+    /// EU圏内からのアクセスか判定します。
+    /// </summary>
+    /// <param name="callback">コールバック</param>
+    public static void isEUAccess(IsEUAccessCallback callback)
+    {
+        isEUAccessCallback = callback;
+
+#if UNITY_IOS
+        if (Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            VAMPUnityIsEUAccess2(VAMPIsEUAccess);
+        }
+#elif UNITY_ANDROID
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            using(var vampCls = new AndroidJavaClass(VampClass))
+            {
+                vampCls.CallStatic("isEUAccess", new UserConsentListener());
+            }
         }
 #endif
     }
@@ -567,11 +901,12 @@ public class VAMPUnitySDK : MonoBehaviour
     /// 結果はVAMPIsEUAccessメソッドを通じて返却されます
     /// </summary>
     /// <param name="obj">GameObject</param>
+    [Obsolete("Deprecated")]
     public static void isEUAccess(GameObject obj)
     {
         userConsentObj = obj;
 
-#if UNITY_IPHONE
+#if UNITY_IOS
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             VAMPUnityIsEUAccess(userConsentObj.name);
@@ -579,8 +914,10 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
-            vampCls.CallStatic("isEUAccess", new UserConsentListener());
+            using(var vampCls = new AndroidJavaClass(VampClass))
+            {
+                vampCls.CallStatic("isEUAccess", new UserConsentListener());
+            }
         }
 #endif
     }
@@ -591,7 +928,7 @@ public class VAMPUnitySDK : MonoBehaviour
     /// <param name="status">ConsentStatus</param>
     public static void setUserConsent(ConsentStatus status)
     {
-#if UNITY_IPHONE
+#if UNITY_IOS
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             VAMPUnitySetUserConsent((int)status);
@@ -599,9 +936,13 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            AndroidJavaClass consentStatusCls = new AndroidJavaClass("jp.supership.vamp.VAMPPrivacySettings$ConsentStatus");
-            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
-            vampCls.CallStatic("setUserConsent", consentStatusCls.GetStatic<AndroidJavaObject>(status.ToString()));
+            using(var consentStatusCls = new AndroidJavaClass("jp.supership.vamp.VAMPPrivacySettings$ConsentStatus"))
+            {
+                using(var vampCls = new AndroidJavaClass(VampClass)) 
+                {
+                    vampCls.CallStatic("setUserConsent", consentStatusCls.GetStatic<AndroidJavaObject>(status.ToString()));
+                }
+            }
         }
 #endif
     }
@@ -612,26 +953,153 @@ public class VAMPUnitySDK : MonoBehaviour
     /// <param name="targeting"></param>
     public static void setTargeting(Targeting targeting)
     {
-#if UNITY_IPHONE
+#if UNITY_IOS
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
-            VAMPUnitySetTargeting((int)targeting.Gender, 
+            VAMPUnitySetTargeting((int)targeting.Gender,
                 targeting.Birthday.Year, targeting.Birthday.Month, targeting.Birthday.Day);
         }
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            AndroidJavaObject user = new AndroidJavaObject("jp.supership.vamp.VAMPTargeting");
+            using(var user = new AndroidJavaObject("jp.supership.vamp.VAMPTargeting"))
+            {
 
-            AndroidJavaClass genderCls = new AndroidJavaClass("jp.supership.vamp.VAMPTargeting$Gender");
-            user.Call<AndroidJavaObject>("setGender", genderCls.GetStatic<AndroidJavaObject>(targeting.Gender.ToString()));
+                using(var genderCls = new AndroidJavaClass("jp.supership.vamp.VAMPTargeting$Gender"))
+                {
+                    user.Call<AndroidJavaObject>("setGender", genderCls.GetStatic<AndroidJavaObject>(targeting.Gender.ToString()));
 
-            AndroidJavaObject calendar = new AndroidJavaObject("java.util.GregorianCalendar",
-                                             targeting.Birthday.Year, targeting.Birthday.Month - 1, targeting.Birthday.Day);
-            user.Call<AndroidJavaObject>("setBirthday", calendar.Call<AndroidJavaObject>("getTime"));
+                    using(var calendar = new AndroidJavaObject("java.util.GregorianCalendar",
+                        targeting.Birthday.Year, targeting.Birthday.Month - 1, targeting.Birthday.Day))
+                    {
+                        
+                        user.Call<AndroidJavaObject>("setBirthday", calendar.Call<AndroidJavaObject>("getTime"));
 
-            AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
-            vampCls.CallStatic("setTargeting", user);
+                        using(var vampCls = new AndroidJavaClass(VampClass))
+                        {
+                            vampCls.CallStatic("setTargeting", user);
+                        }
+                    }
+                }
+            }
+        }
+#endif
+    }
+
+    /// <summary>
+    /// フリークエンシーキャップ機能を設定します。
+    /// 指定した時間内に何回広告を表示できるかを設定します。
+    /// </summary>
+    /// <param name="placementId">フリークエンシーキャップを設定する広告枠ID</param>
+    /// <param name="impressions">視聴制限回数</param>
+    /// <param name="minutes">視聴回数がリセットされるまでの制限時間</param>
+    public static void setFrequencyCap(string placementId, uint impressions, uint minutes)
+    {
+#if UNITY_IOS && !UNITY_EDITOR
+        VAMPUnitySetFrequencyCap(placementId, impressions, minutes);
+#elif UNITY_ANDROID && !UNITY_EDITOR
+        using(var vampCls = new AndroidJavaClass(VampClass))
+        {
+            vampCls.CallStatic("setFrequencyCap", placementId, (int)impressions, (int)minutes);
+        }
+#endif
+    }
+
+    /// <summary>
+    /// フリークエンシーキャップを解除します。
+    /// </summary>
+    /// <param name="placementId">フリークエンシーキャップ機能を解除する広告枠ID</param>
+    public static void clearFrequencyCap(string placementId)
+    {
+#if UNITY_IOS && !UNITY_EDITOR
+        VAMPUnityClearFrequencyCap(placementId);
+#elif UNITY_ANDROID && !UNITY_EDITOR
+        using (var vampCls = new AndroidJavaClass(VampClass))
+        {
+            vampCls.CallStatic("clearFrequencyCap", placementId);
+        }
+#endif
+    }
+
+    /// <summary>
+    /// キャップにかかっているかどうか確認します。
+    /// </summary>
+    /// <returns>キャップにかかっているなら<c>true</c>、 かかっていないなら<c>false</c></returns>
+    /// <param name="placementId">キャップにかかっているか確認する広告枠ID</param>
+    public static bool isFrequencyCapped(string placementId)
+    {
+        var ret = false;
+#if UNITY_IOS && !UNITY_EDITOR
+        ret = VAMPUnityIsFrequencyCapped(placementId);
+#elif UNITY_ANDROID && !UNITY_EDITOR
+        using (var vampCls = new AndroidJavaClass(VampClass))
+        {
+            ret = vampCls.CallStatic<bool>("isFrequencyCapped", placementId);
+        }
+#endif
+        return ret;
+    }
+
+    /// <summary>
+    /// キャップ状況を取得します。
+    /// </summary>
+    /// <returns>キャップ状況</returns>
+    /// <param name="placementId">キャップ状況を取得する広告枠ID</param>
+    public static VAMPFrequencyCappedStatus getFrequencyCappedStatus(string placementId)
+    {
+        VAMPFrequencyCappedStatus status = null;
+#if UNITY_IOS && !UNITY_EDITOR
+        var cPtr = VAMPUnityGetFrequencyCappedStatus(placementId);
+        status = new VAMPFrequencyCappedStatus(cPtr);
+#elif UNITY_ANDROID && !UNITY_EDITOR
+        using (var vampCls = new AndroidJavaClass(VampClass))
+        {
+            var fpStatus = vampCls.CallStatic<AndroidJavaObject>("getFrequencyCappedStatus", placementId);
+            status = new VAMPFrequencyCappedStatus(fpStatus);
+        }
+#endif
+        return status;
+    }
+
+    /// <summary>
+    /// 指定した広告枠IDのフリークエンシーキャップの設定を解除します。
+    /// </summary>
+    /// <param name="placementId">フリークエンシーキャップの設定を解除する広告枠ID</param>
+    public static void resetFrequencyCap(string placementId)
+    {
+#if UNITY_IOS && !UNITY_EDITOR
+        VAMPUnityResetFrequencyCap(placementId);
+#elif UNITY_ANDROID && !UNITY_EDITOR
+        using (var vampCls = new AndroidJavaClass(VampClass))
+        {
+            using(var player = new AndroidJavaClass(UnityPlayerClass))
+            {
+                using(var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
+                {
+                    vampCls.CallStatic("resetFrequencyCap", activity, placementId);
+                }
+            }
+        }
+#endif
+    }
+
+    /// <summary>
+    /// 全ての広告枠IDのフリークエンシーキャップの設定を解除します。
+    /// </summary>
+    public static void resetFrequencyCapAll()
+    {
+#if UNITY_IOS && !UNITY_EDITOR
+        VAMPUnityResetFrequencyCapAll();
+#elif UNITY_ANDROID && !UNITY_EDITOR
+        using (var vampCls = new AndroidJavaClass(VampClass))
+        {
+            using(var player = new AndroidJavaClass(UnityPlayerClass))
+            {
+                using(var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
+                {
+                    vampCls.CallStatic("resetFrequencyCapAll", activity);
+                }
+            }
         }
 #endif
     }
@@ -662,7 +1130,15 @@ public class VAMPUnitySDK : MonoBehaviour
             {
                 case "onCountryCode":
                     // javaArgs[0]:isoCode
-                    countryCodeObj.SendMessage("VAMPCountryCode", JoinParams((string)javaArgs[0]));
+                    if (countryCodeObj)
+                    {
+                        countryCodeObj.SendMessage("VAMPCountryCode", JoinParams((string)javaArgs[0]));
+                    }
+
+                    if (getCountryCodeCallback != null)
+                    {
+                        getCountryCodeCallback.Invoke((string)javaArgs[0]);
+                    }
                     break;
                 default:
                     return base.Invoke(methodName, javaArgs);
@@ -686,7 +1162,15 @@ public class VAMPUnitySDK : MonoBehaviour
             {
                 case "onRequired":
                     // javaArgs[0]:isRequired
-                    userConsentObj.SendMessage("VAMPIsEUAccess", JoinParams(((bool)javaArgs[0]).ToString()));
+                    if (userConsentObj)
+                    {
+                        userConsentObj.SendMessage("VAMPIsEUAccess", JoinParams(((bool)javaArgs[0]).ToString()));
+                    }
+
+                    if (isEUAccessCallback != null)
+                    {
+                        isEUAccessCallback.Invoke((bool)javaArgs[0]);
+                    }
                     break;
                 default:
                     return base.Invoke(methodName, javaArgs);
@@ -711,43 +1195,96 @@ public class VAMPUnitySDK : MonoBehaviour
                 case "onReceive":
                     // javaArgs[0]:placementId
                     // javaArgs[1]:adnwName
-                    messageObj.SendMessage("VAMPDidReceive",
-                        JoinParams((string)javaArgs[0], (string)javaArgs[1]));
+                    if (messageObj)
+                    {
+                        messageObj.SendMessage("VAMPDidReceive",
+                            JoinParams((string)javaArgs[0], (string)javaArgs[1]));
+                    }
+
+                    if (listener != null)
+                    {
+                        listener.VAMPDidReceive((string)javaArgs[0], (string)javaArgs[1]);
+                    }
                     break;
                 case "onFailedToLoad":
                     // javaArgs[0]:error
                     // javaArgs[1]:placementId
-                    messageObj.SendMessage("VAMPDidFailToLoad",
-                        JoinParams(((AndroidJavaObject)javaArgs[0]).Call<string>("name"), (string)javaArgs[1]));
+                    if (messageObj)
+                    {
+                        messageObj.SendMessage("VAMPDidFailToLoad",
+                            JoinParams(((AndroidJavaObject)javaArgs[0]).Call<string>("name"), (string)javaArgs[1]));
+                    }
+
+                    if (listener != null)
+                    {
+                        var errorCode = (AndroidJavaObject)javaArgs[0];
+                        listener.VAMPDidFailToLoad((VAMPError)errorCode.Call<int>("ordinal"), (string)javaArgs[1]);
+                    }
                     break;
                 case "onFailedToShow":
                     // javaArgs[0]:error
                     // javaArgs[1]:placementId
-                    messageObj.SendMessage("VAMPDidFailToShow",
-                        JoinParams(((AndroidJavaObject)javaArgs[0]).Call<string>("name"), (string)javaArgs[1]));
+                    if (messageObj)
+                    {
+                        messageObj.SendMessage("VAMPDidFailToShow",
+                            JoinParams(((AndroidJavaObject)javaArgs[0]).Call<string>("name"), (string)javaArgs[1]));
+                    }
+
+                    if (listener != null)
+                    {
+                        var errorCode = (AndroidJavaObject)javaArgs[0];
+                        listener.VAMPDidFailToShow((VAMPError)errorCode.Call<int>("ordinal"), (string)javaArgs[1]);
+                    }
                     break;
                 case "onFail":  // Deprecated
                                 // javaArgs[0]:placementId
                                 // javaArgs[1]:error
-                    messageObj.SendMessage("VAMPDidFail",
-                        JoinParams((string)javaArgs[0], ((AndroidJavaObject)javaArgs[1]).Call<string>("name")));
+                    if (messageObj)
+                    {
+                        messageObj.SendMessage("VAMPDidFail",
+                            JoinParams((string)javaArgs[0], ((AndroidJavaObject)javaArgs[1]).Call<string>("name")));
+                    }
                     break;
                 case "onComplete":
                     // javaArgs[0]:placementId
                     // javaArgs[1]:adnwName
-                    messageObj.SendMessage("VAMPDidComplete",
-                        JoinParams((string)javaArgs[0], (string)javaArgs[1]));
+                    if (messageObj)
+                    {
+                        messageObj.SendMessage("VAMPDidComplete",
+                            JoinParams((string)javaArgs[0], (string)javaArgs[1]));
+                    }
+
+                    if (listener != null)
+                    {
+                        listener.VAMPDidComplete((string)javaArgs[0], (string)javaArgs[1]);
+                    }
                     break;
                 case "onClose":
                     // javaArgs[0]:placementId
                     // javaArgs[1]:adnwName
-                    messageObj.SendMessage("VAMPDidClose",
-                        JoinParams((string)javaArgs[0], (string)javaArgs[1]));
+                    if (messageObj)
+                    {
+                        messageObj.SendMessage("VAMPDidClose",
+                            JoinParams((string)javaArgs[0], (string)javaArgs[1]));
+                    }
+
+                    if (listener != null)
+                    {
+                        listener.VAMPDidClose((string)javaArgs[0], (string)javaArgs[1]);
+                    }
                     break;
                 case "onExpired":
                     // javaArgs[0]:placementId
-                    messageObj.SendMessage("VAMPDidExpired",
-                        JoinParams((string)javaArgs[0]));
+                    if (messageObj)
+                    {
+                        messageObj.SendMessage("VAMPDidExpired",
+                            JoinParams((string)javaArgs[0]));
+                    }
+
+                    if (listener != null)
+                    {
+                        listener.VAMPDidExpired((string)javaArgs[0]);
+                    }
                     break;
                 default:
                     return base.Invoke(methodName, javaArgs);
@@ -772,16 +1309,31 @@ public class VAMPUnitySDK : MonoBehaviour
                 case "onLoadStart":
                     // javaArgs[0]:placementId
                     // javaArgs[1]:adnwName
-                    messageObj.SendMessage("VAMPLoadStart",
-                        JoinParams((string)javaArgs[0], (string)javaArgs[1]));
+                    if (messageObj)
+                    {
+                        messageObj.SendMessage("VAMPLoadStart",
+                            JoinParams((string)javaArgs[0], (string)javaArgs[1]));
+                    }
+
+                    if (advancedListener != null)
+                    {
+                        advancedListener.VAMPLoadStart((string)javaArgs[0], (string)javaArgs[1]);
+                    }
                     break;
                 case "onLoadResult":
                     // javaArgs[0]:placementId
                     // javaArgs[1]:success
                     // javaArgs[2]:adnwName
                     // javaArgs[3]:message
-                    messageObj.SendMessage("VAMPLoadResult",
-                        JoinParams((string)javaArgs[0], ((bool)javaArgs[1]).ToString(), (string)javaArgs[2], (string)javaArgs[3]));
+                    if (messageObj)
+                    {
+                        messageObj.SendMessage("VAMPLoadResult",
+                            JoinParams((string)javaArgs[0], ((bool)javaArgs[1]).ToString(), (string)javaArgs[2], (string)javaArgs[3]));
+                    }
+                    if (advancedListener != null)
+                    {
+                        advancedListener.VAMPLoadResult((string)javaArgs[0], (bool)javaArgs[1], (string)javaArgs[2], (string)javaArgs[3]);
+                    }
                     break;
                 default:
                     return base.Invoke(methodName, javaArgs);
@@ -811,7 +1363,6 @@ public class VAMPUnitySDK : MonoBehaviour
 
     public class Targeting
     {
-
         public Gender Gender { get; set; }
 
         public Birthday Birthday { get; set; }
@@ -872,9 +1423,9 @@ public class VAMPUnitySDK : MonoBehaviour
 
         public static string GetAdnwSDKVersion(string adnw)
         {
-            string ret = "unknown";
+            var ret = "unknown";
 
-#if UNITY_IPHONE
+#if UNITY_IOS
             if (Application.platform == RuntimePlatform.IPhonePlayer)
             {
                 ret = VAMPUnityAdnwSDKVersion(adnw);
@@ -892,9 +1443,9 @@ public class VAMPUnitySDK : MonoBehaviour
 
         public static string GetInfo(string infoName)
         {
-            string ret = "unknown";
+            var ret = "unknown";
 
-#if UNITY_IPHONE
+#if UNITY_IOS
             if (Application.platform == RuntimePlatform.IPhonePlayer)
             {
                 ret = VAMPUnityDeviceInfo(infoName);
@@ -905,5 +1456,666 @@ public class VAMPUnitySDK : MonoBehaviour
 
             return ret;
         }
+    }
+
+    /// <summary>
+    /// VAMPConfiguration class.
+    /// </summary>
+    public class VAMPConfiguration
+    {
+        static VAMPConfiguration instance;
+
+        /// <summary>
+        /// VAMPConfigurationインスタンスを取得します
+        /// </summary>
+        /// <returns>VAMPConfigurationインスタンス</returns>
+        public static VAMPConfiguration getInstance()
+        {
+            if (instance == null)
+            {
+                instance = new VAMPConfiguration();
+            }
+
+            return instance;
+        }
+            
+#if UNITY_IOS && !UNITY_EDITOR
+        HandleRef handleRef;
+#elif UNITY_ANDROID && !UNITY_EDITOR
+        const string VAMPConfigurationClass = "jp.supership.vamp.VAMPConfiguration";
+        AndroidJavaObject configObject;
+#endif
+        private VAMPConfiguration() 
+        {
+#if UNITY_IOS && !UNITY_EDITOR
+            var cPtr = VAMPUnityVAMPConfigurationDefaultConfiguration();
+            this.handleRef = new HandleRef(this, cPtr);
+#elif UNITY_ANDROID && !UNITY_EDITOR
+            using(var configCls = new AndroidJavaClass(VAMPConfigurationClass))
+            {
+                this.configObject = configCls.CallStatic<AndroidJavaObject>("getInstance");
+            }
+#endif
+        }
+
+        /// <summary>
+        /// 動画再生中にキャンセルが可能かどうかを設定します。
+        /// この機能は一部のアドネットワークのみ有効です。
+        /// </summary>
+        /// <value>動画再生中にキャンセルが可能なら<c>true</c>、 そうでないなら<c>false</c>.</value>
+        public bool PlayerCancelable
+        {
+            get {
+                var ret = false;
+#if UNITY_IOS && !UNITY_EDITOR
+                if (handleRef.Handle != IntPtr.Zero)
+                {
+                    ret = VAMPUnityVAMPConfigurationIsPlayerCancelable(handleRef);
+                }
+#elif UNITY_ANDROID && !UNITY_EDITOR
+                if (configObject != null)
+                {
+                    ret = configObject.Call<bool>("isPlayerCancelable");
+                }
+#endif
+                return ret;
+            }
+                
+            set {
+#if UNITY_IOS && !UNITY_EDITOR
+                if (handleRef.Handle != IntPtr.Zero)
+                {
+                    VAMPUnityVAMPConfigurationSetPlayerCancelable(handleRef, value);
+                }
+#elif UNITY_ANDROID && !UNITY_EDITOR
+                if (configObject != null)
+                {
+                    configObject.Call("setPlayerCancelable", value);
+                }
+#endif
+            }
+        }
+
+        /// <summary>
+        /// キャンセル機能が有効の時に表示するアラートダイアログのタイトルを設定します。
+        /// この設定は一部のアドネットワークのみ有効です。
+        /// </summary>
+        /// <value>アラートダイアログのタイトル</value>
+        public string PlayerAlertTitleText
+        {
+            get {
+                var ret = string.Empty;
+#if UNITY_IOS && !UNITY_EDITOR
+                if (handleRef.Handle != IntPtr.Zero)
+                {
+                    ret = VAMPUnityVAMPConfigurationGetPlayerAlertTitleText(handleRef);
+                }
+#elif UNITY_ANDROID && !UNITY_EDITOR
+                if (configObject != null)
+                {
+                    ret = configObject.Call<string>("getPlayerAlertTitleText");
+                }
+#endif
+                return ret;
+            }
+
+            set {
+#if UNITY_IOS && !UNITY_EDITOR
+                if (handleRef.Handle != IntPtr.Zero)
+                {
+                    VAMPUnityVAMPConfigurationSetPlayerAlertTitleText(handleRef, value);
+                }
+#elif UNITY_ANDROID && !UNITY_EDITOR
+                if (configObject != null)
+                {
+                    configObject.Call("setPlayerAlertTitleText", value);
+                }
+#endif
+            }
+        }
+
+        /// <summary>
+        /// キャンセル機能が有効の時に表示するアラートダイアログの本文を設定します。
+        /// この設定は一部のアドネットワークのみ有効です。
+        /// </summary>
+        /// <value>アラートダイアログの本文</value>
+        public string PlayerAlertBodyText
+        {
+            get {
+                var ret = string.Empty;
+#if UNITY_IOS && !UNITY_EDITOR
+                if (handleRef.Handle != IntPtr.Zero)
+                {
+                    ret = VAMPUnityVAMPConfigurationGetPlayerAlertBodyText(handleRef);
+                }
+#elif UNITY_ANDROID && !UNITY_EDITOR
+                if (configObject != null)
+                {
+                    ret = configObject.Call<string>("getPlayerAlertBodyText");
+                }
+#endif
+                return ret;
+            }
+            set {
+#if UNITY_IOS && !UNITY_EDITOR
+                if (handleRef.Handle != IntPtr.Zero)
+                {
+                    VAMPUnityVAMPConfigurationSetPlayerAlertBodyText(handleRef, value);
+                }
+#elif UNITY_ANDROID && !UNITY_EDITOR
+                if (configObject != null)
+                {
+                    configObject.Call("setPlayerAlertBodyText", value);
+                }
+#endif
+            }
+        }
+
+        /// <summary>
+        /// キャンセル機能が有効の時に表示するアラートダイアログの終了ボタンのテキストを設定します。
+        /// この設定は一部のアドネットワークのみ有効です。
+        /// </summary>
+        /// <value>アラートダイアログの終了ボタンのテキスト</value>
+        public string PlayerAlertCloseButtonText
+        {
+            get {
+                var ret = string.Empty;
+#if UNITY_IOS && !UNITY_EDITOR
+                if (handleRef.Handle != IntPtr.Zero)
+                {
+                    ret = VAMPUnityVAMPConfigurationGetPlayerAlertCloseButtonText(handleRef);
+                }
+#elif UNITY_ANDROID && !UNITY_EDITOR
+                if (configObject != null)
+                {
+                    ret = configObject.Call<string>("getPlayerAlertCloseButtonText");
+                }
+#endif
+                return ret;
+            }
+            set {
+#if UNITY_IOS && !UNITY_EDITOR
+                if (handleRef.Handle != IntPtr.Zero)
+                {
+                    VAMPUnityVAMPConfigurationSetPlayerAlertCloseButtonText(handleRef, value);
+                }
+#elif UNITY_ANDROID && !UNITY_EDITOR
+                if (configObject != null)
+                {
+                    configObject.Call("setPlayerAlertCloseButtonText", value);
+                }
+#endif
+            }
+        }
+
+        /// <summary>
+        /// キャンセル機能が有効の時に表示するアラートダイアログの継続視聴ボタンのテキストを設定します。
+        /// この設定は一部のアドネットワークのみ有効です。
+        /// </summary>
+        /// <value>アラートダイアログの継続視聴ボタンのテキスト</value>
+        public string PlayerAlertContinueButtonText
+        {
+            get {
+                var ret = string.Empty;
+#if UNITY_IOS && !UNITY_EDITOR
+                if (handleRef.Handle != IntPtr.Zero)
+                {
+                    ret = VAMPUnityVAMPConfigurationGetPlayerAlertContinueButtonText(handleRef);
+                }
+#elif UNITY_ANDROID && !UNITY_EDITOR
+                if (configObject != null)
+                {
+                    ret = configObject.Call<string>("getPlayerAlertContinueButtonText");
+                }
+#endif
+                return ret;
+            }
+            set {
+#if UNITY_IOS && !UNITY_EDITOR
+                if (handleRef.Handle != IntPtr.Zero)
+                {
+                    VAMPUnityVAMPConfigurationSetPlayerAlertContinueButtonText(handleRef, value);
+                }
+#elif UNITY_ANDROID && !UNITY_EDITOR
+                if (configObject != null)
+                {
+                    configObject.Call("setPlayerAlertContinueButtonText", value);
+                }
+#endif
+            }
+        }
+    }
+
+    /// <summary>
+    /// フリークエンシーキャップの状況を表すクラス
+    /// </summary>
+    public class VAMPFrequencyCappedStatus : IDisposable
+    {
+#if UNITY_IOS && !UNITY_EDITOR
+        private HandleRef handleRef;
+        public VAMPFrequencyCappedStatus(IntPtr cPtr) 
+        {
+            handleRef = new HandleRef(this, cPtr);
+        }
+
+#elif UNITY_ANDROID && !UNITY_EDITOR
+        private AndroidJavaObject javaObject;
+        public VAMPFrequencyCappedStatus(AndroidJavaObject javaObject)
+        {
+            this.javaObject = javaObject;
+        }
+#endif
+        ~VAMPFrequencyCappedStatus()
+        {
+            Dispose();
+        }
+
+        public void Dispose()
+        {
+            lock (this)
+            {
+#if UNITY_IOS && !UNITY_EDITOR
+                if (handleRef.Handle != IntPtr.Zero)
+                {
+                    VAMPUnityDeleteVAMPFrequencyCappedStatus(handleRef);
+                    handleRef = new HandleRef(null, IntPtr.Zero);
+                    GC.SuppressFinalize(this);
+                }
+#elif UNITY_ANDROID && !UNITY_EDITOR
+                if (javaObject != null) 
+                {
+                    javaObject.Dispose();
+                    javaObject = null;
+                    GC.SuppressFinalize(this);
+                }
+#endif
+            }
+        }
+
+        /// <summary>
+        /// キャップにかかっているかどうかを確認します
+        /// </summary>
+        /// <value>キャップにかかっているなら<c>true</c>、かかっていないなら<c>false</c>.</value>
+        public bool IsCapped
+        {
+            get {
+                var ret = false;
+#if UNITY_IOS && !UNITY_EDITOR
+                if (handleRef.Handle != IntPtr.Zero)
+                {
+                    ret = VAMPUnityVAMPFrequencyCappedStatusIsCapped(handleRef); 
+                }
+                else
+                {
+                    throw new ObjectDisposedException("");
+                }
+#elif UNITY_ANDROID && !UNITY_EDITOR
+                if (javaObject != null)
+                {
+                    ret = javaObject.Call<bool>("isCapped");
+                }
+                else
+                {
+                    throw new ObjectDisposedException("");
+                }
+#endif
+                return ret;
+    
+            }
+        }
+
+        /// <summary>
+        /// 現在設定されている視聴制限回数を取得します
+        /// </summary>
+        /// <value>視聴制限回数</value>
+        public uint ImpressionLimit
+        {
+            get { 
+                var ret = 0u;
+#if UNITY_IOS && !UNITY_EDITOR
+                if (handleRef.Handle != IntPtr.Zero)
+                {
+                    ret = VAMPUnityVAMPFrequencyCappedStatusImpressionLimit(handleRef);
+                }
+                else
+                {
+                    throw new ObjectDisposedException("");
+                }
+#elif UNITY_ANDROID && !UNITY_EDITOR
+                if (javaObject != null)
+                {
+                    ret = (uint)Math.Max(javaObject.Call<int>("getImpressionLimit"), 0);
+                }
+                else
+                {
+                    throw new ObjectDisposedException("");
+                }
+#endif
+                return ret;
+            }
+        }
+
+        /// <summary>
+        /// 現在設定されている、視聴回数がリセットされるまでの時間制限を取得します
+        /// </summary>
+        /// <value>視聴回数がリセットされるまでの時間制限</value>
+        public uint TimeLimit
+        {
+            get {
+                var ret = 0u;
+#if UNITY_IOS && !UNITY_EDITOR
+                if (handleRef.Handle != IntPtr.Zero)
+                {
+                    ret = VAMPUnityVAMPFrequencyCappedStatusTimeLimit(handleRef); 
+                }
+                else
+                {
+                    throw new ObjectDisposedException("");
+                }
+#elif UNITY_ANDROID && !UNITY_EDITOR
+                if (javaObject != null)
+                {
+                    ret = (uint)Math.Max(javaObject.Call<int>("getTimeLimit"), 0);
+                }
+                else
+                {
+                    throw new ObjectDisposedException("");
+                }
+#endif
+                return ret;
+            }
+        }
+
+        /// <summary>
+        /// 現在の視聴回数を取得します
+        /// </summary>
+        /// <value>視聴回数</value>
+        public uint Impressions
+        {
+            get { 
+                var ret = 0u;
+#if UNITY_IOS && !UNITY_EDITOR
+                if (handleRef.Handle != IntPtr.Zero)
+                {
+                    ret = VAMPUnityVAMPFrequencyCappedStatusImpressions(handleRef);
+                }
+                else
+                {
+                    throw new ObjectDisposedException("");
+                }
+#elif UNITY_ANDROID && !UNITY_EDITOR
+                if (javaObject != null)
+                {
+                    ret = (uint)Math.Max(javaObject.Call<int>("getImpressions"), 0);
+                }
+                else
+                {
+                    throw new ObjectDisposedException("");
+                }
+#endif
+                return ret;
+            }
+        }
+
+        public uint RemainingTime
+        {
+            get {
+                var ret = 0u;
+#if UNITY_IOS && !UNITY_EDITOR
+                if (handleRef.Handle != IntPtr.Zero)
+                {
+                    ret = VAMPUnityVAMPFrequencyCappedStatusRemainingTime(handleRef);
+                }
+                else
+                {
+                    throw new ObjectDisposedException("");
+                }
+#elif UNITY_ANDROID && !UNITY_EDITOR
+                if (javaObject != null)
+                {
+                    ret = (uint)Math.Max(javaObject.Call<int>("getRemainingTime"), 0);
+                }
+                else
+                {
+                    throw new ObjectDisposedException("");
+                }
+#endif
+                return ret;
+            }
+        }
+    }
+
+#if UNITY_IOS
+    [AOT.MonoPInvokeCallback(typeof(InternalReceiveCallback))]
+    static void VAMPDidReceive(string placementId, string adnwName)
+    {
+        if (listener != null)
+        {
+            listener.VAMPDidReceive(placementId, adnwName);
+        }
+    }
+
+    [AOT.MonoPInvokeCallback(typeof(InternalFailToLoadCallback))]
+    static void VAMPDidFailToLoad(int errorCode, string placementId)
+    {
+        if (listener != null)
+        {
+            listener.VAMPDidFailToLoad((VAMPError)errorCode, placementId);
+        }
+    }
+
+    [AOT.MonoPInvokeCallback(typeof(InternalFailToShowCallback))]
+    static void VAMPDidFailToShow(int errorCode, string placementId)
+    {
+        if (listener != null)
+        {
+            listener.VAMPDidFailToShow((VAMPError)errorCode, placementId);
+        }
+    }
+
+    [AOT.MonoPInvokeCallback(typeof(InternalCompleteCallback))]
+    static void VAMPDidComplete(string placementId, string adnwName)
+    {
+        if (listener != null)
+        {
+            listener.VAMPDidComplete(placementId, adnwName);
+        }
+    }
+
+    [AOT.MonoPInvokeCallback(typeof(InternalCloseCallback))]
+    static void VAMPDidClose(string placementId, string adnwName)
+    {
+        if (listener != null)
+        {
+            listener.VAMPDidClose(placementId, adnwName);
+        }
+    }
+
+    [AOT.MonoPInvokeCallback(typeof(InternalLoadStartCallback))]
+    static void VAMPDidLoadStart(string placementId, string adnwName)
+    {
+        if (advancedListener != null)
+        {
+            advancedListener.VAMPLoadStart(placementId, adnwName);
+        }
+    }
+
+    [AOT.MonoPInvokeCallback(typeof(InternalLoadResultCallback))]
+    static void VAMPDidLoadResult(string placementId, bool success, string adnwName, string message)
+    {
+        if (advancedListener != null)
+        {
+            advancedListener.VAMPLoadResult(placementId, success, adnwName, message);
+        }
+    }
+
+    [AOT.MonoPInvokeCallback(typeof(InternalExpireCallback))]
+    static void VAMPDidExpire(string placementId)
+    {
+        if (listener != null)
+        {
+            listener.VAMPDidExpired(placementId);
+        }
+    }
+
+    [AOT.MonoPInvokeCallback(typeof(GetCountryCodeCallback))]
+    static void VAMPDidGetCountryCode(string countryCode)
+    {
+        if (getCountryCodeCallback != null)
+        {
+            getCountryCodeCallback.Invoke(countryCode);
+        }
+    }
+
+    [AOT.MonoPInvokeCallback(typeof(IsEUAccessCallback))]
+    static void VAMPIsEUAccess(bool access)
+    {
+        if (isEUAccessCallback != null)
+        {
+            isEUAccessCallback.Invoke(access);
+        }
+    }
+#endif
+
+    /// <summary>
+    /// IVAMPListener interface.
+    /// </summary>
+    public interface IVAMPListener
+    {
+        /// <summary>
+        /// ロードが完了し、広告表示できる状態になった時に通知されます。
+        /// </summary>
+        /// <param name="placementId">広告枠ID</param>
+        /// <param name="adnwName">アドネットワーク名</param>
+        void VAMPDidReceive(string placementId, string adnwName);
+
+        /// <summary>
+        /// 広告のロード時にエラーが発生した時に通知されます。
+        /// </summary>
+        /// <param name="error">Error</param>
+        /// <param name="placementId">広告枠ID</param>
+        void VAMPDidFailToLoad(VAMPError error, string placementId);
+
+        /// <summary>
+        /// 広告の表示時にエラーが発生した時に通知されます。
+        /// </summary>
+        /// <param name="error">Error</param>
+        /// <param name="placementId">広告枠ID</param>
+        void VAMPDidFailToShow(VAMPError error, string placementId);
+
+        /// <summary>
+        /// インセンティブ付与可能になったタイミングで通知されます。
+        /// </summary>
+        /// <param name="placementId">広告枠ID</param>
+        /// <param name="adnwName">アドネットワーク名</param>
+        void VAMPDidComplete(string placementId, string adnwName);
+
+        /// <summary>
+        /// 広告が閉じられた時に通知されます。
+        /// ユーザキャンセルなども含まれるのため、インセンティブ付与はVAMPDidCompleteで判定してください。
+        /// </summary>
+        /// <param name="placementId">広告枠ID</param>
+        /// <param name="adnwName">アドネットワーク名</param>
+        void VAMPDidClose(string placementId, string adnwName);
+
+        /// <summary>
+        /// 広告準備完了から55分経つと取得した広告の表示はできてもRTBの収益は発生しません。
+        /// この通知を受け取ったら、もう一度Loadからやり直す必要があります。
+        /// </summary>
+        /// <param name="placementId">広告枠ID</param>
+        void VAMPDidExpired(string placementId);
+    }
+
+    /// <summary>
+    /// IVAMPAdvancedListener interface.
+    /// </summary>
+    public interface IVAMPAdvancedListener
+    {
+        /// <summary>
+        /// アドネットワークごとの広告取得が開始された時に通知されます。
+        /// </summary>
+        /// <param name="placementId">広告枠ID</param>
+        /// <param name="adnwName">アドネットワーク名</param>
+        void VAMPLoadStart(string placementId, string adnwName);
+
+        /// <summary>
+        /// アドネットワークごとの広告取得結果が通知されます(成功/失敗どちらも通知)。
+        /// </summary>
+        /// <param name="placementId">広告枠ID</param>
+        /// <param name="success"><c>true</c>なら成功</param>
+        /// <param name="adnwName">アドネットワーク名</param>
+        /// <param name="message">メッセージ</param>
+        void VAMPLoadResult(string placementId, bool success, string adnwName, string message);
+    }
+
+    /// <summary>
+    /// VAMP側で発生するエラーの定義
+    /// </summary>
+    public enum VAMPError
+    {
+        /// <summary>
+        /// 非対応OSバージョン
+        /// </summary>
+        NOT_SUPPORTED_OS_VERSION,
+
+        /// <summary>
+        /// 不明なエラー
+        /// </summary>
+        UNKNOWN,
+
+        /// <summary>
+        /// サーバー間通信エラー
+        /// </summary>
+        SERVER_ERROR,
+
+        /// <summary>
+        /// 配信可能なアドネットワークがない
+        /// </summary>
+        NO_ADNETWORK,
+
+        /// <summary>
+        /// 通信不通
+        /// </summary>
+        NEED_CONNECTION,
+
+        /// <summary>
+        /// タイムアウト
+        /// </summary>
+        MEDIATION_TIMEOUT,
+
+        /// <summary>
+        /// ユーザ都合の途中終了
+        /// </summary>
+        USER_CANCEL,
+
+        /// <summary>
+        /// 広告在庫無し
+        /// </summary>
+        NO_ADSTOCK,
+
+        /// <summary>
+        /// アドネットワークにてエラーが発生
+        /// </summary>
+        ADNETWORK_ERROR,
+
+        /// <summary>
+        /// 設定エラー
+        /// </summary>
+        SETTING_ERROR,
+
+        /// <summary>
+        /// 広告のロードが完了していないときに表示しようとした
+        /// </summary>
+        NOT_LOADED,
+
+        /// <summary>
+        /// パラメータが不正
+        /// </summary>
+        INVALID_PARAMETER,
+
+        /// <summary>
+        /// キャップにかかっている
+        /// </summary>
+        FREQUENCY_CAPPED
     }
 }

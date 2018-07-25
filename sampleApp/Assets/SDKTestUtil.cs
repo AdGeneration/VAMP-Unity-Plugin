@@ -6,11 +6,11 @@ public class SDKTestUtil
 {
     public static string GetAppVersion()
     {
-        string ver = "nothing";
+        string ver = Application.version;
 
-        #if UNITY_IPHONE
+        #if UNITY_IOS && !UNITY_EDITOR
         ver = VAMPUnitySDK.DeviceUtil.GetInfo("AppVer");
-        #elif UNITY_ANDROID
+        #elif UNITY_ANDROID && !UNITY_EDITOR
         try
         {
             AndroidJavaClass playerCls = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
@@ -36,8 +36,7 @@ public class SDKTestUtil
         List<string> infos = new List<string>();
 
         infos.Add("--------------------");
-
-        #if UNITY_IPHONE
+        #if UNITY_IOS && !UNITY_EDITOR
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             infos.Add("サポートOSバージョン：" + VAMPUnitySDK.SupportedOSVersion());
@@ -49,6 +48,7 @@ public class SDKTestUtil
             infos.Add("SDK_Ver(FAN)：" + GetAdnwSDKVersion("FAN"));
             infos.Add("SDK_Ver(Maio)：" + GetAdnwSDKVersion("Maio"));
             infos.Add("SDK_Ver(Mintegral)：" + GetAdnwSDKVersion("Mintegral"));
+            infos.Add("SDK_Ver(MoPub)：" + GetAdnwSDKVersion("MoPub"));
             infos.Add("SDK_Ver(Nend)：" + GetAdnwSDKVersion("Nend"));
             infos.Add("SDK_Ver(Tapjoy)：" + GetAdnwSDKVersion("Tapjoy"));
             infos.Add("SDK_Ver(UnityAds)：" + GetAdnwSDKVersion("UnityAds"));
@@ -64,8 +64,9 @@ public class SDKTestUtil
             infos.Add("キャリア情報：" + VAMPUnitySDK.DeviceUtil.GetInfo("Carrier"));
             infos.Add("国コード：" + VAMPUnitySDK.DeviceUtil.GetInfo("CountryCode"));
             infos.Add("IDFA：" + VAMPUnitySDK.DeviceUtil.GetInfo("IDFA"));
+            infos.Add("--------------------");
         }
-        #elif UNITY_ANDROID
+        #elif UNITY_ANDROID && !UNITY_EDITOR
         if (Application.platform == RuntimePlatform.Android)
         {
             string appName = "";
@@ -112,6 +113,7 @@ public class SDKTestUtil
             infos.Add("SDK_Ver(FAN)：" + GetAdnwSDKVersion("FAN"));
             infos.Add("SDK_Ver(Maio)：" + GetAdnwSDKVersion("Maio"));
             infos.Add("SDK_Ver(Mintegral)：" + GetAdnwSDKVersion("Mintegral"));
+            infos.Add("SDK_Ver(MoPub)：" + GetAdnwSDKVersion("MoPub"));
             infos.Add("SDK_Ver(Nend)：" + GetAdnwSDKVersion("Nend"));
             infos.Add("SDK_Ver(Tapjoy)：" + GetAdnwSDKVersion("Tapjoy"));
             infos.Add("SDK_Ver(UnityAds)：" + GetAdnwSDKVersion("UnityAds"));
@@ -127,9 +129,10 @@ public class SDKTestUtil
             infos.Add("メーカー名：" + manufacturer);
             infos.Add("モデル番号：" + model);
             infos.Add("ブランド名：" + brand);
+            infos.Add("--------------------");
         }
         #endif
-
+        infos.Add("isPlayerCancelable:" + VAMPUnitySDK.VAMPConfiguration.getInstance().PlayerCancelable);
         infos.Add("--------------------");
 
         return infos;
@@ -139,12 +142,12 @@ public class SDKTestUtil
     {
         string version = "nothing";
 
-        #if UNITY_IPHONE
+        #if UNITY_IOS && !UNITY_EDITOR
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             version = VAMPUnitySDK.SDKUtil.GetAdnwSDKVersion(adnw);
         }
-        #elif UNITY_ANDROID
+        #elif UNITY_ANDROID && !UNITY_EDITOR
         if (Application.platform == RuntimePlatform.Android)
         {
             AndroidJavaClass cls;
@@ -198,6 +201,10 @@ public class SDKTestUtil
                         cls = new AndroidJavaClass("com.vungle.warren.BuildConfig");
                         version = cls.GetStatic<string>("VERSION_NAME");
                         break;
+                    case "MoPub":
+                        cls = new AndroidJavaClass("com.mopub.common.MoPub");
+                        version = cls.GetStatic<string>("SDK_VERSION");
+                        break;
                 }
             }
             catch (AndroidJavaException ex)
@@ -212,7 +219,7 @@ public class SDKTestUtil
 
     public static void AddFANTestDevice(string deviceIdHash)
     {
-        #if UNITY_ANDROID
+        #if UNITY_ANDROID && !UNITY_EDITOR
         try
         {
             AndroidJavaClass cls = new AndroidJavaClass("com.facebook.ads.AdSettings");
@@ -227,7 +234,7 @@ public class SDKTestUtil
 
     public static void ClearFANTestDevices()
     {
-        #if UNITY_ANDROID
+        #if UNITY_ANDROID && !UNITY_EDITOR
         try
         {
             AndroidJavaClass cls = new AndroidJavaClass("com.facebook.ads.AdSettings");
