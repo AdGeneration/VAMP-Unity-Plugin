@@ -7,15 +7,8 @@ using System.Runtime.InteropServices;
 /// <summary>
 /// SDKTest class.
 /// </summary>
-/// <remarks>
-/// VAMP v3.0.4から大きくAPIが変更しているため、
-/// VAMP v3.0.3もしくはそれよりも古いバージョンで動作を確認する場合は
-/// Scripting Define SymbolsにVAMP_3_0_3_OR_OLDERを追加してください。
-/// </remarks>
 public class SDKTest : MonoBehaviour
-#if !VAMP_3_0_3_OR_OLDER
 , VAMPUnitySDK.IVAMPListener, VAMPUnitySDK.IVAMPAdvancedListener
-#endif
 {
     /**
      * テスト用広告枠IDを使用して広告表示を確認することができます
@@ -42,9 +35,7 @@ public class SDKTest : MonoBehaviour
     // ターゲティング属性 ユーザの性別
     public VAMPUnitySDK.Gender userGender = VAMPUnitySDK.Gender.UNKNOWN;
     // ターゲティング属性 ユーザの誕生日
-    public int userBirthYear = 1980;
-    public int userBirthMonth = 2;
-    public int userBirthDay = 20;
+    public Birthday birthday;
 
     public FrequencyCap frequencyCap;
     public VAMPConfig vampConfig;
@@ -52,7 +43,7 @@ public class SDKTest : MonoBehaviour
     public Texture logoTexture;
     public Texture btnOnTexture;
     public Texture btnOffTexture;
-    
+
     private enum Block
     {
         Title = 0,
@@ -137,7 +128,7 @@ public class SDKTest : MonoBehaviour
         // ユーザ属性をセットします
         //var targeting = new VAMPUnitySDK.Targeting();
         //targeting.Gender = userGender;
-        //targeting.Birthday = new VAMPUnitySDK.Birthday(userBirthYear, userBirthMonth, userBirthDay);
+        //targeting.Birthday = new VAMPUnitySDK.Birthday(birthday.year, birthday.month, birthday.day);
         //VAMPUnitySDK.setTargeting(targeting);
 
         var vampConfiguration = VAMPUnitySDK.VAMPConfiguration.getInstance();
@@ -172,23 +163,19 @@ public class SDKTest : MonoBehaviour
         infos = SDKTestUtil.GetDeviceInfo();
 
         // EU圏内からのアクセスか判定します
-//#if VAMP_3_0_3_OR_OLDER
-//        VAMPUnitySDK.isEUAccess(gameObject);
-//#else
-//        VAMPUnitySDK.isEUAccess((bool access) => {
-//            AddMessage(string.Format("IsEUAccess {0}", access));
+        //        VAMPUnitySDK.isEUAccess((bool access) => {
+        //            AddMessage(string.Format("IsEUAccess {0}", access));
 
-//            Debug.Log("[VAMPUnitySDK] VAMPIsEUAccess: " + access);
+        //            Debug.Log("[VAMPUnitySDK] VAMPIsEUAccess: " + access);
 
-//            if (access)
-//            {
-//                // TODO: ユーザに広告が個人に関連する情報を取得することの同意を求めます
+        //            if (access)
+        //            {
+        //                // TODO: ユーザに広告が個人に関連する情報を取得することの同意を求めます
 
-//                // ユーザの入力を受け付けACCEPTEDまたはDENIEDをセットします
-//                VAMPUnitySDK.setUserConsent(VAMPUnitySDK.ConsentStatus.ACCEPTED);
-//            }
-//        });
-//#endif
+        //                // ユーザの入力を受け付けACCEPTEDまたはDENIEDをセットします
+        //                VAMPUnitySDK.setUserConsent(VAMPUnitySDK.ConsentStatus.ACCEPTED);
+        //            }
+        //        });
     }
 
     void Update()
@@ -222,8 +209,6 @@ public class SDKTest : MonoBehaviour
         {
             logoCube.SetActive(false);
 
-            GUI.Label(new Rect(0, safeAreaInsets.Top, width, 60), "VAMP-Unity-Plugin");
-
             labelStyle.fontSize = 25;
 
             GUI.Label(new Rect(0, height - 60 - safeAreaInsets.Bottom, width, 50),
@@ -237,7 +222,7 @@ public class SDKTest : MonoBehaviour
 
             labelStyle.alignment = TextAnchor.MiddleRight;
 
-            GUI.enabled = !isVampInitialized;
+            // GUI.enabled = !isVampInitialized;
 
             GUI.Label(new Rect(100, 90, 80, 60), "ID:");
             placementID = GUI.TextField(new Rect(200, 90, 240, 60), placementID);
@@ -302,11 +287,7 @@ public class SDKTest : MonoBehaviour
 
                 // アドネットワークSDKを事前に初期化しておくことができます。
                 // アプリ起動時などのタイミングで1度だけ使用してください
-#if VAMP_3_0_3_OR_OLDER
-                VAMPUnitySDK.initializeAdnwSDK(placementID, initializeState.ToString(), initializeDuration);
-#else
                 VAMPUnitySDK.initializeAdnwSDK(placementID, initializeState, initializeDuration);
-#endif
             }
 
             GUILayout.EndArea();
@@ -327,13 +308,9 @@ public class SDKTest : MonoBehaviour
                 VAMPUnitySDK.setDebugMode(debugMode);
 
                 // VAMPを初期化します。必ずLoadより先に実行してください
-#if VAMP_3_0_3_OR_OLDER
-                VAMPUnitySDK.initVAMP(gameObject, placementID);
-#else
                 VAMPUnitySDK.initialize(placementID);
                 VAMPUnitySDK.setVAMPListener(this);
                 VAMPUnitySDK.setAdvancedListener(this);
-#endif
             }
 
             if (GUI.Button(new Rect(100, 410, 340, 60), "AD2"))
@@ -350,13 +327,9 @@ public class SDKTest : MonoBehaviour
                 VAMPUnitySDK.setDebugMode(debugMode);
 
                 // VAMPを初期化します。必ずLoadより先に実行してください
-#if VAMP_3_0_3_OR_OLDER
-                VAMPUnitySDK.initVAMP(gameObject, placementID);
-#else
                 VAMPUnitySDK.initialize(placementID);
                 VAMPUnitySDK.setVAMPListener(this);
                 VAMPUnitySDK.setAdvancedListener(this);
-#endif
                 // 広告のプリロードを開始します
                 VAMPUnitySDK.preload();
             }
@@ -375,24 +348,17 @@ public class SDKTest : MonoBehaviour
                 VAMPUnitySDK.setDebugMode(debugMode);
 
                 // VAMPを初期化します。必ずLoadより先に実行してください
-#if VAMP_3_0_3_OR_OLDER
-                VAMPUnitySDK.initVAMP(gameObject, placementID);
-#else
                 VAMPUnitySDK.initialize(placementID);
                 VAMPUnitySDK.setVAMPListener(this);
                 VAMPUnitySDK.setAdvancedListener(this);
-#endif
             }
-           
+
             if (GUI.Button(new Rect(100, 570, 340, 60), "INFO"))
             {
                 blk = Block.Info;
 
 
                 // 国コード取得サンプル
-#if VAMP_3_0_3_OR_LOWER
-                VAMPUnitySDK.getCountryCode(gameObject);
-#else
                 VAMPUnitySDK.getCountryCode((string countryCode) =>
                     {
                         this.countryCode = countryCode;
@@ -400,14 +366,13 @@ public class SDKTest : MonoBehaviour
 
                         Debug.Log("[VAMPUnitySDK] VAMPCountryCode: " + countryCode);
                     });
-#endif
             }
         }
         else if (blk == Block.Ad1)
         {
             logoCube.SetActive(true);
 
-            if (GUI.Button(new Rect(0, safeAreaInsets.Top, 120, 60), "＜戻る"))
+            if (GUI.Button(new Rect(0, 60 + safeAreaInsets.Top, 120, 60), "＜戻る"))
             {
                 blk = Block.Title;
 
@@ -420,7 +385,7 @@ public class SDKTest : MonoBehaviour
                 logPosition = Vector2.zero;
             }
 
-            if (GUI.Button(new Rect(140, safeAreaInsets.Top, 120, 60), "LOAD"))
+            if (GUI.Button(new Rect(140, 60 + safeAreaInsets.Top, 120, 60), "LOAD"))
             {
                 AddMessage("click load button.");
 
@@ -431,7 +396,7 @@ public class SDKTest : MonoBehaviour
                 isLoading = true;
             }
 
-            if (GUI.Button(new Rect(280, safeAreaInsets.Top, 120, 60), "SHOW"))
+            if (GUI.Button(new Rect(280, 60 + safeAreaInsets.Top, 120, 60), "SHOW"))
             {
                 AddMessage("click show button.");
 
@@ -446,13 +411,13 @@ public class SDKTest : MonoBehaviour
 
             labelStyle.fontSize = 25;
 
-            GUI.Label(new Rect(0, 70 + safeAreaInsets.Top, width, 50),
+            GUI.Label(new Rect(0, 130 + safeAreaInsets.Top, width, 50),
                 "[Test:" + testMode + "] [Debug:" + debugMode + "]");
 
-            GUI.Label(new Rect(0, 120 + safeAreaInsets.Top, width, 50),
+            GUI.Label(new Rect(0, 180 + safeAreaInsets.Top, width, 50),
                 "ID:" + placementID);
 
-            GUILayout.BeginArea(new Rect(20, 170 + safeAreaInsets.Top, width - 40, height - 190 - safeAreaInsets.Bottom));
+            GUILayout.BeginArea(new Rect(20, 230 + safeAreaInsets.Top, width - 40, height - 190 - safeAreaInsets.Bottom));
 
             logPosition = GUILayout.BeginScrollView(logPosition);
 
@@ -477,7 +442,7 @@ public class SDKTest : MonoBehaviour
         {
             logoCube.SetActive(true);
 
-            if (GUI.Button(new Rect(0, safeAreaInsets.Top, 120, 60), "＜戻る"))
+            if (GUI.Button(new Rect(0, 60 + safeAreaInsets.Top, 120, 60), "＜戻る"))
             {
                 blk = Block.Title;
 
@@ -490,7 +455,7 @@ public class SDKTest : MonoBehaviour
                 logPosition = Vector2.zero;
             }
 
-            if (GUI.Button(new Rect(140, safeAreaInsets.Top, 240, 60), "LOAD & SHOW"))
+            if (GUI.Button(new Rect(140, 60 + safeAreaInsets.Top, 240, 60), "LOAD & SHOW"))
             {
                 AddMessage("click load & show button.");
 
@@ -514,13 +479,13 @@ public class SDKTest : MonoBehaviour
 
             labelStyle.fontSize = 25;
 
-            GUI.Label(new Rect(0, 70 + safeAreaInsets.Top, width, 50),
+            GUI.Label(new Rect(0, 130 + safeAreaInsets.Top, width, 50),
                 "[Test:" + testMode + "] [Debug:" + debugMode + "]");
 
-            GUI.Label(new Rect(0, 120 + safeAreaInsets.Top, width, 50),
+            GUI.Label(new Rect(0, 180 + safeAreaInsets.Top, width, 50),
                 "ID:" + placementID);
 
-            GUILayout.BeginArea(new Rect(20, 170 + safeAreaInsets.Top, width - 40, height - 190 - safeAreaInsets.Bottom));
+            GUILayout.BeginArea(new Rect(20, 230 + safeAreaInsets.Top, width - 40, height - 190 - safeAreaInsets.Bottom));
 
             logPosition = GUILayout.BeginScrollView(logPosition);
 
@@ -545,7 +510,7 @@ public class SDKTest : MonoBehaviour
         {
             logoCube.SetActive(true);
 
-            if (GUI.Button(new Rect(0, safeAreaInsets.Top, 120, 60), "＜戻る"))
+            if (GUI.Button(new Rect(0, 60 + safeAreaInsets.Top, 120, 60), "＜戻る"))
             {
                 blk = Block.Title;
 
@@ -558,7 +523,7 @@ public class SDKTest : MonoBehaviour
                 logPosition = Vector2.zero;
             }
 
-            if (GUI.Button(new Rect(140, safeAreaInsets.Top, 120, 60), "LOAD"))
+            if (GUI.Button(new Rect(140, 60 + safeAreaInsets.Top, 120, 60), "LOAD"))
             {
                 AddMessage("click load button.");
 
@@ -569,7 +534,7 @@ public class SDKTest : MonoBehaviour
                 isLoading = true;
             }
 
-            if (GUI.Button(new Rect(280, safeAreaInsets.Top, 120, 60), "SHOW"))
+            if (GUI.Button(new Rect(280, 60 + safeAreaInsets.Top, 120, 60), "SHOW"))
             {
                 AddMessage("click show button.");
 
@@ -582,31 +547,31 @@ public class SDKTest : MonoBehaviour
                 }
             }
 
-            if (GUI.Button(new Rect(70, 70 + safeAreaInsets.Top, 400, 60), "SetFrequencyCap"))
+            if (GUI.Button(new Rect(70, 130 + safeAreaInsets.Top, 400, 60), "SetFrequencyCap"))
             {
                 AddMessage("click SetFrequencyCap button.");
 
                 VAMPUnitySDK.setFrequencyCap(placementID, frequencyCap.impressions, frequencyCap.timeLimit);
             }
 
-            if (GUI.Button(new Rect(70, 150 + safeAreaInsets.Top, 400, 60), "GetFrequencyCappedStatus"))
+            if (GUI.Button(new Rect(70, 210 + safeAreaInsets.Top, 400, 60), "GetFrequencyCappedStatus"))
             {
                 AddMessage("click GetFrequencyCappedStatus button.");
 
                 using (var fpStatus = VAMPUnitySDK.getFrequencyCappedStatus(placementID))
                 {
-                    AddMessage(string.Format("capped:{0}, impressions:{1}, remainingTime:{2}, impressionLimit:{3}, timeLimit:{4}", 
+                    AddMessage(string.Format("capped:{0}, impressions:{1}, remainingTime:{2}, impressionLimit:{3}, timeLimit:{4}",
                         fpStatus.IsCapped, fpStatus.Impressions, fpStatus.RemainingTime, fpStatus.ImpressionLimit, fpStatus.TimeLimit));
                 }
             }
 
-            if (GUI.Button(new Rect(70, 230 + safeAreaInsets.Top, 400, 60), "ClearFrequencyCap"))
+            if (GUI.Button(new Rect(70, 290 + safeAreaInsets.Top, 400, 60), "ClearFrequencyCap"))
             {
                 AddMessage("click clearFrequencyCap button");
                 VAMPUnitySDK.clearFrequencyCap(placementID);
             }
 
-            if (GUI.Button(new Rect(70, 310 + safeAreaInsets.Top, 400, 60), "ResetFrequencyCap"))
+            if (GUI.Button(new Rect(70, 370 + safeAreaInsets.Top, 400, 60), "ResetFrequencyCap"))
             {
                 AddMessage("click resetFrequencyCap button");
                 VAMPUnitySDK.resetFrequencyCap(placementID);
@@ -614,13 +579,13 @@ public class SDKTest : MonoBehaviour
 
             labelStyle.fontSize = 25;
 
-            GUI.Label(new Rect(0, 390 + safeAreaInsets.Top, width, 50),
+            GUI.Label(new Rect(0, 450 + safeAreaInsets.Top, width, 50),
                 "[Test:" + testMode + "] [Debug:" + debugMode + "]");
 
-            GUI.Label(new Rect(0, 440 + safeAreaInsets.Top, width, 50),
+            GUI.Label(new Rect(0, 500 + safeAreaInsets.Top, width, 50),
                 "ID:" + placementID);
 
-            GUILayout.BeginArea(new Rect(20, 490 + safeAreaInsets.Top, width - 40, height - 190 - safeAreaInsets.Bottom));
+            GUILayout.BeginArea(new Rect(20, 550 + safeAreaInsets.Top, width - 40, height - 190 - safeAreaInsets.Bottom));
 
             logPosition = GUILayout.BeginScrollView(logPosition);
 
@@ -645,12 +610,12 @@ public class SDKTest : MonoBehaviour
         {
             logoCube.SetActive(false);
 
-            if (GUI.Button(new Rect(0, safeAreaInsets.Top, 120, 60), "＜戻る"))
+            if (GUI.Button(new Rect(0, 60 + safeAreaInsets.Top, 120, 60), "＜戻る"))
             {
                 blk = Block.Title;
             }
 
-            GUILayout.BeginArea(new Rect(20, 70 + safeAreaInsets.Top, width - 40, height - 90 - safeAreaInsets.Bottom));
+            GUILayout.BeginArea(new Rect(20, 130 + safeAreaInsets.Top, width - 40, height - 90 - safeAreaInsets.Bottom));
 
             infoPosition = GUILayout.BeginScrollView(infoPosition);
 
@@ -676,7 +641,7 @@ public class SDKTest : MonoBehaviour
     {
         messages.Add(System.DateTime.Now.ToString("MM/dd HH:mm:ss ") + str);
     }
-	
+
     private void OnLogMessageReceived(string condition, string stackTrace, LogType type)
     {
         // エラーやワーニングはメッセージを出力する
@@ -694,7 +659,6 @@ public class SDKTest : MonoBehaviour
     }
 
     // IVAMPListener
-#if !VAMP_3_0_3_OR_OLDER
     public void VAMPDidReceive(string placementId, string adnwName)
     {
         AddMessage(string.Format("Receive {0} {1}", placementId, adnwName));
@@ -764,152 +728,6 @@ public class SDKTest : MonoBehaviour
 
         Debug.LogFormat("[VAMPUnitySDK] VAMPLoadResult: {0} {1} {2} {3}", placementId, success, adnwName, message);
     }
-
-#else
-    //
-    // VAMPからのメッセージを受け取る場合は以下のメソッドを実装してください
-    //
-
-    // ロードが完了し、広告表示できる状態になった時に通知されます
-    void VAMPDidReceive(string msg)
-    {
-        string[] param = VAMPUnitySDK.MessageUtil.ParseMessage(msg);
-        // param[0]:placementId
-        // param[1]:adnwName
-        AddMessage(string.Format("Receive {0} {1}", param[0], param[1]));
-
-        isLoading = false;
-
-        Debug.Log("[VAMPUnitySDK] VAMPDidReceive: " + msg);
-
-        if (blk == Block.Ad2)
-        {
-            VAMPUnitySDK.show();
-        }
-    }
-
-    // 広告のロード時にエラーが発生した時に通知されます
-    void VAMPDidFailToLoad(string msg)
-    {
-        string[] param = VAMPUnitySDK.MessageUtil.ParseMessage(msg);
-        // param[0]:error
-        // param[1]:placementId
-        AddMessage(string.Format("FailToLoad {0} {1}", param[0], param[1]));
-
-        isLoading = false;
-
-        Debug.Log("[VAMPUnitySDK] VAMPDidFailToLoad: " + msg);
-    }
-
-    // 広告の表示時にエラーが発生した時に通知されます
-    void VAMPDidFailToShow(string msg)
-    {
-        string[] param = VAMPUnitySDK.MessageUtil.ParseMessage(msg);
-        // param[0]:error
-        // param[1]:placementId
-        AddMessage(string.Format("FailToShow {0} {1}", param[0], param[1]));
-
-        Debug.Log("[VAMPUnitySDK] VAMPDidFailToShow: " + msg);
-    }
-
-
-    // 広告のロード時や表示時にエラーが発生した時に通知されます。
-    // v3.0.0からVAMPDidFailはdeprecatedです。代わりにVAMPDidFailToLoadおよびVAMPDidFailToShowを使用してください
-    void VAMPDidFail(string msg)
-    {
-        Debug.Log("[VAMPUnitySDK] VAMPDidFail: " + msg);
-    }
-
-    // インセンティブ付与可能になったタイミングで通知されます
-    void VAMPDidComplete(string msg)
-    {
-        string[] param = VAMPUnitySDK.MessageUtil.ParseMessage(msg);
-        // param[0]:placementId
-        // param[1]:adnwName
-        AddMessage(string.Format("Complete {0} {1}", param[0], param[1]));
-
-        Debug.Log("[VAMPUnitySDK] VAMPDidComplete: " + msg);
-    }
-
-    // 広告が閉じられた時に通知されます。
-    // ユーザキャンセルなども含まれるのため、インセンティブ付与はVAMPDidCompleteで判定してください
-    void VAMPDidClose(string msg)
-    {
-        string[] param = VAMPUnitySDK.MessageUtil.ParseMessage(msg);
-        // param[0]:placementId
-        // param[1]:adnwName
-        AddMessage(string.Format("Close {0} {1}", param[0], param[1]));
-
-        Debug.Log("[VAMPUnitySDK] VAMPDidClose: " + msg);
-    }
-
-    // 広告準備完了から55分経つと取得した広告の表示はできてもRTBの収益は発生しません。
-    // この通知を受け取ったら、もう一度Loadからやり直す必要があります
-    void VAMPDidExpired(string msg)
-    {
-        string[] param = VAMPUnitySDK.MessageUtil.ParseMessage(msg);
-        // param[0]:placementId
-        AddMessage(string.Format("Expire {0}", param[0]));
-
-        isLoading = false;
-
-        Debug.Log("[VAMPUnitySDK] VAMPDidExpired: " + msg);
-    }
-
-    // アドネットワークごとの広告取得が開始された時に通知されます
-    void VAMPLoadStart(string msg)
-    {
-        string[] param = VAMPUnitySDK.MessageUtil.ParseMessage(msg);
-        // param[0]:placementId
-        AddMessage(string.Format("LoadStart {0} {1}", param[0], param[1]));
-
-        Debug.Log("[VAMPUnitySDK] VAMPLoadStart: " + msg);
-    }
-
-    // アドネットワークごとの広告取得結果が通知されます(成功/失敗どちらも通知)。
-    void VAMPLoadResult(string msg)
-    {
-        string[] param = VAMPUnitySDK.MessageUtil.ParseMessage(msg);
-        // param[0]:placementId
-        // param[1]:success
-        // param[2]:adnwName
-        // param[3]:message
-        AddMessage(string.Format("LoadResult {0} {2} success={1} message={3}",
-                param[0], param[1], param[2], param[3]));
-
-        Debug.Log("[VAMPUnitySDK] VAMPLoadResult: " + msg);
-    }
-
-    // VAMPUnitySDK.getCountryCodeメソッドの取得結果が通知されます
-    void VAMPCountryCode(string msg)
-    {
-        string[] param = VAMPUnitySDK.MessageUtil.ParseMessage(msg);
-        // param[0]:isoCode
-        countryCode = param[0];
-
-        AddMessage(string.Format("CountryCode {0}", param[0]));
-
-        Debug.Log("[VAMPUnitySDK] VAMPCountryCode: " + msg);
-    }
-
-    // VAMPUnitySDK.isEUAccessメソッドの取得結果が通知されます
-    void VAMPIsEUAccess(string msg)
-    {
-        string[] param = VAMPUnitySDK.MessageUtil.ParseMessage(msg);
-        // param[0]:access ("True"/"False")
-        AddMessage(string.Format("IsEUAccess {0}", param[0]));
-
-        Debug.Log("[VAMPUnitySDK] VAMPIsEUAccess: " + msg);
-
-        if (param[0] == "True")
-        {
-            // TODO: ユーザに広告が個人に関連する情報を取得することの同意を求めます
-
-            // ユーザの入力を受け付けACCEPTEDまたはDENIEDをセットします
-            VAMPUnitySDK.setUserConsent(VAMPUnitySDK.ConsentStatus.ACCEPTED);
-        }
-    }
-#endif
 }
 
 public struct EdgeInsets
@@ -947,4 +765,12 @@ public class FrequencyCap
 {
     public uint impressions = 3;
     public uint timeLimit = 3;
+}
+
+[System.Serializable]
+public class Birthday
+{ 
+    public int year = 1980;
+    public int month = 2;
+    public int day = 20;
 }

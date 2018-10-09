@@ -85,9 +85,6 @@ public class VAMPUnitySDK : MonoBehaviour
     private static extern void VAMPUnitySetTargeting(int gender, int birthYear, int birthMonth, int birthDay);
 
     [DllImport("__Internal")]
-    private static extern string VAMPUnityAdnwSDKVersion(string adnwName);
-
-    [DllImport("__Internal")]
     private static extern string VAMPUnityDeviceInfo(string infoName);
 
     [DllImport("__Internal")]
@@ -175,7 +172,7 @@ public class VAMPUnitySDK : MonoBehaviour
     public enum InitializeState
     {
         /// <summary>
-        /// 接続環境によって、WEIGHTとALL設定お自動的に切り替えます
+        /// 接続環境によって、WEIGHTとALL設定を自動的に切り替えます
         /// Wi-Fi: ALL
         /// キャリア回線: WEIGHT
         /// </summary>
@@ -263,7 +260,7 @@ public class VAMPUnitySDK : MonoBehaviour
     {
         get
         {
-            return "3.0.4";
+            return "3.0.5";
         }
     }
 
@@ -297,18 +294,19 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            if (vampObj == null)
+            if (vampObj != null) {
+                vampObj.Dispose();
+            }
+
+            using(var player = new AndroidJavaClass(UnityPlayerClass))
             {
-                using(var player = new AndroidJavaClass(UnityPlayerClass))
+                using(var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
                 {
-                    using(var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
+                    using(var vampCls = new AndroidJavaClass(VampClass))
                     {
-                        using(var vampCls = new AndroidJavaClass(VampClass))
-                        {
-                            vampObj = vampCls.CallStatic<AndroidJavaObject>("getVampInstance", activity, placementID);
-                            vampObj.Call("setVAMPListener", new AdListener());
-                            vampObj.Call("setAdvancedListener", new AdvListener());
-                        }
+                        vampObj = vampCls.CallStatic<AndroidJavaObject>("getVampInstance", activity, placementID);
+                        vampObj.Call("setVAMPListener", new AdListener());
+                        vampObj.Call("setAdvancedListener", new AdvListener());
                     }
                 }
             }
@@ -826,11 +824,11 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            using(AndroidJavaClass player = new AndroidJavaClass(UnityPlayerClass))
+            using(var player = new AndroidJavaClass(UnityPlayerClass))
             {
-                using(AndroidJavaObject activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
+                using(var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
                 {
-                    AndroidJavaClass vampCls = new AndroidJavaClass(VampClass);
+                    var vampCls = new AndroidJavaClass(VampClass);
 
                     vampCls.CallStatic("getCountryCode", activity, new GetCountryCodeListener());
                 }
@@ -858,11 +856,11 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            using(AndroidJavaClass player = new AndroidJavaClass(UnityPlayerClass))
+            using(var player = new AndroidJavaClass(UnityPlayerClass))
             {
-                using(AndroidJavaObject activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
+                using(var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
                 {
-                    using(AndroidJavaClass vampCls = new AndroidJavaClass(VampClass))
+                    using(var vampCls = new AndroidJavaClass(VampClass))
                     {
                         vampCls.CallStatic("getCountryCode", activity, new GetCountryCodeListener());
                     }
@@ -1054,8 +1052,8 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID && !UNITY_EDITOR
         using (var vampCls = new AndroidJavaClass(VampClass))
         {
-            var fpStatus = vampCls.CallStatic<AndroidJavaObject>("getFrequencyCappedStatus", placementId);
-            status = new VAMPFrequencyCappedStatus(fpStatus);
+            var fcStatus = vampCls.CallStatic<AndroidJavaObject>("getFrequencyCappedStatus", placementId);
+            status = new VAMPFrequencyCappedStatus(fcStatus);
         }
 #endif
         return status;
@@ -1418,26 +1416,7 @@ public class VAMPUnitySDK : MonoBehaviour
         }
     }
 
-    public class SDKUtil
-    {
-
-        public static string GetAdnwSDKVersion(string adnw)
-        {
-            var ret = "unknown";
-
-#if UNITY_IOS
-            if (Application.platform == RuntimePlatform.IPhonePlayer)
-            {
-                ret = VAMPUnityAdnwSDKVersion(adnw);
-            }
-#elif UNITY_ANDROID
-            // Nothing to do
-#endif
-
-            return ret;
-        }
-    }
-
+    [Obsolete("Deprecated")]
     public class DeviceUtil
     {
 

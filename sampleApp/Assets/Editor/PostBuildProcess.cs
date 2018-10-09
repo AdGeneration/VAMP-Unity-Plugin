@@ -32,6 +32,7 @@ public class PostBuildProcess
             proj.AddFrameworkToProject(target, "libxml2.tbd", false);
             proj.AddFrameworkToProject(target, "libc++.tbd", false);
             proj.AddFrameworkToProject(target, "libsqlite3.tbd", false);
+            proj.AddFrameworkToProject(target, "CoreFoundation.framework", true);
 
             File.WriteAllText(projPath, proj.WriteToString());
         }

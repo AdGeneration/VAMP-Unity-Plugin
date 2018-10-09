@@ -4,13 +4,19 @@ using UnityEngine;
 
 public class SDKTestUtil
 {
+    [System.Runtime.InteropServices.DllImport("__Internal")]
+    private static extern string VAMPUnityTestAdnwSDKVersion(string adnwName);
+
+    [System.Runtime.InteropServices.DllImport("__Internal")]
+    private static extern string VAMPUnityTestDeviceInfo(string infoName);
+
     public static string GetAppVersion()
     {
         string ver = Application.version;
 
-        #if UNITY_IOS && !UNITY_EDITOR
-        ver = VAMPUnitySDK.DeviceUtil.GetInfo("AppVer");
-        #elif UNITY_ANDROID && !UNITY_EDITOR
+#if UNITY_IOS && !UNITY_EDITOR
+        ver = VAMPUnityTestDeviceInfo("AppVer");
+#elif UNITY_ANDROID && !UNITY_EDITOR
         try
         {
             AndroidJavaClass playerCls = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
@@ -26,7 +32,7 @@ public class SDKTestUtil
         {
             Debug.Log(ex.Message);
         }
-        #endif
+#endif
 
         return ver;
     }
@@ -36,7 +42,7 @@ public class SDKTestUtil
         List<string> infos = new List<string>();
 
         infos.Add("--------------------");
-        #if UNITY_IOS && !UNITY_EDITOR
+#if UNITY_IOS && !UNITY_EDITOR
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             infos.Add("サポートOSバージョン：" + VAMPUnitySDK.SupportedOSVersion());
@@ -54,19 +60,19 @@ public class SDKTestUtil
             infos.Add("SDK_Ver(UnityAds)：" + GetAdnwSDKVersion("UnityAds"));
             infos.Add("SDK_Ver(Vungle)：" + GetAdnwSDKVersion("Vungle"));
             infos.Add("--------------------");
-            infos.Add("BundleID：" + VAMPUnitySDK.DeviceUtil.GetInfo("BundleID"));
-            infos.Add("バージョン名：" + VAMPUnitySDK.DeviceUtil.GetInfo("AppVer"));
+            infos.Add("BundleID：" + VAMPUnityTestDeviceInfo("BundleID"));
+            infos.Add("バージョン名：" + VAMPUnityTestDeviceInfo("AppVer"));
             infos.Add("--------------------");
-            infos.Add("デバイス名：" + VAMPUnitySDK.DeviceUtil.GetInfo("DeviceName"));
-            infos.Add("OS名：" + VAMPUnitySDK.DeviceUtil.GetInfo("OSName"));
-            infos.Add("OSバージョン：" + VAMPUnitySDK.DeviceUtil.GetInfo("OSVersion"));
-            infos.Add("OSモデル：" + VAMPUnitySDK.DeviceUtil.GetInfo("OSModel"));
-            infos.Add("キャリア情報：" + VAMPUnitySDK.DeviceUtil.GetInfo("Carrier"));
-            infos.Add("国コード：" + VAMPUnitySDK.DeviceUtil.GetInfo("CountryCode"));
-            infos.Add("IDFA：" + VAMPUnitySDK.DeviceUtil.GetInfo("IDFA"));
+            infos.Add("デバイス名：" + VAMPUnityTestDeviceInfo("DeviceName"));
+            infos.Add("OS名：" + VAMPUnityTestDeviceInfo("OSName"));
+            infos.Add("OSバージョン：" + VAMPUnityTestDeviceInfo("OSVersion"));
+            infos.Add("OSモデル：" + VAMPUnityTestDeviceInfo("OSModel"));
+            infos.Add("キャリア情報：" + VAMPUnityTestDeviceInfo("Carrier"));
+            infos.Add("国コード：" + VAMPUnityTestDeviceInfo("CountryCode"));
+            infos.Add("IDFA：" + VAMPUnityTestDeviceInfo("IDFA"));
             infos.Add("--------------------");
         }
-        #elif UNITY_ANDROID && !UNITY_EDITOR
+#elif UNITY_ANDROID && !UNITY_EDITOR
         if (Application.platform == RuntimePlatform.Android)
         {
             string appName = "";
@@ -131,7 +137,7 @@ public class SDKTestUtil
             infos.Add("ブランド名：" + brand);
             infos.Add("--------------------");
         }
-        #endif
+#endif
         infos.Add("isPlayerCancelable:" + VAMPUnitySDK.VAMPConfiguration.getInstance().PlayerCancelable);
         infos.Add("--------------------");
 
@@ -142,12 +148,12 @@ public class SDKTestUtil
     {
         string version = "nothing";
 
-        #if UNITY_IOS && !UNITY_EDITOR
+#if UNITY_IOS && !UNITY_EDITOR
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
-            version = VAMPUnitySDK.SDKUtil.GetAdnwSDKVersion(adnw);
+            version = VAMPUnityTestAdnwSDKVersion(adnw);
         }
-        #elif UNITY_ANDROID && !UNITY_EDITOR
+#elif UNITY_ANDROID && !UNITY_EDITOR
         if (Application.platform == RuntimePlatform.Android)
         {
             AndroidJavaClass cls;
@@ -182,7 +188,7 @@ public class SDKTestUtil
                         version = cls.CallStatic<string>("getSdkVersion");
                         break;
                     case "Mintegral":
-                        cls = new AndroidJavaClass("com.mobvista.msdk.out.MVConfiguration");
+                        cls = new AndroidJavaClass("com.mintegral.msdk.out.MTGConfiguration");
                         version = cls.GetStatic<string>("SDK_VERSION");
                         break;
                     case "Nend":
@@ -212,39 +218,41 @@ public class SDKTestUtil
                 Debug.Log(ex.Message);
             }
         }
-        #endif
+#endif
 
         return version;
     }
 
     public static void AddFANTestDevice(string deviceIdHash)
     {
-        #if UNITY_ANDROID && !UNITY_EDITOR
+#if UNITY_ANDROID && !UNITY_EDITOR
         try
         {
-            AndroidJavaClass cls = new AndroidJavaClass("com.facebook.ads.AdSettings");
-            cls.CallStatic("addTestDevice", new string[] { deviceIdHash });
+            using(var cls = new AndroidJavaClass("com.facebook.ads.AdSettings")) {
+                cls.CallStatic("addTestDevice", new string[] { deviceIdHash });
+            }
         }
         catch (AndroidJavaException ex)
         {
             Debug.Log(ex.Message);
         }
-        #endif
+#endif
     }
 
     public static void ClearFANTestDevices()
     {
-        #if UNITY_ANDROID && !UNITY_EDITOR
+#if UNITY_ANDROID && !UNITY_EDITOR
         try
         {
-            AndroidJavaClass cls = new AndroidJavaClass("com.facebook.ads.AdSettings");
-            cls.CallStatic("clearTestDevices");
+            using(var cls = new AndroidJavaClass("com.facebook.ads.AdSettings")) {
+                cls.CallStatic("clearTestDevices");
+            }
         }
         catch (AndroidJavaException ex)
         {
             Debug.Log(ex.Message);
         }
-        #endif
+#endif
     }
 }
 
