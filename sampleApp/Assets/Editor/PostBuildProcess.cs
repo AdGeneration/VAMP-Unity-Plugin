@@ -1,24 +1,26 @@
-using UnityEngine;
+#if UNITY_EDITOR_OSX
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.iOS.Xcode;
-using System.Collections;
 using System.IO;
+#if UNITY_2017_1_OR_NEWER
+using UnityEditor.iOS.Xcode.Extensions;
+#endif
 
 public class PostBuildProcess
 {
-    #if UNITY_IOS
+#if UNITY_IOS
 
     [PostProcessBuild]
     public static void OnPostProcessBuild(BuildTarget buildTarget, string path)
     {
         if (buildTarget == BuildTarget.iOS)
         {
-            string projPath = PBXProject.GetPBXProjectPath (path);
-            PBXProject proj = new PBXProject();
+            var projPath = PBXProject.GetPBXProjectPath(path);
+            var proj = new PBXProject();
             proj.ReadFromFile(projPath);
 
-            string target = proj.TargetGuidByName("Unity-iPhone");
+            var target = proj.TargetGuidByName("Unity-iPhone");
 
             // Other Linker Flagsに-ObjCを追加
             proj.AddBuildProperty(target, "OTHER_LDFLAGS", "-ObjC");
@@ -34,9 +36,27 @@ public class PostBuildProcess
             proj.AddFrameworkToProject(target, "libsqlite3.tbd", false);
             proj.AddFrameworkToProject(target, "CoreFoundation.framework", true);
 
+#region MoPubの設定
+            var mopubFileGuid = proj.FindFileGuidByProjectPath("Frameworks/Plugins/iOS/sdk/MoPubSDKFramework.framework");
+#if UNITY_2017_1_OR_NEWER
+            proj.AddFileToEmbedFrameworks(target, mopubFileGuid);
+#endif
+            var maskedFiles = Directory.GetFiles(
+               path, "*.prevent_unity_compilation", SearchOption.AllDirectories);
+            foreach (var maskedFile in maskedFiles)
+            {
+                var unmaskedFile = maskedFile.Replace(".prevent_unity_compilation", "");
+                File.Move(maskedFile, unmaskedFile);
+            }
+
+            proj.SetBuildProperty(
+                target, "LD_RUNPATH_SEARCH_PATHS", "$(inherited) @executable_path/Frameworks");
+
+#endregion
             File.WriteAllText(projPath, proj.WriteToString());
         }
     }
 
-    #endif
+#endif
 }
+#endif

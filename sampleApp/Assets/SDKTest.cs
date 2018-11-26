@@ -241,59 +241,6 @@ public class SDKTest : MonoBehaviour
                 debugMode = !debugMode;
             }
 
-            labelStyle.fontSize = 20;
-            labelStyle.alignment = TextAnchor.MiddleCenter;
-
-            GUI.Box(new Rect(65, 670, 410, 215), "");
-            GUILayout.BeginArea(new Rect(75, 680, 400, 195));
-            GUI.Label(new Rect(10, 0, 380, 30), "ADNW SDK Initialize State");
-
-            labelStyle.fontSize = 18;
-
-            if (GUI.Button(new Rect(35, 40, 40, 40), initializeState == VAMPUnitySDK.InitializeState.AUTO ? btnOnTexture : btnOffTexture))
-            {
-                initializeState = VAMPUnitySDK.InitializeState.AUTO;
-            }
-
-            GUI.Label(new Rect(10, 85, 90, 30), VAMPUnitySDK.InitializeState.AUTO.ToString());
-
-            if (GUI.Button(new Rect(125, 40, 40, 40), initializeState == VAMPUnitySDK.InitializeState.WEIGHT ? btnOnTexture : btnOffTexture))
-            {
-                initializeState = VAMPUnitySDK.InitializeState.WEIGHT;
-            }
-
-            GUI.Label(new Rect(100, 85, 90, 30), VAMPUnitySDK.InitializeState.WEIGHT.ToString());
-
-            if (GUI.Button(new Rect(225, 40, 40, 40), initializeState == VAMPUnitySDK.InitializeState.ALL ? btnOnTexture : btnOffTexture))
-            {
-                initializeState = VAMPUnitySDK.InitializeState.ALL;
-            }
-
-            GUI.Label(new Rect(200, 85, 90, 30), VAMPUnitySDK.InitializeState.ALL.ToString());
-
-            if (GUI.Button(new Rect(325, 40, 40, 40), initializeState == VAMPUnitySDK.InitializeState.WIFIONLY ? btnOnTexture : btnOffTexture))
-            {
-                initializeState = VAMPUnitySDK.InitializeState.WIFIONLY;
-            }
-
-            GUI.Label(new Rect(300, 85, 90, 30), VAMPUnitySDK.InitializeState.WIFIONLY.ToString());
-
-            if (GUI.Button(new Rect(30, 125, 340, 60), "ADNW SDK INIT"))
-            {
-                isVampInitialized = true;
-
-                VAMPUnitySDK.setTestMode(testMode);
-                VAMPUnitySDK.setDebugMode(debugMode);
-
-                // アドネットワークSDKを事前に初期化しておくことができます。
-                // アプリ起動時などのタイミングで1度だけ使用してください
-                VAMPUnitySDK.initializeAdnwSDK(placementID, initializeState, initializeDuration);
-            }
-
-            GUILayout.EndArea();
-
-            GUI.enabled = true;
-
             if (GUI.Button(new Rect(100, 330, 340, 60), "AD1"))
             {
                 blk = Block.Ad1;
