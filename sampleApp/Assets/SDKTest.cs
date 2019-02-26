@@ -176,6 +176,9 @@ public class SDKTest : MonoBehaviour
         //                VAMPUnitySDK.setUserConsent(VAMPUnitySDK.ConsentStatus.ACCEPTED);
         //            }
         //        });
+
+        VAMPUnitySDK.setCoppaChildDirected(false);
+        Debug.Log("[VAMPUnitySDK] Coppa:" + VAMPUnitySDK.isCoppaChildDirected());
     }
 
     void Update()
@@ -312,6 +315,11 @@ public class SDKTest : MonoBehaviour
                         AddMessage(string.Format("CountryCode {0}", countryCode));
 
                         Debug.Log("[VAMPUnitySDK] VAMPCountryCode: " + countryCode);
+
+                        //if (countryCode == "US") {
+                        //    // COPPA対象ユーザである場合はtrueを設定する
+                        //    VAMPUnitySDK.setCoppaChildDirected(true);
+                        //}
                     });
             }
         }

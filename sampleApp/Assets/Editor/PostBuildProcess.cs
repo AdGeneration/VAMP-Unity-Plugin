@@ -19,8 +19,7 @@ public class PostBuildProcess
             var projPath = PBXProject.GetPBXProjectPath(path);
             var proj = new PBXProject();
             proj.ReadFromFile(projPath);
-
-            var target = proj.TargetGuidByName("Unity-iPhone");
+            var target = proj.TargetGuidByName(PBXProject.GetUnityTargetName());
 
             // Other Linker Flagsに-ObjCを追加
             proj.AddBuildProperty(target, "OTHER_LDFLAGS", "-ObjC");
@@ -37,8 +36,8 @@ public class PostBuildProcess
             proj.AddFrameworkToProject(target, "CoreFoundation.framework", true);
 
 #region MoPubの設定
-            var mopubFileGuid = proj.FindFileGuidByProjectPath("Frameworks/Plugins/iOS/sdk/MoPubSDKFramework.framework");
 #if UNITY_2017_1_OR_NEWER
+            var mopubFileGuid = proj.FindFileGuidByProjectPath("Frameworks/Plugins/iOS/sdk/MoPubSDKFramework.framework");
             proj.AddFileToEmbedFrameworks(target, mopubFileGuid);
 #endif
             var maskedFiles = Directory.GetFiles(
@@ -48,10 +47,6 @@ public class PostBuildProcess
                 var unmaskedFile = maskedFile.Replace(".prevent_unity_compilation", "");
                 File.Move(maskedFile, unmaskedFile);
             }
-
-            proj.SetBuildProperty(
-                target, "LD_RUNPATH_SEARCH_PATHS", "$(inherited) @executable_path/Frameworks");
-
 #endregion
             File.WriteAllText(projPath, proj.WriteToString());
         }

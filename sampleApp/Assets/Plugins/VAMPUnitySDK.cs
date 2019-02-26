@@ -85,9 +85,6 @@ public class VAMPUnitySDK : MonoBehaviour
     private static extern void VAMPUnitySetTargeting(int gender, int birthYear, int birthMonth, int birthDay);
 
     [DllImport("__Internal")]
-    private static extern string VAMPUnityDeviceInfo(string infoName);
-
-    [DllImport("__Internal")]
     private static extern void VAMPUnitySetCallbacks(IntPtr vampni,
                                                      InternalReceiveCallback receiveCallback,
                                                      InternalFailToLoadCallback failToLoadCallback,
@@ -166,7 +163,14 @@ public class VAMPUnitySDK : MonoBehaviour
     private static extern uint VAMPUnityVAMPFrequencyCappedStatusRemainingTime(HandleRef frequencyCappedStatus);
 
     [DllImport("__Internal")]
-    private static extern uint VAMPUnityDeleteVAMPFrequencyCappedStatus(HandleRef handle);
+    private static extern void VAMPUnityDeleteVAMPFrequencyCappedStatus(HandleRef handle);
+
+    [DllImport("__Internal")]
+    private static extern void VAMPUnitySetCoppaChildDirected(bool childDirected);
+
+    [DllImport("__Internal")]
+    private static extern bool VAMPUnityIsCoppaChildDirected();
+
 #endif
 
     public enum InitializeState
@@ -224,21 +228,21 @@ public class VAMPUnitySDK : MonoBehaviour
     private static GameObject countryCodeObj = null;
     private static GameObject userConsentObj = null;
 
-    internal delegate void InternalReceiveCallback(string placementId,string adnwName);
+    internal delegate void InternalReceiveCallback(string placementId, string adnwName);
 
-    internal delegate void InternalCompleteCallback(string placementId,string adnwName);
+    internal delegate void InternalCompleteCallback(string placementId, string adnwName);
 
-    internal delegate void InternalCloseCallback(string placementId,string adnwName);
+    internal delegate void InternalCloseCallback(string placementId, string adnwName);
 
-    internal delegate void InternalLoadStartCallback(string placementId,string adnwName);
+    internal delegate void InternalLoadStartCallback(string placementId, string adnwName);
 
-    internal delegate void InternalLoadResultCallback(string placementId,bool success,string adnwName,string message);
+    internal delegate void InternalLoadResultCallback(string placementId, bool success, string adnwName, string message);
 
     internal delegate void InternalExpireCallback(string placementId);
 
-    internal delegate void InternalFailToLoadCallback(int errorCode,string placementId);
+    internal delegate void InternalFailToLoadCallback(int errorCode, string placementId);
 
-    internal delegate void InternalFailToShowCallback(int errorCode,string placementId);
+    internal delegate void InternalFailToShowCallback(int errorCode, string placementId);
 
     /// <summary>
     /// getCountryCode コールバック.
@@ -260,7 +264,7 @@ public class VAMPUnitySDK : MonoBehaviour
     {
         get
         {
-            return "3.0.6";
+            return "3.1.0";
         }
     }
 
@@ -294,15 +298,16 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            if (vampObj != null) {
+            if (vampObj != null)
+            {
                 vampObj.Dispose();
             }
 
-            using(var player = new AndroidJavaClass(UnityPlayerClass))
+            using (var player = new AndroidJavaClass(UnityPlayerClass))
             {
-                using(var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
+                using (var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
                 {
-                    using(var vampCls = new AndroidJavaClass(VampClass))
+                    using (var vampCls = new AndroidJavaClass(VampClass))
                     {
                         vampObj = vampCls.CallStatic<AndroidJavaObject>("getVampInstance", activity, placementID);
                         vampObj.Call("setVAMPListener", new AdListener());
@@ -343,11 +348,11 @@ public class VAMPUnitySDK : MonoBehaviour
         {
             if (vampObj == null)
             {
-                using(var player = new AndroidJavaClass(UnityPlayerClass))
+                using (var player = new AndroidJavaClass(UnityPlayerClass))
                 {
-                    using(var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
+                    using (var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
                     {
-                        using(var vampCls = new AndroidJavaClass(VampClass))
+                        using (var vampCls = new AndroidJavaClass(VampClass))
                         {
                             vampObj = vampCls.CallStatic<AndroidJavaObject>("getVampInstance", activity, placementID);
                             vampObj.Call("setVAMPListener", new AdListener());
@@ -520,11 +525,11 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            using(var player = new AndroidJavaClass(UnityPlayerClass))
+            using (var player = new AndroidJavaClass(UnityPlayerClass))
             {
-                using(var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
+                using (var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
                 {
-                    using(var vampCls = new AndroidJavaClass(VampClass))
+                    using (var vampCls = new AndroidJavaClass(VampClass))
                     {
                         vampCls.CallStatic("initializeAdnwSDK", activity, placementID);
                     }
@@ -557,13 +562,13 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            using(var player = new AndroidJavaClass(UnityPlayerClass))
+            using (var player = new AndroidJavaClass(UnityPlayerClass))
             {
-                using(var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
+                using (var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
                 {
-                    using(var vampCls = new AndroidJavaClass(VampClass))
+                    using (var vampCls = new AndroidJavaClass(VampClass))
                     {
-                        using(var initStateCls = new AndroidJavaClass("jp.supership.vamp.VAMP$VAMPInitializeState"))
+                        using (var initStateCls = new AndroidJavaClass("jp.supership.vamp.VAMP$VAMPInitializeState"))
                         {
                             vampCls.CallStatic("initializeAdnwSDK", activity, placementID, initStateCls.GetStatic<AndroidJavaObject>(state), duration);
                         }
@@ -597,13 +602,13 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            using(var player = new AndroidJavaClass(UnityPlayerClass))
+            using (var player = new AndroidJavaClass(UnityPlayerClass))
             {
-                using(var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
+                using (var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
                 {
-                    using(var vampCls = new AndroidJavaClass(VampClass))
+                    using (var vampCls = new AndroidJavaClass(VampClass))
                     {
-                        using(var initStateCls = new AndroidJavaClass("jp.supership.vamp.VAMP$VAMPInitializeState"))
+                        using (var initStateCls = new AndroidJavaClass("jp.supership.vamp.VAMP$VAMPInitializeState"))
                         {
                             vampCls.CallStatic("initializeAdnwSDK", activity, placementID, initStateCls.GetStatic<AndroidJavaObject>(state.ToString()), duration);
                         }
@@ -630,7 +635,7 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            using(var vampCls = new AndroidJavaClass(VampClass))
+            using (var vampCls = new AndroidJavaClass(VampClass))
             {
                 vampCls.CallStatic("setTestMode", testMode);
             }
@@ -653,7 +658,7 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            using(var vampCls = new AndroidJavaClass(VampClass))
+            using (var vampCls = new AndroidJavaClass(VampClass))
             {
                 ret = vampCls.CallStatic<bool>("isTestMode");
             }
@@ -678,7 +683,7 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            using(var vampCls = new AndroidJavaClass(VampClass))
+            using (var vampCls = new AndroidJavaClass(VampClass))
             {
                 vampCls.CallStatic("setDebugMode", debugMode);
             }
@@ -701,7 +706,7 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            using(var vampCls = new AndroidJavaClass(VampClass))
+            using (var vampCls = new AndroidJavaClass(VampClass))
             {
                 ret = vampCls.CallStatic<bool>("isDebugMode");
             }
@@ -727,7 +732,7 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            using(var vampCls = new AndroidJavaClass(VampClass))
+            using (var vampCls = new AndroidJavaClass(VampClass))
             {
                 ret = vampCls.CallStatic<string>("SDKVersion");
             }
@@ -752,7 +757,7 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            using(var vampCls = new AndroidJavaClass(VampClass))
+            using (var vampCls = new AndroidJavaClass(VampClass))
             {
                 ret = vampCls.CallStatic<int>("SupportedOSVersion");
             }
@@ -777,7 +782,7 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            using(var vampCls = new AndroidJavaClass(VampClass))
+            using (var vampCls = new AndroidJavaClass(VampClass))
             {
                 ret = vampCls.CallStatic<bool>("isSupportedOSVersion");
             }
@@ -801,7 +806,7 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            using(var vampCls = new AndroidJavaClass(VampClass))
+            using (var vampCls = new AndroidJavaClass(VampClass))
             {
                 vampCls.CallStatic("setMediationTimeout", timeout);
             }
@@ -826,9 +831,9 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            using(var player = new AndroidJavaClass(UnityPlayerClass))
+            using (var player = new AndroidJavaClass(UnityPlayerClass))
             {
-                using(var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
+                using (var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
                 {
                     var vampCls = new AndroidJavaClass(VampClass);
 
@@ -858,11 +863,11 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            using(var player = new AndroidJavaClass(UnityPlayerClass))
+            using (var player = new AndroidJavaClass(UnityPlayerClass))
             {
-                using(var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
+                using (var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
                 {
-                    using(var vampCls = new AndroidJavaClass(VampClass))
+                    using (var vampCls = new AndroidJavaClass(VampClass))
                     {
                         vampCls.CallStatic("getCountryCode", activity, new GetCountryCodeListener());
                     }
@@ -888,7 +893,7 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            using(var vampCls = new AndroidJavaClass(VampClass))
+            using (var vampCls = new AndroidJavaClass(VampClass))
             {
                 vampCls.CallStatic("isEUAccess", new UserConsentListener());
             }
@@ -914,7 +919,7 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            using(var vampCls = new AndroidJavaClass(VampClass))
+            using (var vampCls = new AndroidJavaClass(VampClass))
             {
                 vampCls.CallStatic("isEUAccess", new UserConsentListener());
             }
@@ -936,15 +941,64 @@ public class VAMPUnitySDK : MonoBehaviour
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            using(var consentStatusCls = new AndroidJavaClass("jp.supership.vamp.VAMPPrivacySettings$ConsentStatus"))
+            using (var consentStatusCls = new AndroidJavaClass("jp.supership.vamp.VAMPPrivacySettings$ConsentStatus"))
             {
-                using(var vampCls = new AndroidJavaClass(VampClass)) 
+                using (var vampCls = new AndroidJavaClass(VampClass))
                 {
                     vampCls.CallStatic("setUserConsent", consentStatusCls.GetStatic<AndroidJavaObject>(status.ToString()));
                 }
             }
         }
 #endif
+    }
+
+    /// <summary>
+    /// 特定の年齢未満のユーザからのアクセスかどうかを設定します。
+    /// (COPPAならば米国のユーザで13歳未満かどうか)
+    /// <c>true</c>に設定した場合はadvertisingIdを送りません。
+    /// 以下のアドネットワークの特定の年齢未満のユーザからのアクセスかどうかを設定する機能と連動します。
+    /// (AdMob、FAN、AppLovin、Tapjoy)
+    /// </summary>
+    /// <param name="childDirected">特定の年齢未満のユーザかどうか</param>
+    public static void setCoppaChildDirected(bool childDirected)
+    {
+#if UNITY_IOS
+        if (Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            VAMPUnitySetCoppaChildDirected(childDirected);
+        }
+#elif UNITY_ANDROID
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            using (var vampCls = new AndroidJavaClass(VampClass))
+            {
+                vampCls.CallStatic("setCoppaChildDirected", childDirected);
+            }
+        }
+#endif
+    }
+
+    /// <summary>
+    /// <see cref="setCoppaChildDirected(bool)"/>で設定した値を取得します。
+    /// </summary>
+    /// <returns><see cref="setCoppaChildDirected(bool)"/>で設定した値</returns>
+    public static bool isCoppaChildDirected()
+    {
+#if UNITY_IOS
+        if (Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            return VAMPUnityIsCoppaChildDirected();
+        }
+#elif UNITY_ANDROID
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            using (var vampCls = new AndroidJavaClass(VampClass))
+            {
+                return vampCls.CallStatic<bool>("isCoppaChildDirected");
+            }
+        }
+#endif
+        return false;
     }
 
     /// <summary>
@@ -1415,27 +1469,6 @@ public class VAMPUnitySDK : MonoBehaviour
             }
 
             return null;
-        }
-    }
-
-    [Obsolete("Deprecated")]
-    public class DeviceUtil
-    {
-
-        public static string GetInfo(string infoName)
-        {
-            var ret = "unknown";
-
-#if UNITY_IOS
-            if (Application.platform == RuntimePlatform.IPhonePlayer)
-            {
-                ret = VAMPUnityDeviceInfo(infoName);
-            }
-#elif UNITY_ANDROID
-            // Nothing to do
-#endif
-
-            return ret;
         }
     }
 

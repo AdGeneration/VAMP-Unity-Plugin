@@ -72,52 +72,6 @@ NSString *VAMPNIGetErrorMessage(NSInteger code) {
     }
 }
 
-NSString *VAMPNIGetDeviceInfo(NSString *infoName) {
-    NSString *info = @"nothing";
-    
-    if ([infoName isEqualToString:@"DeviceName"]) {
-        info = [[UIDevice currentDevice] name];
-    }
-    else if ([infoName isEqualToString:@"OSName"]) {
-        info = [[UIDevice currentDevice] systemName];
-    }
-    else if ([infoName isEqualToString:@"OSVersion"]) {
-        info = [[UIDevice currentDevice] systemVersion];
-    }
-    else if ([infoName isEqualToString:@"OSModel"]) {
-        info = [[UIDevice currentDevice] model];
-    }
-    else if ([infoName isEqualToString:@"Carrier"]) {
-        CTTelephonyNetworkInfo *networkInfo = [[CTTelephonyNetworkInfo alloc] init];
-        CTCarrier *provider = [networkInfo subscriberCellularProvider];
-        
-        info = provider.carrierName;
-    }
-    else if ([infoName isEqualToString:@"ISOCountry"]) {
-        CTTelephonyNetworkInfo *networkInfo = [[CTTelephonyNetworkInfo alloc] init];
-        CTCarrier *provider = [networkInfo subscriberCellularProvider];
-        
-        info = provider.isoCountryCode;
-    }
-    else if ([infoName isEqualToString:@"CountryCode"]) {
-        info = [[NSLocale preferredLanguages] objectAtIndex:0];
-    }
-    else if ([infoName isEqualToString:@"LocaleCode"]) {
-        info = [[NSLocale currentLocale] objectForKey:NSLocaleIdentifier];
-    }
-    else if ([infoName isEqualToString:@"IDFA"]) {
-        info = [[ASIdentifierManager sharedManager] advertisingIdentifier].UUIDString;
-    }
-    else if ([infoName isEqualToString:@"BundleID"]) {
-        info = [[NSBundle mainBundle] bundleIdentifier];
-    }
-    else if ([infoName isEqualToString:@"AppVer"]) {
-        info = [NSBundle mainBundle].infoDictionary[@"CFBundleShortVersionString"];
-    }
-    
-    return info;
-}
-
 #pragma mark - VAMPNI
 
 static NSString * const kVAMPNIInitializeStateStringAuto = @"AUTO";
@@ -585,6 +539,15 @@ extern "C" {
         }];
     }
     
+    // VAMP v3.1.0から追加されたメソッドです
+    void VAMPUnitySetCoppaChildDirected(bool childDirected) {
+        [VAMP setCoppaChildDirected:childDirected];
+    }
+    
+    bool VAMPUnityIsCoppaChildDirected() {
+        return [VAMP isCoppaChildDirected];
+    }
+    
     // VAMP v3.0.4から追加されたメソッドです
     void VAMPUnitySetFrequencyCap(const char *cPlacementId, const unsigned int impressions, const unsigned int minutes) {
         NSString *placementId = [NSString stringWithCString:cPlacementId encoding:NSUTF8StringEncoding];
@@ -657,22 +620,6 @@ extern "C" {
                             dateFromComponents:components];
             [VAMP setBirthday:date];
         }
-    }
-    
-    char *VAMPUnityDeviceInfo(const char *cInfoName) {
-        NSString *infoName = [NSString stringWithCString:cInfoName encoding:NSUTF8StringEncoding];
-        
-        NSString *info = VAMPNIGetDeviceInfo(infoName);
-        
-        if (!info) {
-            info = @"";
-        }
-        
-        char *cInfo = (char *) info.UTF8String;
-        char *res = (char *) malloc(strlen(cInfo) + 1);
-        strcpy(res, cInfo);
-        
-        return res;
     }
     
     void *VAMPUnityVAMPConfigurationDefaultConfiguration() {
