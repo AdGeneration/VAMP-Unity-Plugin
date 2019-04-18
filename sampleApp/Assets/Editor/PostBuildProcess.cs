@@ -11,6 +11,9 @@ public class PostBuildProcess
 {
 #if UNITY_IOS
 
+    private static readonly string adMobAppId = "ca-app-pub-3940256099942544~3347511713";
+    private static readonly string adMobAppIdKey = "GADApplicationIdentifier";
+
     [PostProcessBuild]
     public static void OnPostProcessBuild(BuildTarget buildTarget, string path)
     {
@@ -49,6 +52,16 @@ public class PostBuildProcess
             }
 #endregion
             File.WriteAllText(projPath, proj.WriteToString());
+
+
+            var plistPath = path + "/Info.plist";
+            var plist = new PlistDocument();
+            plist.ReadFromString(File.ReadAllText(plistPath));
+
+            var rootDict = plist.root;
+            rootDict.SetString(adMobAppIdKey, adMobAppId);
+
+            File.WriteAllText(plistPath, plist.WriteToString());
         }
     }
 

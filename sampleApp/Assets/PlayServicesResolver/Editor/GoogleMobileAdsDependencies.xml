@@ -1,6 +1,6 @@
 <dependencies>
   <androidPackages>
-    <androidPackage spec="com.google.android.gms:play-services-ads:17.1.2">
+    <androidPackage spec="com.google.android.gms:play-services-ads:17.2.0">
       <repositories>
         <repository>https://maven.google.com/</repository>
       </repositories>
@@ -11,11 +11,6 @@
         </repositories>
     </androidPackage>
     <androidPackage spec="com.google.android.gms:play-services-ads-identifier:16.0.0">
-        <repositories>
-            <repository>https://maven.google.com/</repository>
-        </repositories>
-    </androidPackage>
-    <androidPackage spec="com.android.support:support-annotations:28.0.0">
         <repositories>
             <repository>https://maven.google.com/</repository>
         </repositories>

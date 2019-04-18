@@ -74,11 +74,6 @@ NSString *VAMPNIGetErrorMessage(NSInteger code) {
 
 #pragma mark - VAMPNI
 
-static NSString * const kVAMPNIInitializeStateStringAuto = @"AUTO";
-static NSString * const kVAMPNIInitializeStateStringAll = @"ALL";
-static NSString * const kVAMPNIInitializeStateStringWeight = @"WEIGHT";
-static NSString * const kVAMPNIInitializeStateStringWifiOnly = @"WIFIONLY";
-
 static NSString * const kBoolMessage_True = @"True";
 static NSString * const kBoolMessage_False = @"False";
 
@@ -94,8 +89,6 @@ typedef void (^VAMPLoadResultCallback)(const char *placementId, const bool succe
 @interface VAMPNI : NSObject <VAMPDelegate>
 
 @property (nonatomic) VAMP *vamp;
-@property (nonatomic, copy) NSString *gameObjName;
-@property (nonatomic, readonly, getter=canUseGameObj) BOOL useGameObj;
 @property (nonatomic, copy) VAMPReceiveCallback receiveCallback;
 @property (nonatomic, copy) VAMPFailToLoadCallback failToLoadCallback;
 @property (nonatomic, copy) VAMPFailToShowCallback failToShowCallback;
@@ -111,20 +104,7 @@ typedef void (^VAMPLoadResultCallback)(const char *placementId, const bool succe
 
 static VAMPNI *_vampInstance = nil;
 
-#pragma mark - property
-
-- (BOOL)canUseGameObj {
-    return self.gameObjName != nil && self.gameObjName.length > 0;
-}
-
 #pragma mark - public
-
-- (void)setVAMPWithGameObjectName:(NSString *)gameObjName
-               rootViewController:(UIViewController *)viewController
-                      placementId:(NSString *)placementId {
-    [self setVAMP:viewController placementId:placementId];
-    self.gameObjName = gameObjName;
-}
 
 - (void)setVAMP:(UIViewController *)viewController
     placementId:(NSString *)placementId {
@@ -161,35 +141,7 @@ static VAMPNI *_vampInstance = nil;
     return NO;
 }
 
-- (void)clearLoaded {
-    if (self.vamp) {
-        // VAMP ver.2.0.3から追加されたメソッドです。
-        // ver.3.0.0からdeprecatedになりました
-        [self.vamp clearLoaded];
-    }
-}
-
 #pragma mark - static public
-
-+ (void)initializeAdnwSDK:(NSString *)placementId {
-    [[VAMP new] initializeAdnwSDK:placementId];
-}
-
-+ (void)initializeAdnwSDK:(NSString *)placementId state:(NSString *)state duration:(int)duration {
-    VAMPInitializeState initializeState = kVAMPInitializeStateAUTO;
-    
-    if ([state isEqualToString:kVAMPNIInitializeStateStringAll]) {
-        initializeState = kVAMPInitializeStateALL;
-    }
-    else if ([state isEqualToString:kVAMPNIInitializeStateStringWeight]) {
-        initializeState = kVAMPInitializeStateWEIGHT;
-    }
-    else if ([state isEqualToString:kVAMPNIInitializeStateStringWifiOnly]) {
-        initializeState = kVAMPInitializeStateWIFIONLY;
-    }
-    
-    [[VAMP new] initializeAdnwSDK:placementId initializeState:initializeState duration:duration];
-}
 
 + (void)retainInstance:(VAMPNI *)vampni {
     _vampInstance = vampni;
@@ -198,11 +150,6 @@ static VAMPNI *_vampInstance = nil;
 #pragma mark - VAMPDelegate
 
 - (void)vampDidReceive:(NSString *)placementId adnwName:(NSString *)adnwName {
-    if (self.canUseGameObj) {
-        NSString *msg = [NSString stringWithFormat:@"%@,%@", placementId, adnwName];
-        UnitySendMessage(self.gameObjName.UTF8String, "VAMPDidReceive", msg.UTF8String);
-    }
-    
     if (self.receiveCallback) {
         const char *cPlacementId = [placementId UTF8String];
         const char *cAdnwName = [adnwName UTF8String];
@@ -212,13 +159,6 @@ static VAMPNI *_vampInstance = nil;
 }
 
 - (void)vamp:(VAMP *)vamp didFailToLoadWithError:(VAMPError *)error withPlacementId:(NSString *)placementId {
-    if (self.canUseGameObj) {
-        NSString *msg = [NSString stringWithFormat:@"%@,%@", VAMPNIGetErrorMessage(error.code), placementId];
-        UnitySendMessage(self.gameObjName.UTF8String, "VAMPDidFailToLoad", msg.UTF8String);
-        // v3.0.0からVAMPDidFailはdeprecatedです。代わりにVAMPDidFailToLoadを使用してください
-        UnitySendMessage(self.gameObjName.UTF8String, "VAMPDidFail", msg.UTF8String);
-    }
-    
     if (self.failToLoadCallback) {
         const char *cPlacementId = [placementId UTF8String];
         self.failToLoadCallback((int)error.code, cPlacementId);
@@ -226,13 +166,6 @@ static VAMPNI *_vampInstance = nil;
 }
 
 - (void)vamp:(VAMP *)vamp didFailToShowWithError:(VAMPError *)error withPlacementId:(NSString *)placementId {
-    if (self.canUseGameObj) {
-        NSString *msg = [NSString stringWithFormat:@"%@,%@", VAMPNIGetErrorMessage(error.code), placementId];
-        UnitySendMessage(self.gameObjName.UTF8String, "VAMPDidFailToShow", msg.UTF8String);
-        // v3.0.0からVAMPDidFailはdeprecatedです。代わりにVAMPDidFailToShowを使用してください
-        UnitySendMessage(self.gameObjName.UTF8String, "VAMPDidFail", msg.UTF8String);
-    }
-    
     if (self.failToShowCallback) {
         const char *cPlacementId = [placementId UTF8String];
         self.failToShowCallback((int)error.code, cPlacementId);
@@ -240,11 +173,6 @@ static VAMPNI *_vampInstance = nil;
 }
 
 - (void)vampDidComplete:(NSString *)placementId adnwName:(NSString *)adnwName {
-    if (self.canUseGameObj) {
-        NSString *msg = [NSString stringWithFormat:@"%@,%@", placementId, adnwName];
-        UnitySendMessage(self.gameObjName.UTF8String, "VAMPDidComplete", msg.UTF8String);
-    }
-    
     if (self.completeCallback) {
         const char *cPlacementId = [placementId UTF8String];
         const char *cAdnwName = [adnwName UTF8String];
@@ -253,11 +181,6 @@ static VAMPNI *_vampInstance = nil;
 }
 
 - (void)vampDidClose:(NSString *)placementId adnwName:(NSString *)adnwName {
-    if (self.canUseGameObj) {
-        NSString *msg = [NSString stringWithFormat:@"%@,%@", placementId, adnwName];
-        UnitySendMessage(self.gameObjName.UTF8String, "VAMPDidClose", msg.UTF8String);
-    }
-    
     if (self.closeCallback) {
         const char *cPlacementId = [placementId UTF8String];
         const char *cAdnwName = [adnwName UTF8String];
@@ -266,11 +189,6 @@ static VAMPNI *_vampInstance = nil;
 }
 
 - (void)vampLoadStart:(NSString *)placementId adnwName:(NSString *)adnwName {
-    if (self.canUseGameObj) {
-        NSString *msg = [NSString stringWithFormat:@"%@,%@", placementId, adnwName];
-        UnitySendMessage(self.gameObjName.UTF8String, "VAMPLoadStart", msg.UTF8String);
-    }
-    
     if (self.loadStartCallback) {
         const char *cPlacementId = [placementId UTF8String];
         const char *cAdnwName = [adnwName UTF8String];
@@ -280,12 +198,6 @@ static VAMPNI *_vampInstance = nil;
 
 - (void)vampLoadResult:(NSString *)placementId success:(BOOL)success adnwName:(NSString *)adnwName
                message:(NSString *)message {
-    if (self.canUseGameObj) {
-        NSString *msg = [NSString stringWithFormat:@"%@,%@,%@,%@",
-                         placementId, (success ? kBoolMessage_True : kBoolMessage_False), adnwName, message];
-        UnitySendMessage(self.gameObjName.UTF8String, "VAMPLoadResult", msg.UTF8String);
-    }
-    
     if (self.loadResultCallback) {
         const char *cPlacementId = [placementId UTF8String];
         const char *cAdnwName = [adnwName UTF8String];
@@ -295,11 +207,6 @@ static VAMPNI *_vampInstance = nil;
 }
 
 - (void)vampDidExpired:(NSString *)placementId {
-    if (self.canUseGameObj) {
-        NSString *msg = [NSString stringWithFormat:@"%@", placementId];
-        UnitySendMessage(self.gameObjName.UTF8String, "VAMPDidExpired", msg.UTF8String);
-    }
-    
     if (self.expireCallback) {
         const char *cPlacementId = [placementId UTF8String];
         self.expireCallback(cPlacementId);
@@ -329,27 +236,6 @@ extern "C" {
         [vampniTemp setVAMP:UnityGetGLViewController() placementId:placementId];
         [VAMPNI retainInstance:vampniTemp];
         return (__bridge void*) vampniTemp;
-    }
-    
-    void *VAMPUnityInit(void *vampni , const char *cPlacementId , const char *cObjName) {
-        NSString *placementId = [NSString stringWithCString:cPlacementId encoding:NSUTF8StringEncoding];
-        NSString *objName = [NSString stringWithCString:cObjName encoding:NSUTF8StringEncoding];
-        
-        VAMPNI *vampniTemp;
-        
-        if (vampni == NULL) {
-            vampniTemp = [VAMPNI new];
-        }
-        else {
-            vampniTemp = (__bridge VAMPNI *) vampni;
-        }
-        
-        [vampniTemp setVAMPWithGameObjectName:objName rootViewController:UnityGetGLViewController()
-                                  placementId:placementId];
-        
-        [VAMPNI retainInstance:vampniTemp];
-        
-        return (__bridge void *) vampniTemp;
     }
     
     void VAMPUnitySetCallbacks(void *vampni,
@@ -436,23 +322,6 @@ extern "C" {
         return [((__bridge VAMPNI *) vampni) isReady];
     }
     
-    void VAMPUnityClearLoaded(void *vampni) {
-        [((__bridge VAMPNI *) vampni) clearLoaded];
-    }
-    
-    void VAMPUnityInitializeAdnwSDK(const char *cPlacementId) {
-        NSString *placementId = [NSString stringWithCString:cPlacementId encoding:NSUTF8StringEncoding];
-        
-        [VAMPNI initializeAdnwSDK:placementId];
-    }
-    
-    void VAMPUnityInitializeAdnwSDKWithConfig(const char *cPlacementId, const char *cState, int duration) {
-        NSString *placementId = [NSString stringWithCString:cPlacementId encoding:NSUTF8StringEncoding];
-        NSString *state = [NSString stringWithCString:cState encoding:NSUTF8StringEncoding];
-        
-        [VAMPNI initializeAdnwSDK:placementId state:state duration:duration];
-    }
-    
     void VAMPUnitySetTestMode(bool enableTest) {
         [VAMP setTestMode:enableTest];
     }
@@ -495,14 +364,7 @@ extern "C" {
         [VAMP setMediationTimeout:(float) timeout];
     }
     
-    void VAMPUnityGetCountryCode(const char *cObjName) {
-        NSString *objName = [NSString stringWithCString:cObjName encoding:NSUTF8StringEncoding];
-        [VAMP getCountryCode:^(NSString *countryCode) {
-            UnitySendMessage(objName.UTF8String, "VAMPCountryCode", countryCode.UTF8String);
-        }];
-    }
-    
-    void VAMPUnityGetCountryCode2(VAMPUnityGetCountryCodeCallback callback) {
+    void VAMPUnityGetCountryCode(VAMPUnityGetCountryCodeCallback callback) {
         
         [VAMP getCountryCode:^(NSString *countryCode) {
             if (callback) {
@@ -511,22 +373,7 @@ extern "C" {
         }];
     }
     
-    // VAMP v3.0.1から追加されたメソッドです
-    void VAMPUnityIsEUAccess(const char *cObjName) {
-        if (![[VAMP class] respondsToSelector:@selector(isEUAccess:)]) {
-            NSLog(@"VAMPUnityPlugin requires VAMP SDK v3.0.1 or higher.");
-            return;
-        }
-        
-        NSString *objName = [NSString stringWithCString:cObjName encoding:NSUTF8StringEncoding];
-        
-        [VAMP isEUAccess:^(BOOL access) {
-            NSString *msg = access ? kBoolMessage_True : kBoolMessage_False;
-            UnitySendMessage(objName.UTF8String, "VAMPIsEUAccess", msg.UTF8String);
-        }];
-    }
-    
-    void VAMPUnityIsEUAccess2(VAMPUnityIsEUAccessCallback callback) {
+    void VAMPUnityIsEUAccess(VAMPUnityIsEUAccessCallback callback) {
         if (![[VAMP class] respondsToSelector:@selector(isEUAccess:)]) {
             NSLog(@"VAMPUnityPlugin requires VAMP SDK v3.0.1 or higher.");
             return;
@@ -546,6 +393,33 @@ extern "C" {
     
     bool VAMPUnityIsCoppaChildDirected() {
         return [VAMP isCoppaChildDirected];
+    }
+    
+    void VAMPUnitySetChildDirected(bool childDirected) {
+        [VAMP setChildDirected:childDirected];
+    }
+    
+    bool VAMPUnityIsChildDirected() {
+        return [VAMP isChildDirected];
+    }
+    
+    // VAMP v3.1.3から追加されたメソッドです
+    void VAMPUnitySetUnderAgeOfConsent(int underAgeOfConsent) {
+        if (![[VAMP class] respondsToSelector:@selector(setUnderAgeOfConsent:)]) {
+            NSLog(@"VAMPUnityPlugin requires VAMP SDK v3.0.1 or higher.");
+            return;
+        }
+        
+        switch (underAgeOfConsent) {
+            case 1:
+                [VAMP setUnderAgeOfConsent:kVAMPUnderAgeOfConsentTrue];
+                break;
+            case 2:
+                [VAMP setUnderAgeOfConsent:kVAMPUnderAgeOfConsentFalse];
+                break;
+            default:
+                [VAMP setUnderAgeOfConsent:kVAMPUnderAgeOfConsentUnknown];
+        }
     }
     
     // VAMP v3.0.4から追加されたメソッドです
@@ -719,7 +593,7 @@ extern "C" {
     unsigned int VAMPUnityVAMPFrequencyCappedStatusImpressionLimit(void *frequencyCappedStatus) {
         VAMPUnityWrapper<VAMPFrequencyCappedStatus> *wrapper = (VAMPUnityWrapper<VAMPFrequencyCappedStatus> *)frequencyCappedStatus;
         if (wrapper != NULL) {
-            return wrapper->pv.impressionLimit;
+            return (unsigned int)wrapper->pv.impressionLimit;
         }
         return 0;
     }
@@ -727,7 +601,7 @@ extern "C" {
     unsigned int VAMPUnityVAMPFrequencyCappedStatusTimeLimit(void *frequencyCappedStatus) {
         VAMPUnityWrapper<VAMPFrequencyCappedStatus> *wrapper = (VAMPUnityWrapper<VAMPFrequencyCappedStatus> *)frequencyCappedStatus;
         if (wrapper != NULL) {
-            return wrapper->pv.timeLimit;
+            return (unsigned int)wrapper->pv.timeLimit;
         }
         return 0;
     }
@@ -735,7 +609,7 @@ extern "C" {
     unsigned int VAMPUnityVAMPFrequencyCappedStatusImpressions(void *frequencyCappedStatus) {
         VAMPUnityWrapper<VAMPFrequencyCappedStatus> *wrapper = (VAMPUnityWrapper<VAMPFrequencyCappedStatus> *)frequencyCappedStatus;
         if (wrapper != NULL) {
-            return wrapper->pv.impressions;
+            return (unsigned int)wrapper->pv.impressions;
         }
         return 0;
     }
@@ -743,7 +617,7 @@ extern "C" {
     unsigned int VAMPUnityVAMPFrequencyCappedStatusRemainingTime(void *frequencyCappedStatus) {
         VAMPUnityWrapper<VAMPFrequencyCappedStatus> *wrapper = (VAMPUnityWrapper<VAMPFrequencyCappedStatus> *)frequencyCappedStatus;
         if (wrapper != NULL) {
-            return wrapper->pv.remainingTime;
+            return (unsigned int)wrapper->pv.remainingTime;
         }
         return 0;
     }

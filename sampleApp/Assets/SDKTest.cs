@@ -8,7 +8,6 @@ using System.Runtime.InteropServices;
 /// SDKTest class.
 /// </summary>
 public class SDKTest : MonoBehaviour
-, VAMPUnitySDK.IVAMPListener, VAMPUnitySDK.IVAMPAdvancedListener
 {
     /**
      * テスト用広告枠IDを使用して広告表示を確認することができます
@@ -27,11 +26,6 @@ public class SDKTest : MonoBehaviour
     public bool testMode;
     // Debug mode flag
     public bool debugMode;
-    // アドネットワークSDKの初期化モード
-    public VAMPUnitySDK.InitializeState initializeState;
-    // アドネットワークSDKの初期化実行間隔 (単位:秒)
-    [Range(4, 60)]
-    public int initializeDuration;
     // ターゲティング属性 ユーザの性別
     public VAMPUnitySDK.Gender userGender = VAMPUnitySDK.Gender.UNKNOWN;
     // ターゲティング属性 ユーザの誕生日
@@ -57,7 +51,6 @@ public class SDKTest : MonoBehaviour
     private const float SCREEN_HEIGHT = 960f;
 
     private string placementID;
-    private bool isVampInitialized;
     private bool isLoading;
     private string sdkVersion;
     private string appVersion;
@@ -139,7 +132,6 @@ public class SDKTest : MonoBehaviour
         vampConfiguration.PlayerAlertContinueButtonText = vampConfig.playerAlertContinueButtonText;
 
         blk = Block.Title;
-        isVampInitialized = false;
         logoCube = GameObject.Find("LogoCube");
         logoCube.SetActive(false);
         isLoading = false;
@@ -177,8 +169,17 @@ public class SDKTest : MonoBehaviour
         //            }
         //        });
 
-        VAMPUnitySDK.setCoppaChildDirected(false);
-        Debug.Log("[VAMPUnitySDK] Coppa:" + VAMPUnitySDK.isCoppaChildDirected());
+        VAMPListener listener = new VAMPListener();
+        listener.onReceive += VAMPDidReceive;
+        listener.onComplete += VAMPDidComplete;
+        listener.onFailToLoad += VAMPDidFailToLoad;
+        listener.onFailToShow += VAMPDidFailToShow;
+        listener.onClose += VAMPDidClose;
+        listener.onExpire += VAMPDidExpired;
+        listener.onLoadStart += VAMPLoadStart;
+        listener.onLoadResult += VAMPLoadResult;
+        VAMPUnitySDK.setVAMPListener(listener);
+        VAMPUnitySDK.setAdvancedListener(listener);
     }
 
     void Update()
@@ -225,8 +226,6 @@ public class SDKTest : MonoBehaviour
 
             labelStyle.alignment = TextAnchor.MiddleRight;
 
-            // GUI.enabled = !isVampInitialized;
-
             GUI.Label(new Rect(100, 90, 80, 60), "ID:");
             placementID = GUI.TextField(new Rect(200, 90, 240, 60), placementID);
 
@@ -248,8 +247,6 @@ public class SDKTest : MonoBehaviour
             {
                 blk = Block.Ad1;
 
-                isVampInitialized = true;
-
                 // trueを指定すると収益が発生しないテスト広告が配信されるようになります。
                 // ストアに申請する際は必ずfalseを設定してください
                 VAMPUnitySDK.setTestMode(testMode);
@@ -259,16 +256,12 @@ public class SDKTest : MonoBehaviour
 
                 // VAMPを初期化します。必ずLoadより先に実行してください
                 VAMPUnitySDK.initialize(placementID);
-                VAMPUnitySDK.setVAMPListener(this);
-                VAMPUnitySDK.setAdvancedListener(this);
             }
 
             if (GUI.Button(new Rect(100, 410, 340, 60), "AD2"))
             {
                 blk = Block.Ad2;
 
-                isVampInitialized = true;
-
                 // trueを指定すると収益が発生しないテスト広告が配信されるようになります。
                 // ストアに申請する際は必ずfalseを設定してください
                 VAMPUnitySDK.setTestMode(testMode);
@@ -278,8 +271,6 @@ public class SDKTest : MonoBehaviour
 
                 // VAMPを初期化します。必ずLoadより先に実行してください
                 VAMPUnitySDK.initialize(placementID);
-                VAMPUnitySDK.setVAMPListener(this);
-                VAMPUnitySDK.setAdvancedListener(this);
                 // 広告のプリロードを開始します
                 VAMPUnitySDK.preload();
             }
@@ -288,8 +279,6 @@ public class SDKTest : MonoBehaviour
             {
                 blk = Block.Ad3;
 
-                isVampInitialized = true;
-
                 // trueを指定すると収益が発生しないテスト広告が配信されるようになります。
                 // ストアに申請する際は必ずfalseを設定してください
                 VAMPUnitySDK.setTestMode(testMode);
@@ -299,8 +288,6 @@ public class SDKTest : MonoBehaviour
 
                 // VAMPを初期化します。必ずLoadより先に実行してください
                 VAMPUnitySDK.initialize(placementID);
-                VAMPUnitySDK.setVAMPListener(this);
-                VAMPUnitySDK.setAdvancedListener(this);
             }
 
             if (GUI.Button(new Rect(100, 570, 340, 60), "INFO"))
@@ -330,8 +317,6 @@ public class SDKTest : MonoBehaviour
             if (GUI.Button(new Rect(0, 60 + safeAreaInsets.Top, 120, 60), "＜戻る"))
             {
                 blk = Block.Title;
-
-                VAMPUnitySDK.clearLoaded();
 
                 isLoading = false;
 
@@ -401,8 +386,6 @@ public class SDKTest : MonoBehaviour
             {
                 blk = Block.Title;
 
-                VAMPUnitySDK.clearLoaded();
-
                 isLoading = false;
 
                 messages.Clear();
@@ -468,8 +451,6 @@ public class SDKTest : MonoBehaviour
             if (GUI.Button(new Rect(0, 60 + safeAreaInsets.Top, 120, 60), "＜戻る"))
             {
                 blk = Block.Title;
-
-                VAMPUnitySDK.clearLoaded();
 
                 isLoading = false;
 
@@ -613,7 +594,6 @@ public class SDKTest : MonoBehaviour
         }
     }
 
-    // IVAMPListener
     public void VAMPDidReceive(string placementId, string adnwName)
     {
         AddMessage(string.Format("Receive {0} {1}", placementId, adnwName));
@@ -626,7 +606,6 @@ public class SDKTest : MonoBehaviour
         {
             VAMPUnitySDK.show();
         }
-
     }
 
     public void VAMPDidFailToLoad(VAMPUnitySDK.VAMPError error, string placementId)
@@ -659,7 +638,7 @@ public class SDKTest : MonoBehaviour
         Debug.LogFormat("[VAMPUnitySDK] VAMPDidClose: {0} {1}", placementId, adnwName);
     }
 
-    public void VAMPDidExpired(string placementId)
+    public void VAMPDidExpired(string placementId, string adnwName)
     {
         AddMessage(string.Format("Expire {0}", placementId));
 
@@ -667,6 +646,7 @@ public class SDKTest : MonoBehaviour
 
         Debug.LogFormat("[VAMPUnitySDK] VAMPDidExpired: {0}", placementId);
     }
+
 
     // IVAMPAdvancedListener
     public void VAMPLoadStart(string placementId, string adnwName)
@@ -682,6 +662,81 @@ public class SDKTest : MonoBehaviour
                 placementId, success, adnwName, message));
 
         Debug.LogFormat("[VAMPUnitySDK] VAMPLoadResult: {0} {1} {2} {3}", placementId, success, adnwName, message);
+    }
+
+    public class VAMPListener : VAMPUnitySDK.IVAMPListener, VAMPUnitySDK.IVAMPAdvancedListener
+    {
+        public delegate void VAMPCallback(string placementId, string adnwName);
+        public delegate void VAMPErrorCallback(VAMPUnitySDK.VAMPError error, string placementId);
+        public delegate void VAMPLoadResultCallback(string placementId, bool success, string adnwName, string message);
+
+        public event VAMPCallback onReceive;
+        public event VAMPErrorCallback onFailToLoad;
+        public event VAMPErrorCallback onFailToShow;
+        public event VAMPCallback onComplete;
+        public event VAMPCallback onClose;
+        public event VAMPCallback onExpire;
+        public event VAMPCallback onLoadStart;
+        public event VAMPLoadResultCallback onLoadResult;
+
+        // IVAMPListener
+        public void VAMPDidReceive(string placementId, string adnwName)
+        {
+            if (onReceive != null) {
+                onReceive.Invoke(placementId, adnwName);
+            }
+        }
+
+        public void VAMPDidFailToLoad(VAMPUnitySDK.VAMPError error, string placementId)
+        {
+            if (onFailToLoad != null) {
+                onFailToLoad.Invoke(error, placementId);
+            }
+        }
+
+        public void VAMPDidFailToShow(VAMPUnitySDK.VAMPError error, string placementId)
+        {
+            if (onFailToShow != null) {
+                onFailToShow.Invoke(error, placementId);
+            }
+        }
+
+        public void VAMPDidComplete(string placementId, string adnwName)
+        {
+            if (onComplete != null) {
+                onComplete.Invoke(placementId, adnwName);
+            }
+        }
+
+        public void VAMPDidClose(string placementId, string adnwName)
+        {
+            if (onClose != null) {
+                onClose.Invoke(placementId, adnwName);
+            }
+        }
+
+        public void VAMPDidExpired(string placementId)
+        {
+            if (onExpire != null) {
+                onExpire.Invoke(placementId, null);
+            }
+        }
+
+
+        // IVAMPAdvancedListener
+        public void VAMPLoadStart(string placementId, string adnwName)
+        {
+            if (onLoadStart != null) {
+                onLoadStart.Invoke(placementId, adnwName);
+            }
+        }
+
+        public void VAMPLoadResult(string placementId, bool success, string adnwName, string message)
+        {
+            if (onLoadResult != null) {
+                onLoadResult.Invoke(placementId, success, adnwName, message);
+            }
+        }
     }
 }
 
