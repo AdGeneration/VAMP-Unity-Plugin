@@ -1,5 +1,6 @@
 #import <CoreTelephony/CTCarrier.h>
 #import <CoreTelephony/CTTelephonyNetworkInfo.h>
+#import <AdSupport/AdSupport.h>
 
 #import <VAMP/VAMP.h>
 

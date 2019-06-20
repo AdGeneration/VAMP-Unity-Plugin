@@ -17,26 +17,59 @@ public class SDKTest : MonoBehaviour
      */
 
     // iOS 広告枠ID
-    public string iosPlacementID = "59755";
+    [SerializeField]
+    private string iosPlacementID = "59755";
     // Android 広告枠ID
-    public string androidPlacementID = "59756";
+    [SerializeField]
+    private string androidPlacementID = "59756";
     // FAN's device ID hash to enable test mode on Android
-    public string androidFANHashedID = "HASHED ID";
+    [SerializeField]
+    private string androidFANHashedID = "HASHED ID";
     // Test mode flag
-    public bool testMode;
+    [SerializeField]
+    private bool testMode;
     // Debug mode flag
-    public bool debugMode;
+    [SerializeField]
+    private bool debugMode;
+
+    [SerializeField]
+    private bool childDirected;
+
+    [SerializeField]
+    private VAMPUnitySDK.UnderAgeOfConsent underAgeOfConsent;
     // ターゲティング属性 ユーザの性別
-    public VAMPUnitySDK.Gender userGender = VAMPUnitySDK.Gender.UNKNOWN;
+    [SerializeField]
+    private VAMPUnitySDK.Gender userGender = VAMPUnitySDK.Gender.UNKNOWN;
+
     // ターゲティング属性 ユーザの誕生日
-    public Birthday birthday;
+    [SerializeField]
+    private Birthday birthday;
 
-    public FrequencyCap frequencyCap;
-    public VAMPConfig vampConfig;
+    [SerializeField]
+    private FrequencyCap frequencyCap;
 
-    public Texture logoTexture;
-    public Texture btnOnTexture;
+    [SerializeField]
+    private VAMPConfig vampConfig;
+
+    [SerializeField]
+    private Texture logoTexture;
+
+    [SerializeField]
+    private Texture btnOnTexture;
+
+    [SerializeField]
     public Texture btnOffTexture;
+
+    [SerializeField]
+    private Texture soundOnTexture;
+
+    [SerializeField]
+    private Texture soundOffTexture;
+
+    [SerializeField]
+    private AudioSource audioSource;
+
+    private bool isPlayingPrev;
 
     private enum Block
     {
@@ -67,39 +100,13 @@ public class SDKTest : MonoBehaviour
     private Vector2 infoPosition = Vector2.zero;
     private Vector2 logPosition = Vector2.zero;
 
-    private static EdgeInsets safeAreaInsets
+    private static EdgeInsets SafeAreaInsets
     {
         get
         {
-#if UNITY_IOS
-            // for iPhone X
-            if (Mathf.Min(Screen.width, Screen.height) == 1125 && Mathf.Max(Screen.width, Screen.height) == 2436)
-            {
-                if (Screen.width > Screen.height)
-                {
-                    // Landscape
-                    return new EdgeInsets(0, 44, 21, 44);
-                }
-                else
-                {
-                    // Portrait
-                    return new EdgeInsets(44, 0, 34, 0);
-                }
-            }
-#endif
-            // for others
-            return new EdgeInsets(0, 0, 0, 0);
+            var safeArea = Screen.safeArea;
+            return new EdgeInsets(safeArea.yMin, safeArea.xMin, Screen.height - safeArea.yMax, Screen.width - safeArea.xMax);
         }
-    }
-
-    void Awake()
-    {
-        Application.logMessageReceived += OnLogMessageReceived;
-    }
-
-    void OnDestroy()
-    {
-        Application.logMessageReceived -= OnLogMessageReceived;
     }
 
     void Start()
@@ -130,6 +137,15 @@ public class SDKTest : MonoBehaviour
         vampConfiguration.PlayerAlertBodyText = vampConfig.playerAlertBodyText;
         vampConfiguration.PlayerAlertCloseButtonText = vampConfig.playerAlertCloseButtonText;
         vampConfiguration.PlayerAlertContinueButtonText = vampConfig.playerAlertContinueButtonText;
+
+        // COPPA対象ユーザかどうかを設定します
+        //VAMPUnitySDK.setChildDirected(childDirected);
+
+        // GDPRの対象ユーザで特定の年齢未満であるかどうかを設定します。
+        //if (underAgeOfConsent != VAMPUnitySDK.UnderAgeOfConsent.UNKNOWN)
+        //{
+        //    VAMPUnitySDK.setUnderAgeOfConsent(underAgeOfConsent);
+        //}
 
         blk = Block.Title;
         logoCube = GameObject.Find("LogoCube");
@@ -178,6 +194,7 @@ public class SDKTest : MonoBehaviour
         listener.onExpire += VAMPDidExpired;
         listener.onLoadStart += VAMPLoadStart;
         listener.onLoadResult += VAMPLoadResult;
+
         VAMPUnitySDK.setVAMPListener(listener);
         VAMPUnitySDK.setAdvancedListener(listener);
     }
@@ -207,10 +224,13 @@ public class SDKTest : MonoBehaviour
 
         GUI.matrix = Matrix4x4.Scale(scaleV3);
 
-        EdgeInsets safeAreaInsets = SDKTest.safeAreaInsets;
+        var safeAreaInsets = SDKTest.SafeAreaInsets;
 
         if (blk == Block.Title)
         {
+            isPlayingPrev = false;
+            audioSource.Stop();
+
             logoCube.SetActive(false);
 
             labelStyle.fontSize = 25;
@@ -344,8 +364,20 @@ public class SDKTest : MonoBehaviour
                 if (VAMPUnitySDK.isReady())
                 {
                     Debug.Log("[VAMPUnitySDK] VAMPUnitySDK.show()");
-
+                    PauseSound();
                     VAMPUnitySDK.show();
+                }
+            }
+
+            if (GUI.Button(new Rect(420, 60 + safeAreaInsets.Top, 120, 60), audioSource.isPlaying ? soundOffTexture : soundOnTexture))
+            {
+                if (audioSource.isPlaying)
+                {
+                    audioSource.Stop();
+                }
+                else
+                {
+                    audioSource.Play();
                 }
             }
 
@@ -410,8 +442,20 @@ public class SDKTest : MonoBehaviour
                 {
                     // 動画広告が準備できているときは広告を表示します
                     Debug.Log("[VAMPUnitySDK] VAMPUnitySDK.show()");
-
+                    PauseSound();
                     VAMPUnitySDK.show();
+                }
+            }
+
+            if (GUI.Button(new Rect(420, 60 + safeAreaInsets.Top, 120, 60), audioSource.isPlaying ? soundOffTexture : soundOnTexture))
+            {
+                if (audioSource.isPlaying)
+                {
+                    audioSource.Stop();
+                }
+                else
+                {
+                    audioSource.Play();
                 }
             }
 
@@ -479,9 +523,23 @@ public class SDKTest : MonoBehaviour
                 {
                     Debug.Log("[VAMPUnitySDK] VAMPUnitySDK.show()");
 
+                    PauseSound();
                     VAMPUnitySDK.show();
                 }
             }
+
+            if (GUI.Button(new Rect(420, 60 + safeAreaInsets.Top, 120, 60), audioSource.isPlaying ? soundOffTexture : soundOnTexture))
+            {
+                if (audioSource.isPlaying)
+                {
+                    audioSource.Stop();
+                }
+                else
+                {
+                    audioSource.Play();
+                }
+            }
+
 
             if (GUI.Button(new Rect(70, 130 + safeAreaInsets.Top, 400, 60), "SetFrequencyCap"))
             {
@@ -573,25 +631,26 @@ public class SDKTest : MonoBehaviour
         GUI.skin = null;
     }
 
+    private void PauseSound()
+    {
+        isPlayingPrev = audioSource.isPlaying;
+        if (audioSource.isPlaying)
+        {
+            audioSource.Pause();
+        }
+    }
+
+    private void ResumeSound()
+    {
+        if (isPlayingPrev)
+        {
+            audioSource.UnPause();
+        }
+    }
+
     private void AddMessage(string str)
     {
         messages.Add(System.DateTime.Now.ToString("MM/dd HH:mm:ss ") + str);
-    }
-
-    private void OnLogMessageReceived(string condition, string stackTrace, LogType type)
-    {
-        // エラーやワーニングはメッセージを出力する
-        switch (type)
-        {
-            case LogType.Warning:
-                AddMessage(string.Format("<color=yellow>{0}</color>", condition));
-                break;
-            case LogType.Error:
-            case LogType.Assert:
-            case LogType.Exception:
-                AddMessage(string.Format("<color=red>{0}</color>", condition));
-                break;
-        }
     }
 
     public void VAMPDidReceive(string placementId, string adnwName)
@@ -604,6 +663,7 @@ public class SDKTest : MonoBehaviour
 
         if (blk == Block.Ad2)
         {
+            PauseSound();
             VAMPUnitySDK.show();
         }
     }
@@ -613,7 +673,7 @@ public class SDKTest : MonoBehaviour
         AddMessage(string.Format("FailToLoad {0} {1}", error, placementId));
 
         isLoading = false;
-
+        ResumeSound();
         Debug.LogFormat("[VAMPUnitySDK] VAMPDidFailToLoad: {0} {1}", error, placementId);
     }
 
@@ -634,7 +694,7 @@ public class SDKTest : MonoBehaviour
     public void VAMPDidClose(string placementId, string adnwName)
     {
         AddMessage(string.Format("Close {0} {1}", placementId, adnwName));
-
+        ResumeSound();
         Debug.LogFormat("[VAMPUnitySDK] VAMPDidClose: {0} {1}", placementId, adnwName);
     }
 
@@ -682,42 +742,48 @@ public class SDKTest : MonoBehaviour
         // IVAMPListener
         public void VAMPDidReceive(string placementId, string adnwName)
         {
-            if (onReceive != null) {
+            if (onReceive != null)
+            {
                 onReceive.Invoke(placementId, adnwName);
             }
         }
 
         public void VAMPDidFailToLoad(VAMPUnitySDK.VAMPError error, string placementId)
         {
-            if (onFailToLoad != null) {
+            if (onFailToLoad != null)
+            {
                 onFailToLoad.Invoke(error, placementId);
             }
         }
 
         public void VAMPDidFailToShow(VAMPUnitySDK.VAMPError error, string placementId)
         {
-            if (onFailToShow != null) {
+            if (onFailToShow != null)
+            {
                 onFailToShow.Invoke(error, placementId);
             }
         }
 
         public void VAMPDidComplete(string placementId, string adnwName)
         {
-            if (onComplete != null) {
+            if (onComplete != null)
+            {
                 onComplete.Invoke(placementId, adnwName);
             }
         }
 
         public void VAMPDidClose(string placementId, string adnwName)
         {
-            if (onClose != null) {
+            if (onClose != null)
+            {
                 onClose.Invoke(placementId, adnwName);
             }
         }
 
         public void VAMPDidExpired(string placementId)
         {
-            if (onExpire != null) {
+            if (onExpire != null)
+            {
                 onExpire.Invoke(placementId, null);
             }
         }
@@ -726,14 +792,16 @@ public class SDKTest : MonoBehaviour
         // IVAMPAdvancedListener
         public void VAMPLoadStart(string placementId, string adnwName)
         {
-            if (onLoadStart != null) {
+            if (onLoadStart != null)
+            {
                 onLoadStart.Invoke(placementId, adnwName);
             }
         }
 
         public void VAMPLoadResult(string placementId, bool success, string adnwName, string message)
         {
-            if (onLoadResult != null) {
+            if (onLoadResult != null)
+            {
                 onLoadResult.Invoke(placementId, success, adnwName, message);
             }
         }
@@ -742,7 +810,6 @@ public class SDKTest : MonoBehaviour
 
 public struct EdgeInsets
 {
-
     public float Top { get; }
 
     public float Left { get; }
@@ -757,6 +824,12 @@ public struct EdgeInsets
         Left = left;
         Bottom = bottom;
         Right = right;
+    }
+
+    public override string ToString()
+    {
+        return
+            string.Format("Top:{0}, Left:{1} Bottom:{2} Right:{3}", Top, Left, Bottom, Right);
     }
 }
 
@@ -779,7 +852,7 @@ public class FrequencyCap
 
 [System.Serializable]
 public class Birthday
-{ 
+{
     public int year = 1980;
     public int month = 2;
     public int day = 20;
