@@ -13,9 +13,8 @@
 #import <Tapjoy/Tapjoy.h>
 #import <UnityAds/UnityAds.h>
 #import <VungleSDK/VungleSDK.h>
-
-// MoPubを使う場合は以下のコメントアウトを外してください
-//#import <MoPubSDKFramework/MoPub.h>
+#import <MoPubSDKFramework/MoPub.h>
+#import <BUAdSDK/BUAdSDK.h>
 
 NSString *VAMPTestNIGetAdnwSDKVersion(NSString *adnwName) {
     NSString *version = @"nothing";
@@ -68,6 +67,9 @@ NSString *VAMPTestNIGetAdnwSDKVersion(NSString *adnwName) {
     }
     else if ([adnwName isEqualToString:@"Vungle"]) {
         version = VungleSDKVersion;
+    }
+    else if ([adnwName isEqualToString:@"TikTok"]) {
+        version = BUAdSDKManager.SDKVersion;
     }
     
     return version;

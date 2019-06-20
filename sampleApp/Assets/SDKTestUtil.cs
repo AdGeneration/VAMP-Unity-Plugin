@@ -59,6 +59,7 @@ public class SDKTestUtil
             infos.Add("SDK_Ver(Tapjoy)：" + GetAdnwSDKVersion("Tapjoy"));
             infos.Add("SDK_Ver(UnityAds)：" + GetAdnwSDKVersion("UnityAds"));
             infos.Add("SDK_Ver(Vungle)：" + GetAdnwSDKVersion("Vungle"));
+            infos.Add("SDK_Ver(TikTok)：" + GetAdnwSDKVersion("TikTok"));
             infos.Add("--------------------");
             infos.Add("BundleID：" + VAMPUnityTestDeviceInfo("BundleID"));
             infos.Add("バージョン名：" + VAMPUnityTestDeviceInfo("AppVer"));
