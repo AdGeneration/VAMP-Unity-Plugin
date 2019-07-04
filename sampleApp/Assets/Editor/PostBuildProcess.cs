@@ -42,7 +42,10 @@ public class PostBuildProcess
 #region MoPubの設定
 #if UNITY_2017_1_OR_NEWER
             var mopubFileGuid = proj.FindFileGuidByProjectPath("Frameworks/Plugins/iOS/sdk/MoPubSDKFramework.framework");
-            proj.AddFileToEmbedFrameworks(target, mopubFileGuid);
+            if (!string.IsNullOrEmpty(mopubFileGuid))
+            {
+                proj.AddFileToEmbedFrameworks(target, mopubFileGuid);
+            }
 #endif
             var maskedFiles = Directory.GetFiles(
                path, "*.prevent_unity_compilation", SearchOption.AllDirectories);
