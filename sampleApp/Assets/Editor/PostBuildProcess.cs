@@ -7,10 +7,9 @@ using System.IO;
 using UnityEditor.iOS.Xcode.Extensions;
 #endif
 
+#if UNITY_IOS
 public class PostBuildProcess
 {
-#if UNITY_IOS
-
     private static readonly string adMobAppId = "ca-app-pub-3940256099942544~3347511713";
     private static readonly string adMobAppIdKey = "GADApplicationIdentifier";
 
@@ -68,7 +67,36 @@ public class PostBuildProcess
             File.WriteAllText(plistPath, plist.WriteToString());
         }
     }
-
-#endif
 }
+#elif UNITY_ANDROID
+public class PostBuildProcess : UnityEditor.Android.IPostGenerateGradleAndroidProject
+{
+    public int callbackOrder
+    {
+        get
+        {
+            return 999;
+        }
+    }
+
+    void UnityEditor.Android.IPostGenerateGradleAndroidProject.OnPostGenerateGradleAndroidProject(string path)
+    {
+        var gradlePropertiesFile = path + "/gradle.properties";
+
+        if (File.Exists(gradlePropertiesFile))
+        {
+            File.Delete(gradlePropertiesFile);
+        }
+
+        using (var writer = File.CreateText(gradlePropertiesFile))
+        {
+            writer.WriteLine("org.gradle.jvmargs=-Xmx4096M");
+            writer.WriteLine("android.useAndroidX=true");
+            writer.WriteLine("android.enableJetifier=true");
+            writer.Flush();
+            writer.Close();
+        }
+    }
+}
+#endif
 #endif

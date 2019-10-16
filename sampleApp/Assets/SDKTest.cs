@@ -89,7 +89,7 @@ public class SDKTest : MonoBehaviour
     private string appVersion;
     private string countryCode = "";
     private List<string> messages = new List<string>();
-    private List<string> infos;
+    private List<string> infos = new List<string>();
     private Block blk;
     private Vector3 scaleV3;
     private float width;
@@ -168,7 +168,6 @@ public class SDKTest : MonoBehaviour
 
         sdkVersion = VAMPUnitySDK.SDKVersion();
         appVersion = SDKTestUtil.GetAppVersion();
-        infos = SDKTestUtil.GetDeviceInfo();
 
         // EU圏内からのアクセスか判定します
         //        VAMPUnitySDK.isEUAccess((bool access) => {
@@ -313,7 +312,7 @@ public class SDKTest : MonoBehaviour
             if (GUI.Button(new Rect(100, 570, 340, 60), "INFO"))
             {
                 blk = Block.Info;
-
+                infos = SDKTestUtil.GetDeviceInfo();
 
                 // 国コード取得サンプル
                 VAMPUnitySDK.getCountryCode((string countryCode) =>
