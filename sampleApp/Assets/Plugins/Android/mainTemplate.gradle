@@ -22,6 +22,12 @@ allprojects {
 }
 
 // Android Resolver Repos Start
+([rootProject] + (rootProject.subprojects as List)).each {
+    ext {
+        it.setProperty("android.useAndroidX", true)
+        it.setProperty("android.enableJetifier", true)
+    }
+}
 ([rootProject] + (rootProject.subprojects as List)).each { project ->
     project.repositories {
         def unityProjectPath = "file:///" + file(rootProject.projectDir.path + "/../../").absolutePath
@@ -44,12 +50,13 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 // Android Resolver Dependencies Start
     implementation 'androidx.annotation:annotation:1.1.0' // Assets/PlayServicesResolver/Editor/VAMPDependencies.xml:37
+    implementation 'androidx.appcompat:appcompat:1.1.0' // Assets/PlayServicesResolver/Editor/VAMPDependencies.xml:43
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3' // Assets/PlayServicesResolver/Editor/VAMPDependencies.xml:27
     implementation 'androidx.legacy:legacy-support-v4:1.0.0' // Assets/PlayServicesResolver/Editor/VAMPDependencies.xml:32
     implementation 'androidx.multidex:multidex:2.0.1' // Assets/PlayServicesResolver/Editor/VAMPDependencies.xml:42
-    implementation 'com.google.android.gms:play-services-ads:18.1.1' // Assets/PlayServicesResolver/Editor/VAMPDependencies.xml:7
+    implementation 'com.google.android.gms:play-services-ads:18.3.0' // Assets/PlayServicesResolver/Editor/VAMPDependencies.xml:7
     implementation 'com.google.android.gms:play-services-ads-identifier:17.0.0' // Assets/PlayServicesResolver/Editor/VAMPDependencies.xml:17
-    implementation 'com.google.android.gms:play-services-base:17.0.0' // Assets/PlayServicesResolver/Editor/VAMPDependencies.xml:12
+    implementation 'com.google.android.gms:play-services-base:17.1.0' // Assets/PlayServicesResolver/Editor/VAMPDependencies.xml:12
     implementation 'com.google.android.gms:play-services-basement:17.1.1' // Assets/PlayServicesResolver/Editor/VAMPDependencies.xml:22
 // Android Resolver Dependencies End
 **DEPS**}

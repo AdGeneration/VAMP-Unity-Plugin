@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 /// <summary>
 /// SDKTest class.
 /// </summary>
-public class SDKTest : MonoBehaviour
+public class SDKTest : MonoBehaviour, VAMPUnitySDK.IVAMPListener, VAMPUnitySDK.IVAMPAdvancedListener
 {
     /**
      * テスト用広告枠IDを使用して広告表示を確認することができます
@@ -87,7 +87,7 @@ public class SDKTest : MonoBehaviour
     private bool isLoading;
     private string sdkVersion;
     private string appVersion;
-    private string countryCode = "";
+    private VAMPUnitySDK.VAMPLocation location;
     private List<string> messages = new List<string>();
     private List<string> infos = new List<string>();
     private Block blk;
@@ -109,7 +109,7 @@ public class SDKTest : MonoBehaviour
         }
     }
 
-    void Start()
+    void Awake()
     {
 #if UNITY_IOS
         placementID = iosPlacementID;
@@ -170,32 +170,76 @@ public class SDKTest : MonoBehaviour
         appVersion = SDKTestUtil.GetAppVersion();
 
         // EU圏内からのアクセスか判定します
-        //        VAMPUnitySDK.isEUAccess((bool access) => {
-        //            AddMessage(string.Format("IsEUAccess {0}", access));
+        VAMPUnitySDK.isEUAccess((bool access) =>
+        {
+            AddMessage(string.Format("IsEUAccess {0}", access));
 
-        //            Debug.Log("[VAMPUnitySDK] VAMPIsEUAccess: " + access);
+            Debug.Log("[VAMPUnitySDK] VAMPIsEUAccess: " + access);
 
-        //            if (access)
-        //            {
-        //                // TODO: ユーザに広告が個人に関連する情報を取得することの同意を求めます
+            if (access)
+            {
+                // TODO: ユーザに広告が個人に関連する情報を取得することの同意を求めます
 
-        //                // ユーザの入力を受け付けACCEPTEDまたはDENIEDをセットします
-        //                VAMPUnitySDK.setUserConsent(VAMPUnitySDK.ConsentStatus.ACCEPTED);
-        //            }
-        //        });
+                // ユーザの入力を受け付けACCEPTEDまたはDENIEDをセットします
+                VAMPUnitySDK.setUserConsent(VAMPUnitySDK.ConsentStatus.ACCEPTED);
+            }
+        });
 
-        VAMPListener listener = new VAMPListener();
-        listener.onReceive += VAMPDidReceive;
-        listener.onComplete += VAMPDidComplete;
-        listener.onFailToLoad += VAMPDidFailToLoad;
-        listener.onFailToShow += VAMPDidFailToShow;
-        listener.onClose += VAMPDidClose;
-        listener.onExpire += VAMPDidExpired;
-        listener.onLoadStart += VAMPLoadStart;
-        listener.onLoadResult += VAMPLoadResult;
+        VAMPUnitySDK.setVAMPListener(this);
+        VAMPUnitySDK.setAdvancedListener(this);
 
-        VAMPUnitySDK.setVAMPListener(listener);
-        VAMPUnitySDK.setAdvancedListener(listener);
+        // 国コード取得サンプル
+        VAMPUnitySDK.getLocation(result => 
+        {
+            location = result;
+            if (location != null)
+            {
+                var countryCode = location.CountryCode;
+                var region = location.Region;
+
+                if (countryCode == VAMPUnitySDK.UNKNOWN_COUNTRY_CODE)
+                {
+                    // 取得失敗
+                }
+                else if (countryCode == "US")
+                {
+                    // アメリカ
+
+                    // COPPA対象ユーザである場合はtrueを設定する
+                    // VAMPUnitySDK.setChildDirected(true);
+
+                    if (string.IsNullOrEmpty(region))
+                    {
+                        // region取得失敗
+                    }
+                    else if (region == "CA")
+                    {
+                        // カリフォルニア州 (California)
+                        // CCPA (https://www.caprivacy.org/)
+                    }
+                    else if (region == "NV")
+                    {
+                        // ネバダ州 (Nevada)
+                    }
+                }
+                else if (countryCode == "JP")
+                {
+                    // 日本
+                    if (string.IsNullOrEmpty(region))
+                    {
+                        // 取得失敗
+                    }
+                    else if (region == "13")
+                    {
+                        // 東京都
+                    }
+                    else if (region == "27")
+                    {
+                        // 大阪府
+                    }
+                }
+            }
+        });
     }
 
     void Update()
@@ -235,7 +279,7 @@ public class SDKTest : MonoBehaviour
             labelStyle.fontSize = 25;
 
             GUI.Label(new Rect(0, height - 60 - safeAreaInsets.Bottom, width, 50),
-                "APP " + appVersion + " / SDK " + sdkVersion);
+                "APP " + appVersion + " / SDK " + sdkVersion + " / " + (location != null ? (location.CountryCode + "-" + location.Region) : string.Empty));
 
             labelStyle.fontSize = 30;
 
@@ -314,19 +358,10 @@ public class SDKTest : MonoBehaviour
                 blk = Block.Info;
                 infos = SDKTestUtil.GetDeviceInfo();
 
-                // 国コード取得サンプル
-                VAMPUnitySDK.getCountryCode((string countryCode) =>
-                    {
-                        this.countryCode = countryCode;
-                        AddMessage(string.Format("CountryCode {0}", countryCode));
-
-                        Debug.Log("[VAMPUnitySDK] VAMPCountryCode: " + countryCode);
-
-                        //if (countryCode == "US") {
-                        //    // COPPA対象ユーザである場合はtrueを設定する
-                        //    VAMPUnitySDK.setCoppaChildDirected(true);
-                        //}
-                    });
+                VAMPUnitySDK.getLocation(result =>
+                {
+                    location = result;
+                });
             }
         }
         else if (blk == Block.Ad1)
@@ -620,7 +655,7 @@ public class SDKTest : MonoBehaviour
                 GUILayout.Label(infos[i], labelStyle);
             }
 
-            GUILayout.Label("Country Code：" + countryCode, labelStyle);
+            GUILayout.Label("Country Code：" + (location != null ? location.CountryCode + "-" + location.Region : string.Empty), labelStyle);
 
             GUILayout.EndScrollView();
             GUILayout.EndArea();
@@ -650,6 +685,8 @@ public class SDKTest : MonoBehaviour
     private void AddMessage(string str)
     {
         messages.Add(System.DateTime.Now.ToString("MM/dd HH:mm:ss ") + str);
+
+        Debug.Log("[VAMPUnitySDK] " + str);
     }
 
     public void VAMPDidReceive(string placementId, string adnwName)
@@ -657,8 +694,6 @@ public class SDKTest : MonoBehaviour
         AddMessage(string.Format("Receive {0} {1}", placementId, adnwName));
 
         isLoading = false;
-
-        Debug.LogFormat("[VAMPUnitySDK] VAMPDidReceive: {0} {1}", placementId, adnwName);
 
         if (blk == Block.Ad2)
         {
@@ -673,37 +708,35 @@ public class SDKTest : MonoBehaviour
 
         isLoading = false;
         ResumeSound();
-        Debug.LogFormat("[VAMPUnitySDK] VAMPDidFailToLoad: {0} {1}", error, placementId);
     }
 
     public void VAMPDidFailToShow(VAMPUnitySDK.VAMPError error, string placementId)
     {
         AddMessage(string.Format("FailToShow {0} {1}", error, placementId));
 
-        Debug.LogFormat("[VAMPUnitySDK] VAMPDidFailToShow: {0} {1}", error, placementId);
+    }
+
+    public void VAMPDidOpen(string placementId, string adnwName)
+    {
+        AddMessage(string.Format("Open {0} {1}", placementId, adnwName));
     }
 
     public void VAMPDidComplete(string placementId, string adnwName)
     {
         AddMessage(string.Format("Complete {0} {1}", placementId, adnwName));
-
-        Debug.LogFormat("[VAMPUnitySDK] VAMPDidComplete: {0} {1}", placementId, adnwName);
     }
 
-    public void VAMPDidClose(string placementId, string adnwName)
+    public void VAMPDidClose(string placementId, string adnwName, bool adClicked)
     {
-        AddMessage(string.Format("Close {0} {1}", placementId, adnwName));
+        AddMessage(string.Format("Close {0} {1} Click:{2}", placementId, adnwName, adClicked));
         ResumeSound();
-        Debug.LogFormat("[VAMPUnitySDK] VAMPDidClose: {0} {1}", placementId, adnwName);
     }
 
-    public void VAMPDidExpired(string placementId, string adnwName)
+    public void VAMPDidExpired(string placementId)
     {
         AddMessage(string.Format("Expire {0}", placementId));
 
         isLoading = false;
-
-        Debug.LogFormat("[VAMPUnitySDK] VAMPDidExpired: {0}", placementId);
     }
 
 
@@ -711,99 +744,12 @@ public class SDKTest : MonoBehaviour
     public void VAMPLoadStart(string placementId, string adnwName)
     {
         AddMessage(string.Format("LoadStart {0} {1}", placementId, adnwName));
-
-        Debug.LogFormat("[VAMPUnitySDK] VAMPLoadStart: {0} {1}", placementId, adnwName);
     }
 
     public void VAMPLoadResult(string placementId, bool success, string adnwName, string message)
     {
         AddMessage(string.Format("LoadResult {0} {2} success={1} message={3}",
                 placementId, success, adnwName, message));
-
-        Debug.LogFormat("[VAMPUnitySDK] VAMPLoadResult: {0} {1} {2} {3}", placementId, success, adnwName, message);
-    }
-
-    public class VAMPListener : VAMPUnitySDK.IVAMPListener, VAMPUnitySDK.IVAMPAdvancedListener
-    {
-        public delegate void VAMPCallback(string placementId, string adnwName);
-        public delegate void VAMPErrorCallback(VAMPUnitySDK.VAMPError error, string placementId);
-        public delegate void VAMPLoadResultCallback(string placementId, bool success, string adnwName, string message);
-
-        public event VAMPCallback onReceive;
-        public event VAMPErrorCallback onFailToLoad;
-        public event VAMPErrorCallback onFailToShow;
-        public event VAMPCallback onComplete;
-        public event VAMPCallback onClose;
-        public event VAMPCallback onExpire;
-        public event VAMPCallback onLoadStart;
-        public event VAMPLoadResultCallback onLoadResult;
-
-        // IVAMPListener
-        public void VAMPDidReceive(string placementId, string adnwName)
-        {
-            if (onReceive != null)
-            {
-                onReceive.Invoke(placementId, adnwName);
-            }
-        }
-
-        public void VAMPDidFailToLoad(VAMPUnitySDK.VAMPError error, string placementId)
-        {
-            if (onFailToLoad != null)
-            {
-                onFailToLoad.Invoke(error, placementId);
-            }
-        }
-
-        public void VAMPDidFailToShow(VAMPUnitySDK.VAMPError error, string placementId)
-        {
-            if (onFailToShow != null)
-            {
-                onFailToShow.Invoke(error, placementId);
-            }
-        }
-
-        public void VAMPDidComplete(string placementId, string adnwName)
-        {
-            if (onComplete != null)
-            {
-                onComplete.Invoke(placementId, adnwName);
-            }
-        }
-
-        public void VAMPDidClose(string placementId, string adnwName)
-        {
-            if (onClose != null)
-            {
-                onClose.Invoke(placementId, adnwName);
-            }
-        }
-
-        public void VAMPDidExpired(string placementId)
-        {
-            if (onExpire != null)
-            {
-                onExpire.Invoke(placementId, null);
-            }
-        }
-
-
-        // IVAMPAdvancedListener
-        public void VAMPLoadStart(string placementId, string adnwName)
-        {
-            if (onLoadStart != null)
-            {
-                onLoadStart.Invoke(placementId, adnwName);
-            }
-        }
-
-        public void VAMPLoadResult(string placementId, bool success, string adnwName, string message)
-        {
-            if (onLoadResult != null)
-            {
-                onLoadResult.Invoke(placementId, success, adnwName, message);
-            }
-        }
     }
 }
 

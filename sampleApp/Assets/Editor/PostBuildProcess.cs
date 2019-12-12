@@ -1,13 +1,14 @@
-#if UNITY_EDITOR_OSX
+#if UNITY_EDITOR_OSX 
 using UnityEditor;
 using UnityEditor.Callbacks;
-using UnityEditor.iOS.Xcode;
 using System.IO;
+
+#if UNITY_IOS
+using UnityEditor.iOS.Xcode;
 #if UNITY_2017_1_OR_NEWER
 using UnityEditor.iOS.Xcode.Extensions;
 #endif
 
-#if UNITY_IOS
 public class PostBuildProcess
 {
     private static readonly string adMobAppId = "ca-app-pub-3940256099942544~3347511713";
@@ -68,7 +69,7 @@ public class PostBuildProcess
         }
     }
 }
-#elif UNITY_ANDROID
+#elif UNITY_ANDROID && UNITY_2018_1_OR_NEWER
 public class PostBuildProcess : UnityEditor.Android.IPostGenerateGradleAndroidProject
 {
     public int callbackOrder
