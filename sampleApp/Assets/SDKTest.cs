@@ -1,8 +1,5 @@
 using UnityEngine;
-using UnityEngine.UI;
-using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 
 /// <summary>
 /// SDKTest class.
@@ -689,9 +686,9 @@ public class SDKTest : MonoBehaviour, VAMPUnitySDK.IVAMPListener, VAMPUnitySDK.I
         Debug.Log("[VAMPUnitySDK] " + str);
     }
 
-    public void VAMPDidReceive(string placementId, string adnwName)
+    public void VAMPDidReceive(VAMPUnitySDK.VAMPAd ad)
     {
-        AddMessage(string.Format("Receive {0} {1}", placementId, adnwName));
+        AddMessage(string.Format("Receive {0} {1} {2}", ad.PlacementId, ad.AdNetworkName, ad.SeqId));
 
         isLoading = false;
 
@@ -702,33 +699,32 @@ public class SDKTest : MonoBehaviour, VAMPUnitySDK.IVAMPListener, VAMPUnitySDK.I
         }
     }
 
-    public void VAMPDidFailToLoad(VAMPUnitySDK.VAMPError error, string placementId)
+    public void VAMPDidFailToLoad(VAMPUnitySDK.VAMPAd ad, VAMPUnitySDK.VAMPError error)
     {
-        AddMessage(string.Format("FailToLoad {0} {1}", error, placementId));
+        AddMessage(string.Format("FailToLoad(error={0}, placementId={1}, adnwName={2}, seqId={3})", error, ad.PlacementId, ad.AdNetworkName, ad.SeqId));
 
         isLoading = false;
         ResumeSound();
     }
 
-    public void VAMPDidFailToShow(VAMPUnitySDK.VAMPError error, string placementId)
+    public void VAMPDidFailToShow(VAMPUnitySDK.VAMPAd ad, VAMPUnitySDK.VAMPError error)
     {
-        AddMessage(string.Format("FailToShow {0} {1}", error, placementId));
-
+        AddMessage(string.Format("FailToShow(error={0}, placemnetId={1}, adnwName={2}, seqId={3})", error, ad.PlacementId, ad.AdNetworkName, ad.SeqId));
     }
 
-    public void VAMPDidOpen(string placementId, string adnwName)
+    public void VAMPDidOpen(VAMPUnitySDK.VAMPAd ad)
     {
-        AddMessage(string.Format("Open {0} {1}", placementId, adnwName));
+        AddMessage(string.Format("Open(placementId={0}, adnwName={1}, seqId={2})", ad.PlacementId, ad.AdNetworkName, ad.SeqId));
     }
 
-    public void VAMPDidComplete(string placementId, string adnwName)
+    public void VAMPDidComplete(VAMPUnitySDK.VAMPAd ad)
     {
-        AddMessage(string.Format("Complete {0} {1}", placementId, adnwName));
+        AddMessage(string.Format("Complete(placementId={0}, adnwName={1}, seqId={2})", ad.PlacementId, ad.AdNetworkName, ad.SeqId));
     }
 
-    public void VAMPDidClose(string placementId, string adnwName, bool adClicked)
+    public void VAMPDidClose(VAMPUnitySDK.VAMPAd ad, bool adClicked)
     {
-        AddMessage(string.Format("Close {0} {1} Click:{2}", placementId, adnwName, adClicked));
+        AddMessage(string.Format("Close(placementId={0}, adnwName={1}, seqId={2} adClicked={3}", ad.PlacementId, ad.AdNetworkName, ad.SeqId, adClicked));
         ResumeSound();
     }
 
@@ -741,15 +737,15 @@ public class SDKTest : MonoBehaviour, VAMPUnitySDK.IVAMPListener, VAMPUnitySDK.I
 
 
     // IVAMPAdvancedListener
-    public void VAMPLoadStart(string placementId, string adnwName)
+    public void VAMPLoadStart(VAMPUnitySDK.VAMPAd ad)
     {
-        AddMessage(string.Format("LoadStart {0} {1}", placementId, adnwName));
+        AddMessage(string.Format("LoadStart(placementId={0}, adnwName={1}, seqId={2})", ad.PlacementId, ad.AdNetworkName, ad.SeqId));
     }
 
-    public void VAMPLoadResult(string placementId, bool success, string adnwName, string message)
+    public void VAMPLoadResult(VAMPUnitySDK.VAMPAd ad, bool success, string message)
     {
-        AddMessage(string.Format("LoadResult {0} {2} success={1} message={3}",
-                placementId, success, adnwName, message));
+        AddMessage(string.Format("LoadResult(placementId={0}, adnwName={1}, seqId={2}, success={3}, message={4})",
+                ad.PlacementId, ad.AdNetworkName, ad.SeqId, success, message));
     }
 }
 

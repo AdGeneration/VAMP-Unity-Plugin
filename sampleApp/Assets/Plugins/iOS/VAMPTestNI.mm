@@ -8,17 +8,14 @@
 #import <FBAudienceNetwork/FBAudienceNetwork.h>
 #import <GoogleMobileAds/GoogleMobileAds.h>
 #import <Maio/Maio.h>
-#import <MTGSDK/MTGSDK.h>
 #import <NendAd/NendAd.h>
 #import <Tapjoy/Tapjoy.h>
 #import <UnityAds/UnityAds.h>
-#import <VungleSDK/VungleSDK.h>
-#import <MoPubSDKFramework/MoPub.h>
 #import <BUAdSDK/BUAdSDK.h>
 
 NSString *VAMPTestNIGetAdnwSDKVersion(NSString *adnwName) {
     NSString *version = @"nothing";
-    
+
     if ([adnwName isEqualToString:@"VAMP"]) {
         version = [VAMP SDKVersion];
     }
@@ -37,16 +34,6 @@ NSString *VAMPTestNIGetAdnwSDKVersion(NSString *adnwName) {
     else if ([adnwName isEqualToString:@"Maio"]) {
         version = [Maio sdkVersion];
     }
-#ifdef MTGSDKVersion
-    else if ([adnwName isEqualToString:@"Mintegral"]) {
-        version = MTGSDKVersion;
-    }
-#endif
-#ifdef MP_SDK_VERSION
-    else if ([adnwName isEqualToString:@"MoPub"]) {
-        version = MP_SDK_VERSION;
-    }
-#endif
     else if ([adnwName isEqualToString:@"Nend"]) {
         NSString *ver = [NSString stringWithCString:(const char *) NendAdVersionString
                                            encoding:NSUTF8StringEncoding];
@@ -65,18 +52,15 @@ NSString *VAMPTestNIGetAdnwSDKVersion(NSString *adnwName) {
     else if ([adnwName isEqualToString:@"UnityAds"]) {
         version = [UnityAds getVersion];
     }
-    else if ([adnwName isEqualToString:@"Vungle"]) {
-        version = VungleSDKVersion;
-    }
     else if ([adnwName isEqualToString:@"TikTok"]) {
         version = BUAdSDKManager.SDKVersion;
     }
-    
+
     return version;
 }
 NSString *VAMPTestNIGetDeviceInfo(NSString *infoName) {
     NSString *info = @"nothing";
-    
+
     if ([infoName isEqualToString:@"DeviceName"]) {
         info = [[UIDevice currentDevice] name];
     }
@@ -92,13 +76,13 @@ NSString *VAMPTestNIGetDeviceInfo(NSString *infoName) {
     else if ([infoName isEqualToString:@"Carrier"]) {
         CTTelephonyNetworkInfo *networkInfo = [[CTTelephonyNetworkInfo alloc] init];
         CTCarrier *provider = [networkInfo subscriberCellularProvider];
-        
+
         info = provider.carrierName;
     }
     else if ([infoName isEqualToString:@"ISOCountry"]) {
         CTTelephonyNetworkInfo *networkInfo = [[CTTelephonyNetworkInfo alloc] init];
         CTCarrier *provider = [networkInfo subscriberCellularProvider];
-        
+
         info = provider.isoCountryCode;
     }
     else if ([infoName isEqualToString:@"CountryCode"]) {
@@ -116,40 +100,40 @@ NSString *VAMPTestNIGetDeviceInfo(NSString *infoName) {
     else if ([infoName isEqualToString:@"AppVer"]) {
         info = [NSBundle mainBundle].infoDictionary[@"CFBundleShortVersionString"];
     }
-    
+
     return info;
 }
 
 extern "C" {
     char *VAMPUnityTestAdnwSDKVersion(const char *cAdnwName) {
         NSString *adnwName = [NSString stringWithCString:cAdnwName encoding:NSUTF8StringEncoding];
-        
+
         NSString *version = VAMPTestNIGetAdnwSDKVersion(adnwName);
-        
+
         if (!version) {
             version = @"";
         }
-        
+
         char *cVersion = (char *) version.UTF8String;
         char *res = (char *) malloc(strlen(cVersion) + 1);
         strcpy(res, cVersion);
-        
+
         return res;
     }
-    
+
     char *VAMPUnityTestDeviceInfo(const char *cInfoName) {
         NSString *infoName = [NSString stringWithCString:cInfoName encoding:NSUTF8StringEncoding];
-        
+
         NSString *info = VAMPTestNIGetDeviceInfo(infoName);
-        
+
         if (!info) {
             info = @"";
         }
-        
+
         char *cInfo = (char *) info.UTF8String;
         char *res = (char *) malloc(strlen(cInfo) + 1);
         strcpy(res, cInfo);
-        
+
         return res;
     }
 }

@@ -4,12 +4,13 @@ using UnityEngine;
 
 public static class SDKTestUtil
 {
+#if UNITY_IOS
     [System.Runtime.InteropServices.DllImport("__Internal")]
     private static extern string VAMPUnityTestAdnwSDKVersion(string adnwName);
 
     [System.Runtime.InteropServices.DllImport("__Internal")]
     private static extern string VAMPUnityTestDeviceInfo(string infoName);
-
+#endif
     public static string GetAppVersion()
     {
         string ver = Application.version;
@@ -55,17 +56,15 @@ public static class SDKTestUtil
             "サポートOSバージョン：" + VAMPUnitySDK.SupportedOSVersion(),
             "サポート対象OS：" + VAMPUnitySDK.isSupportedOSVersion(),
             "--------------------",
+            "UnityPlugin_Ver：" + VAMPUnitySDK.VAMPUnityPluginVersion,
             "SDK_Ver(VAMP)：" + VAMPUnitySDK.SDKVersion(),
             "SDK_Ver(Admob)：" + GetAdnwSDKVersion("Admob"),
             "SDK_Ver(AppLovin)：" + GetAdnwSDKVersion("AppLovin"),
             "SDK_Ver(FAN)：" + GetAdnwSDKVersion("FAN"),
             "SDK_Ver(Maio)：" + GetAdnwSDKVersion("Maio"),
-            "SDK_Ver(Mintegral)：" + GetAdnwSDKVersion("Mintegral"),
-            "SDK_Ver(MoPub)：" + GetAdnwSDKVersion("MoPub"),
             "SDK_Ver(Nend)：" + GetAdnwSDKVersion("Nend"),
             "SDK_Ver(Tapjoy)：" + GetAdnwSDKVersion("Tapjoy"),
             "SDK_Ver(UnityAds)：" + GetAdnwSDKVersion("UnityAds"),
-            "SDK_Ver(Vungle)：" + GetAdnwSDKVersion("Vungle"),
             "SDK_Ver(TikTok)：" + GetAdnwSDKVersion("TikTok"),
             "--------------------",
             "プロダクト名：" + Application.productName,
@@ -144,12 +143,6 @@ public static class SDKTestUtil
                             version = cls.CallStatic<string>("getSdkVersion");
                         }
                         break;
-                    case "Mintegral":
-                        using (var obj = new AndroidJavaObject("com.mintegral.msdk.out.MTGConfiguration"))
-                        {
-                            version = obj.GetStatic<string>("SDK_VERSION");
-                        }
-                        break;
                     case "Nend":
                         using (var obj = new AndroidJavaObject("net.nend.android.BuildConfig"))
                         {
@@ -166,18 +159,6 @@ public static class SDKTestUtil
                         using (var cls = new AndroidJavaClass("com.unity3d.ads.UnityAds"))
                         {
                             version = cls.CallStatic<string>("getVersion");
-                        }
-                        break;
-                    case "Vungle":
-                        using (var obj = new AndroidJavaObject("com.vungle.warren.BuildConfig"))
-                        {
-                            version = obj.GetStatic<string>("VERSION_NAME");
-                        }
-                        break;
-                    case "MoPub":
-                        using (var obj = new AndroidJavaObject("com.mopub.common.MoPub"))
-                        {
-                            version = obj.GetStatic<string>("SDK_VERSION");
                         }
                         break;
                 }

@@ -22,7 +22,11 @@ public class PostBuildProcess
             var projPath = PBXProject.GetPBXProjectPath(path);
             var proj = new PBXProject();
             proj.ReadFromFile(projPath);
+#if UNITY_2019_4_OR_NEWER
+            var target = proj.GetUnityMainTargetGuid();
+#else
             var target = proj.TargetGuidByName(PBXProject.GetUnityTargetName());
+#endif
 
             // Other Linker Flagsに-ObjCを追加
             proj.AddBuildProperty(target, "OTHER_LDFLAGS", "-ObjC");
@@ -39,24 +43,7 @@ public class PostBuildProcess
             proj.AddFrameworkToProject(target, "libresolv.9.tbd", false);
             proj.AddFrameworkToProject(target, "CoreFoundation.framework", true);
 
-#region MoPubの設定
-#if UNITY_2017_1_OR_NEWER
-            var mopubFileGuid = proj.FindFileGuidByProjectPath("Frameworks/Plugins/iOS/sdk/MoPubSDKFramework.framework");
-            if (!string.IsNullOrEmpty(mopubFileGuid))
-            {
-                proj.AddFileToEmbedFrameworks(target, mopubFileGuid);
-            }
-#endif
-            var maskedFiles = Directory.GetFiles(
-               path, "*.prevent_unity_compilation", SearchOption.AllDirectories);
-            foreach (var maskedFile in maskedFiles)
-            {
-                var unmaskedFile = maskedFile.Replace(".prevent_unity_compilation", "");
-                File.Move(maskedFile, unmaskedFile);
-            }
-#endregion
             File.WriteAllText(projPath, proj.WriteToString());
-
 
             var plistPath = path + "/Info.plist";
             var plist = new PlistDocument();
@@ -69,7 +56,9 @@ public class PostBuildProcess
         }
     }
 }
+
 #elif UNITY_ANDROID && UNITY_2018_1_OR_NEWER
+
 public class PostBuildProcess : UnityEditor.Android.IPostGenerateGradleAndroidProject
 {
     public int callbackOrder
