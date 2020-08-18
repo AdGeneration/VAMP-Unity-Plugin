@@ -23,7 +23,7 @@ public class PostBuildProcess
             var proj = new PBXProject();
             proj.ReadFromFile(projPath);
 #if UNITY_2019_4_OR_NEWER
-            var target = proj.GetUnityMainTargetGuid();
+            var target = proj.GetUnityFrameworkTargetGuid();
 #else
             var target = proj.TargetGuidByName(PBXProject.GetUnityTargetName());
 #endif
