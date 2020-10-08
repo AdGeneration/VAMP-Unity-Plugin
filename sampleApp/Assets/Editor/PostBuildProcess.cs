@@ -11,8 +11,18 @@ using UnityEditor.iOS.Xcode.Extensions;
 
 public class PostBuildProcess
 {
+    // AdMob AppID
+    private static readonly string plistKeyadMobAppId = "GADApplicationIdentifier";
     private static readonly string adMobAppId = "ca-app-pub-3940256099942544~3347511713";
-    private static readonly string adMobAppIdKey = "GADApplicationIdentifier";
+
+    // ATT
+    private static readonly string plistKeyTrackingUsageDescription = "NSUserTrackingUsageDescription";
+    private static readonly string trackingUsageDescription = "App would like to access IDFA for tracking purpose";
+
+    // SKAdNetwork
+    private static readonly string plistKeySKAdNetworkItems = "SKAdNetworkItems";
+    private static readonly string plistKeySKAdNetworkIdentifier = "SKAdNetworkIdentifier";
+    private static readonly string plistKeySupershipSKAdNetworkIdentifier = "348L86ZLVX.skadnetwork";
 
     [PostProcessBuild]
     public static void OnPostProcessBuild(BuildTarget buildTarget, string path)
@@ -41,6 +51,8 @@ public class PostBuildProcess
             proj.AddFrameworkToProject(target, "libc++.tbd", false);
             proj.AddFrameworkToProject(target, "libsqlite3.tbd", false);
             proj.AddFrameworkToProject(target, "libresolv.9.tbd", false);
+            proj.AddFrameworkToProject(target, "libbz2.tbd", false);
+            proj.AddFrameworkToProject(target, "AVKit.framework", false);
             proj.AddFrameworkToProject(target, "CoreFoundation.framework", true);
 
             File.WriteAllText(projPath, proj.WriteToString());
@@ -50,7 +62,10 @@ public class PostBuildProcess
             plist.ReadFromString(File.ReadAllText(plistPath));
 
             var rootDict = plist.root;
-            rootDict.SetString(adMobAppIdKey, adMobAppId);
+            rootDict.SetString(plistKeyadMobAppId, adMobAppId);
+            rootDict.SetString(plistKeyTrackingUsageDescription, trackingUsageDescription);
+            rootDict.CreateArray(plistKeySKAdNetworkItems).AddDict()
+                .SetString(plistKeySKAdNetworkIdentifier, plistKeySupershipSKAdNetworkIdentifier);
 
             File.WriteAllText(plistPath, plist.WriteToString());
         }

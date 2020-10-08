@@ -12,6 +12,7 @@
 #import <Tapjoy/Tapjoy.h>
 #import <UnityAds/UnityAds.h>
 #import <BUAdSDK/BUAdSDK.h>
+#import <FiveAd/FiveAd.h>
 
 NSString *VAMPTestNIGetAdnwSDKVersion(NSString *adnwName) {
     NSString *version = @"nothing";
@@ -52,8 +53,11 @@ NSString *VAMPTestNIGetAdnwSDKVersion(NSString *adnwName) {
     else if ([adnwName isEqualToString:@"UnityAds"]) {
         version = [UnityAds getVersion];
     }
-    else if ([adnwName isEqualToString:@"TikTok"]) {
+    else if ([adnwName isEqualToString:@"Pangle"]) {
         version = BUAdSDKManager.SDKVersion;
+    }
+    else if ([adnwName isEqualToString:@"LINEAds"]) {
+        version = FADSettings.version;
     }
 
     return version;
