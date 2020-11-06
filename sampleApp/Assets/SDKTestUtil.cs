@@ -9,7 +9,7 @@ public static class SDKTestUtil
     private static extern string VAMPUnityTestAdnwSDKVersion(string adnwName);
 
     [System.Runtime.InteropServices.DllImport("__Internal")]
-    private static extern string VAMPUnityTestDeviceInfo(string infoName);
+    public static extern string VAMPUnityTestDeviceInfo(string infoName);
 #endif
     public static string GetAppVersion()
     {
@@ -90,9 +90,8 @@ public static class SDKTestUtil
         };
     }
 
-    private static string GetAdnwSDKVersion(string adnw)
+    public static string GetAdnwSDKVersion(string adnw)
     {
-        System.GC.Collect();
         string version = "nothing";
 #if UNITY_IOS && !UNITY_EDITOR
         if (Application.platform == RuntimePlatform.IPhonePlayer)

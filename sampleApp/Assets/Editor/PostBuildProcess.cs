@@ -1,3 +1,12 @@
+/// <summary>
+///
+/// VAMP-Unity-Plugin
+///
+/// Created by AdGeneratioin.
+/// Copyright 2018 Supership Inc. All rights reserved.
+///
+/// </summary>
+
 #if UNITY_EDITOR_OSX 
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -5,9 +14,6 @@ using System.IO;
 
 #if UNITY_IOS
 using UnityEditor.iOS.Xcode;
-#if UNITY_2017_1_OR_NEWER
-using UnityEditor.iOS.Xcode.Extensions;
-#endif
 
 public class PostBuildProcess
 {
@@ -66,7 +72,6 @@ public class PostBuildProcess
             rootDict.SetString(plistKeyTrackingUsageDescription, trackingUsageDescription);
             rootDict.CreateArray(plistKeySKAdNetworkItems).AddDict()
                 .SetString(plistKeySKAdNetworkIdentifier, plistKeySupershipSKAdNetworkIdentifier);
-
             File.WriteAllText(plistPath, plist.WriteToString());
         }
     }

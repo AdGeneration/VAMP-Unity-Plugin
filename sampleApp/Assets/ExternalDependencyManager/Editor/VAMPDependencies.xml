@@ -32,7 +32,7 @@
             </repositories>
         </androidPackage>
         <!--Tapjoy-->
-        <androidPackage spec="com.tapjoy:tapjoy-android-sdk:12.6.1@aar">
+        <androidPackage spec="com.tapjoy:tapjoy-android-sdk:12.7.1@aar">
             <repositories>
                 <repository>https://tapjoy.bintray.com/maven</repository>
             </repositories>
@@ -56,11 +56,11 @@
         <!--maio-->
         <iosPod name="MaioSDK" version="1.5.5" />
         <!--nend-->
-        <iosPod name="NendSDK_iOS" version="7.0.0" />
+        <iosPod name="NendSDK_iOS" version="7.0.1" />
         <!--Pangle-->
         <iosPod name="Bytedance-UnionAD" version="3.2.6.2" />
         <!--Tapjoy-->
-        <iosPod name="TapjoySDK" version="12.7.0" />
+        <iosPod name="TapjoySDK" version="12.7.1" />
         <!--UnityAds-->
         <iosPod name="UnityAds" version="3.5.0" />
     </iosPods>
