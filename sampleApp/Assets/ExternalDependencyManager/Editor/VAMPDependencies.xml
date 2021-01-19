@@ -9,7 +9,7 @@
         <androidPackage spec="androidx.multidex:multidex:2.0.1" />
         <androidPackage spec="androidx.appcompat:appcompat:1.1.0" />
         <!--VAMP-->
-        <androidPackage spec="jp.supership.vamp:vamp-sdk:3.3.3">
+        <androidPackage spec="jp.supership.vamp:vamp-sdk:3.3.4">
             <repositories>
                 <repository>https://AdGeneration.github.io/VAMP-Android-SDK/repository</repository>
             </repositories>
@@ -22,7 +22,7 @@
             </repositories>
         </androidPackage>
         <!--AppLovin-->
-        <androidPackage spec="com.applovin:applovin-sdk:9.14.10" />
+        <androidPackage spec="com.applovin:applovin-sdk:9.14.12" />
         <!--FAN-->
         <androidPackage spec="com.facebook.android:audience-network-sdk:6.2.0" />
         <!--maio-->
@@ -56,15 +56,15 @@
         <!--AdMob-->
         <iosPod name="Google-Mobile-Ads-SDK" version="7.69.0" />
         <!--AppLovin-->
-        <iosPod name="AppLovinSDK" version="6.14.9" />
+        <iosPod name="AppLovinSDK" version="6.14.11" />
         <!--FAN-->
-        <iosPod name="FBAudienceNetwork" version="6.2.0" />
+        <iosPod name="FBAudienceNetwork" version="6.2.1" />
         <!--maio-->
         <iosPod name="MaioSDK" version="1.5.6" />
         <!--nend-->
         <iosPod name="NendSDK_iOS" version="7.0.2" />
         <!--Pangle-->
-        <iosPod name="Bytedance-UnionAD" version="3.3.6.1" />
+        <iosPod name="Bytedance-UnionAD" version="3.3.6.2" />
         <!--Tapjoy-->
         <iosPod name="TapjoySDK" version="12.7.1" />
         <!--UnityAds-->

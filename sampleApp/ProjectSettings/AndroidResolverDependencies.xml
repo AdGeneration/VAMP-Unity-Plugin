@@ -5,17 +5,18 @@
     <package>androidx.constraintlayout:constraintlayout:1.1.3</package>
     <package>androidx.legacy:legacy-support-v4:1.0.0</package>
     <package>androidx.multidex:multidex:2.0.1</package>
-    <package>com.applovin:applovin-sdk:9.14.4</package>
-    <package>com.facebook.android:audience-network-sdk:6.1.0</package>
-    <package>com.google.android.gms:play-services-ads:19.4.0</package>
+    <package>com.applovin:applovin-sdk:9.14.12</package>
+    <package>com.facebook.android:audience-network-sdk:6.2.0</package>
+    <package>com.google.android.gms:play-services-ads:19.6.0</package>
     <package>com.google.android.gms:play-services-ads-identifier:17.0.0</package>
     <package>com.google.android.gms:play-services-base:17.3.0</package>
-    <package>com.maio:android-sdk:1.1.12@aar</package>
-    <package>com.tapjoy:tapjoy-android-sdk:12.6.1@aar</package>
-    <package>com.unity3d.ads:unity-ads:3.5.0</package>
+    <package>com.maio:android-sdk:1.1.14@aar</package>
+    <package>com.tapjoy:tapjoy-android-sdk:12.7.1@aar</package>
+    <package>com.unity3d.ads:unity-ads:3.6.0</package>
     <package>jp.supership.vamp:vamp-admob-adapter:1.0.0</package>
+    <package>jp.supership.vamp:vamp-sdk:3.3.3</package>
     <package>jp.supership.vamp:vamp-unityads-adapter:1.0.0</package>
-    <package>net.nend.android:nend-sdk:7.0.0</package>
+    <package>net.nend.android:nend-sdk:7.0.1</package>
   </packages>
   <files />
   <settings>
