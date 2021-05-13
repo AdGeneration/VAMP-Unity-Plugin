@@ -11,16 +11,16 @@
 #import <NendAd/NendAd.h>
 #import <Tapjoy/Tapjoy.h>
 #import <UnityAds/UnityAds.h>
-#import <BUAdSDK/BUAdSDK.h>
 #import <FiveAd/FiveAd.h>
+#import <BUAdSDK/BUAdSDK.h>
 
 NSString *VAMPTestNIGetAdnwSDKVersion(NSString *adnwName) {
     NSString *version = @"nothing";
 
     if ([adnwName isEqualToString:@"VAMP"]) {
-        version = [VAMP SDKVersion];
+        version = VAMPSDKVersion;
     }
-    else if ([adnwName isEqualToString:@"Admob"]) {
+    else if ([adnwName isEqualToString:@"AdMob"]) {
         version = [NSString stringWithCString:(const char *) GoogleMobileAdsVersionString
                                      encoding:NSUTF8StringEncoding];
     }
@@ -53,11 +53,11 @@ NSString *VAMPTestNIGetAdnwSDKVersion(NSString *adnwName) {
     else if ([adnwName isEqualToString:@"UnityAds"]) {
         version = [UnityAds getVersion];
     }
-    else if ([adnwName isEqualToString:@"Pangle"]) {
-        version = BUAdSDKManager.SDKVersion;
-    }
     else if ([adnwName isEqualToString:@"LINEAds"]) {
         version = FADSettings.version;
+    }
+    else if ([adnwName isEqualToString:@"Pangle"]) {
+        version = BUAdSDKManager.SDKVersion;
     }
 
     return version;

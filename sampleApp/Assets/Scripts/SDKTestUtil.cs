@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public static class SDKTestUtil
@@ -53,12 +52,11 @@ public static class SDKTestUtil
         return new List<string>
         {
             "--------------------",
-            "サポートOSバージョン：" + VAMPUnitySDK.SupportedOSVersion(),
-            "サポート対象OS：" + VAMPUnitySDK.isSupportedOSVersion(),
+            "IsSupported：" + VAMP.SDK.IsSupported,
             "--------------------",
-            "UnityPlugin_Ver：" + VAMPUnitySDK.VAMPUnityPluginVersion,
-            "SDK_Ver(VAMP)：" + VAMPUnitySDK.SDKVersion(),
-            "SDK_Ver(Admob)：" + GetAdnwSDKVersion("Admob"),
+            "UnityPlugin_Ver：" + VAMP.SDK.VAMPUnityPluginVersion,
+            "SDK_Ver(VAMP)：" + VAMP.SDK.SDKVersion,
+            "SDK_Ver(AdMob)：" + GetAdnwSDKVersion("AdMob"),
             "SDK_Ver(AppLovin)：" + GetAdnwSDKVersion("AppLovin"),
             "SDK_Ver(FAN)：" + GetAdnwSDKVersion("FAN"),
             "SDK_Ver(Maio)：" + GetAdnwSDKVersion("Maio"),
@@ -81,9 +79,6 @@ public static class SDKTestUtil
             "IDFA：" + VAMPUnityTestDeviceInfo("IDFA"),
 #endif
             "--------------------",
-            "isPlayerCancelable:" + VAMPUnitySDK.VAMPConfiguration.getInstance().PlayerCancelable,
-            "isChildDirected:" + VAMPUnitySDK.isChildDirected(),
-            "--------------------",
             "Unity：" + Application.unityVersion,
             "ビルド：" + Application.buildGUID,
             "--------------------",
@@ -105,7 +100,7 @@ public static class SDKTestUtil
             {
                 switch (adnw)
                 {
-                    case "Admob":
+                    case "AdMob":
                         using (var playerCls = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
                         {
                             using (var activity = playerCls.GetStatic<AndroidJavaObject>("currentActivity"))
@@ -146,7 +141,7 @@ public static class SDKTestUtil
                     case "Nend":
                         using (var obj = new AndroidJavaObject("net.nend.android.BuildConfig"))
                         {
-                            version = obj.GetStatic<string>("VERSION_NAME");
+                            version = obj.GetStatic<string>("NEND_SDK_VERSION");
                         }
                         break;
                     case "Tapjoy":
@@ -159,6 +154,23 @@ public static class SDKTestUtil
                         using (var cls = new AndroidJavaClass("com.unity3d.ads.UnityAds"))
                         {
                             version = cls.CallStatic<string>("getVersion");
+                        }
+                        break;
+                    case "LINEAds":
+                        using (var cls = new AndroidJavaClass("com.five_corp.ad.FiveAd"))
+                        {
+                            if (cls.CallStatic<bool>("isInitialized"))
+                            {
+                                var fiveAd = cls.CallStatic<AndroidJavaObject>("getSingleton");
+                                version = fiveAd.Call<string>("getVersion");
+                            }
+                        }
+                        break;
+                    case "Pangle":
+                        using (var cls = new AndroidJavaClass("com.bytedance.sdk.openadsdk.TTAdSdk"))
+                        {
+                            var adManager = cls.CallStatic<AndroidJavaObject>("getAdManager");
+                            version = adManager.Call<string>("getSDKVersion");
                         }
                         break;
                 }
@@ -207,4 +219,3 @@ public static class SDKTestUtil
 #endif
     }
 }
-

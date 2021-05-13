@@ -30,6 +30,13 @@ public class PostBuildProcess
     private static readonly string plistKeySKAdNetworkIdentifier = "SKAdNetworkIdentifier";
     private static readonly string plistKeySupershipSKAdNetworkIdentifier = "348L86ZLVX.skadnetwork";
 
+    // AR
+    private static readonly string plistKeyCameraUsageDescription = "NSCameraUsageDescription";
+    private static readonly string cameraUsageDescription = "For AR";
+
+    private static readonly string plistKeyPhotoLibraryAddUsageDescription = "NSPhotoLibraryAddUsageDescription";
+    private static readonly string photoLibraryAddUsageDescription = "Take a screenshot for AR demo";
+
     [PostProcessBuild]
     public static void OnPostProcessBuild(BuildTarget buildTarget, string path)
     {
@@ -59,6 +66,7 @@ public class PostBuildProcess
             proj.AddFrameworkToProject(target, "libresolv.9.tbd", false);
             proj.AddFrameworkToProject(target, "libbz2.tbd", false);
             proj.AddFrameworkToProject(target, "AVKit.framework", false);
+            proj.AddFrameworkToProject(target, "ARKit.framework", true);
             proj.AddFrameworkToProject(target, "CoreFoundation.framework", true);
 
             File.WriteAllText(projPath, proj.WriteToString());
@@ -70,6 +78,8 @@ public class PostBuildProcess
             var rootDict = plist.root;
             rootDict.SetString(plistKeyadMobAppId, adMobAppId);
             rootDict.SetString(plistKeyTrackingUsageDescription, trackingUsageDescription);
+            rootDict.SetString(plistKeyPhotoLibraryAddUsageDescription, photoLibraryAddUsageDescription);
+            rootDict.SetString(plistKeyCameraUsageDescription, cameraUsageDescription);
             rootDict.CreateArray(plistKeySKAdNetworkItems).AddDict()
                 .SetString(plistKeySKAdNetworkIdentifier, plistKeySupershipSKAdNetworkIdentifier);
             File.WriteAllText(plistPath, plist.WriteToString());
