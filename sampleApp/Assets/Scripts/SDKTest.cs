@@ -632,7 +632,6 @@ public class SDKTest : MonoBehaviour
     {
         var config = new VAMP.VideoConfiguration
         {
-            IsPlayerCancelable = vampConfig.playerCancelable,
             PlayerAlertTitleText = vampConfig.playerAlertTitleText,
             PlayerAlertBodyText = vampConfig.playerAlertBodyText,
             PlayerAlertCloseButtonText = vampConfig.playerAlertCloseButtonText,

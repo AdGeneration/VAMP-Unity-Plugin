@@ -67,8 +67,9 @@ public class PostBuildProcess
             proj.AddFrameworkToProject(target, "libbz2.tbd", false);
             proj.AddFrameworkToProject(target, "AVKit.framework", false);
             proj.AddFrameworkToProject(target, "ARKit.framework", true);
+            proj.AddFrameworkToProject(target, "AppTrackingTransparency.framework", false);
             proj.AddFrameworkToProject(target, "CoreFoundation.framework", true);
-
+            
             File.WriteAllText(projPath, proj.WriteToString());
 
             var plistPath = path + "/Info.plist";
