@@ -11,7 +11,8 @@
 #import <NendAd/NendAd.h>
 #import <Tapjoy/Tapjoy.h>
 #import <UnityAds/UnityAds.h>
-#import <FiveAd/FiveAd.h>
+// 「Use of '@import' when C++ modules are disabled, consider using -fmodules and -fcxx-modules」エラーが出るためObjC++ファイルではコメントアウト
+//#import <FiveAd/FiveAd.h>
 #import <BUAdSDK/BUAdSDK.h>
 
 NSString *VAMPTestNIGetAdnwSDKVersion(NSString *adnwName) {
@@ -54,7 +55,7 @@ NSString *VAMPTestNIGetAdnwSDKVersion(NSString *adnwName) {
         version = [UnityAds getVersion];
     }
     else if ([adnwName isEqualToString:@"LINEAds"]) {
-        version = FADSettings.version;
+//        version = FADSettings.version;
     }
     else if ([adnwName isEqualToString:@"Pangle"]) {
         version = BUAdSDKManager.SDKVersion;
