@@ -58,6 +58,8 @@
         <iosPod name="VAMPAppLovinAdapter" version="10.3.4.1" />
         <!--FAN-->
         <iosPod name="VAMPFANAdapter" version="6.5.1.1" />
+        <!--[Workaround] FBAudienceNetwork 6.5.1 depends on FBSDKCoreKit_Basics 11.0+ not 12.0.2-->
+        <iosPod name="FBSDKCoreKit_Basics" version="11.2.1" />
         <!--maio-->
         <iosPod name="VAMPMaioAdapter" version="1.5.8.1" />
         <!--nend-->
