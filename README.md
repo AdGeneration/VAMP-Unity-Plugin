@@ -9,7 +9,7 @@ Unityで広告を表示するには、動画リワード用のSDKが必要とな
 
 ## 実装マニュアル
 ### v4
-https://docs.sdk.vamp.ad-generation.jp/docs/unity/
+https://supership-jp.github.io/VAMP-SDK-Document/unity/
 
 ### v3
 https://github.com/AdGeneration/VAMP-Unity-Plugin/wiki/Integration-Guide
