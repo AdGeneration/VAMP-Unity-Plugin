@@ -20,7 +20,7 @@ Unityで広告を表示するには、動画リワード用のSDKが必要とな
 [Android SDK v3.1.2](https://github.com/AdGeneration/VAMP-Android-SDK/releases/tag/v3.1.2)    
 [iOS SDK v3.1.0](https://github.com/AdGeneration/VAMP-iOS-SDK/releases/tag/3.1.0)
 
-## ドキュメント
+### ドキュメント
 
 v3系プラグインのドキュメントは下記リンクをご参照ください。
 
