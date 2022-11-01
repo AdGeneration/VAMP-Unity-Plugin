@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public static class SDKTestUtil
@@ -8,182 +9,147 @@ public static class SDKTestUtil
     private static extern string VAMPUnityTestAdnwSDKVersion(string adnwName);
 
     [System.Runtime.InteropServices.DllImport("__Internal")]
+    private static extern string VAMPUnityTestAdapterVersion(string adnwName);
+
+    [System.Runtime.InteropServices.DllImport("__Internal")]
     public static extern string VAMPUnityTestDeviceInfo(string infoName);
 #endif
-    public static string GetAppVersion()
-    {
-        string ver = Application.version;
-
-#if UNITY_IOS && !UNITY_EDITOR
-        ver = VAMPUnityTestDeviceInfo("AppVer");
-#elif UNITY_ANDROID && !UNITY_EDITOR
-        try
-        {
-            using (var playerCls = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
-            {
-                using (var activity = playerCls.GetStatic<AndroidJavaObject>("currentActivity"))
-                {
-                    using (var packageManager = activity.Call<AndroidJavaObject>("getPackageManager"))
-                    {
-                        using (var packageManagerCls = new AndroidJavaClass("android.content.pm.PackageManager"))
-                        {
-                            string packageName = activity.Call<string>("getPackageName");
-                            int activities = packageManagerCls.GetStatic<int>("GET_ACTIVITIES");
-                            using (var packageInfo = packageManager.Call<AndroidJavaObject>("getPackageInfo", packageName, activities))
-                            {
-                                ver = packageInfo.Get<string>("versionName");
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        catch (AndroidJavaException ex)
-        {
-            Debug.Log(ex.Message);
-        }
-#endif
-
-        return ver;
-    }
 
     public static List<string> GetDeviceInfo()
     {
         return new List<string>
         {
             "--------------------",
-            "IsSupported：" + VAMP.SDK.IsSupported,
+            "IsSupported: " + VAMP.SDK.IsSupported,
+            "UseMetaAudienceNetworkBidding: " + VAMP.SDK.UseMetaAudienceNetworkBidding,
+            "IsMetaAudienceNetworkBiddingTestMode: " +
+            VAMP.SDK.IsMetaAudienceNetworkBiddingTestMode,
+            "UseHyperID: " + VAMP.SDK.UseHyperID,
             "--------------------",
-            "UnityPlugin_Ver：" + VAMP.SDK.VAMPUnityPluginVersion,
-            "SDK_Ver(VAMP)：" + VAMP.SDK.SDKVersion,
-            "SDK_Ver(AdMob)：" + GetAdnwSDKVersion("AdMob"),
-            "SDK_Ver(AppLovin)：" + GetAdnwSDKVersion("AppLovin"),
-            "SDK_Ver(FAN)：" + GetAdnwSDKVersion("FAN"),
-            "SDK_Ver(Maio)：" + GetAdnwSDKVersion("Maio"),
-            "SDK_Ver(Nend)：" + GetAdnwSDKVersion("Nend"),
-            "SDK_Ver(Tapjoy)：" + GetAdnwSDKVersion("Tapjoy"),
-            "SDK_Ver(UnityAds)：" + GetAdnwSDKVersion("UnityAds"),
-            "SDK_Ver(Pangle)：" + GetAdnwSDKVersion("Pangle"),
-            "SDK_Ver(LINEAds)：" + GetAdnwSDKVersion("LINEAds"),
+            "VAMPUnityPlugin: " + VAMP.SDK.VAMPUnityPluginVersion,
+            "VAMP SDK: " + VAMP.SDK.SDKVersion,
+            "AdMob: " + GetAdnwSDKVersion("AdMob"),
+            "FAN: " + GetAdnwSDKVersion("FAN"),
+            "LINEAds: " + GetAdnwSDKVersion("LINEAds"),
+            "maio: " + GetAdnwSDKVersion("Maio"),
+            "nend: " + GetAdnwSDKVersion("Nend"),
+            "Pangle: " + GetAdnwSDKVersion("Pangle"),
+            "Tapjoy: " + GetAdnwSDKVersion("Tapjoy"),
+            "UnityAds: " + GetAdnwSDKVersion("UnityAds"),
             "--------------------",
-            "プロダクト名：" + Application.productName,
-            "アプリID：" + Application.identifier,
-            "バージョン名：" + Application.version,
+            "プロダクト名: " + Application.productName,
+            "アプリID: " + Application.identifier,
+            "バージョン名: " + Application.version,
             "--------------------",
-            "デバイス名：" + SystemInfo.deviceName,
-            "OS：" + SystemInfo.operatingSystem,
-            "デバイスモデル：" + SystemInfo.deviceModel,
+            "デバイス名: " + SystemInfo.deviceName,
+            "OS: " + SystemInfo.operatingSystem,
+            "デバイスモデル: " + SystemInfo.deviceModel,
 #if UNITY_IOS && !UNITY_EDITOR
-            "キャリア情報：" + VAMPUnityTestDeviceInfo("Carrier"),
-            "国コード：" + VAMPUnityTestDeviceInfo("CountryCode"),
-            "IDFA：" + VAMPUnityTestDeviceInfo("IDFA"),
+            "キャリア情報: " + VAMPUnityTestDeviceInfo("Carrier"),
+            "国コード: " + VAMPUnityTestDeviceInfo("CountryCode"),
+            "IDFA: " + VAMPUnityTestDeviceInfo("IDFA"),
 #endif
             "--------------------",
-            "Unity：" + Application.unityVersion,
-            "ビルド：" + Application.buildGUID,
+            "Unity: " + Application.unityVersion,
+            "ビルド: " + Application.buildGUID,
             "--------------------",
         };
     }
 
-    public static string GetAdnwSDKVersion(string adnw)
+    private static string GetAdnwSDKVersion(string adnw)
     {
-        string version = "nothing";
 #if UNITY_IOS && !UNITY_EDITOR
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
-            version = VAMPUnityTestAdnwSDKVersion(adnw);
+            return VAMPUnityTestAdnwSDKVersion(adnw) + " | " + VAMPUnityTestAdapterVersion(adnw);
         }
 #elif UNITY_ANDROID
         if (Application.platform == RuntimePlatform.Android)
         {
-            try
+            switch (adnw)
             {
-                switch (adnw)
+                case "AdMob":
                 {
-                    case "AdMob":
-                        using (var playerCls = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
-                        {
-                            using (var activity = playerCls.GetStatic<AndroidJavaObject>("currentActivity"))
-                            {
-                                using (var res = activity.Call<AndroidJavaObject>("getResources"))
-                                {
-                                    var packageName = activity.Call<string>("getPackageName");
-                                    var versionId = res.Call<int>("getIdentifier", "google_play_services_version", "integer", packageName);
-
-                                    if (versionId != 0)
-                                    {
-                                        int versionInt = res.Call<int>("getInteger", versionId);
-                                        version = (versionInt).ToString();
-                                    }
-                                }
-                            }
-                        }
-
-                        break;
-                    case "AppLovin":
-                        using (var cls = new AndroidJavaClass("com.applovin.sdk.AppLovinSdk"))
-                        {
-                            version = cls.CallStatic<string>("getVersion");
-                        }
-                        break;
-                    case "FAN":
-                        using (var obj = new AndroidJavaObject("com.facebook.ads.BuildConfig"))
-                        {
-                            version = obj.GetStatic<string>("VERSION_NAME");
-                        }
-                        break;
-                    case "Maio":
-                        using (var cls = new AndroidJavaClass("jp.maio.sdk.android.MaioAds"))
-                        {
-                            version = cls.CallStatic<string>("getSdkVersion");
-                        }
-                        break;
-                    case "Nend":
-                        using (var obj = new AndroidJavaObject("net.nend.android.BuildConfig"))
-                        {
-                            version = obj.GetStatic<string>("NEND_SDK_VERSION");
-                        }
-                        break;
-                    case "Tapjoy":
-                        using (var cls = new AndroidJavaClass("com.tapjoy.Tapjoy"))
-                        {
-                            version = cls.CallStatic<string>("getVersion");
-                        }
-                        break;
-                    case "UnityAds":
-                        using (var cls = new AndroidJavaClass("com.unity3d.ads.UnityAds"))
-                        {
-                            version = cls.CallStatic<string>("getVersion");
-                        }
-                        break;
-                    case "LINEAds":
-                        using (var cls = new AndroidJavaClass("com.five_corp.ad.FiveAd"))
-                        {
-                            if (cls.CallStatic<bool>("isInitialized"))
-                            {
-                                var fiveAd = cls.CallStatic<AndroidJavaObject>("getSingleton");
-                                version = fiveAd.Call<string>("getVersion");
-                            }
-                        }
-                        break;
-                    case "Pangle":
-                        using (var cls = new AndroidJavaClass("com.bytedance.sdk.openadsdk.TTAdSdk"))
-                        {
-                            var adManager = cls.CallStatic<AndroidJavaObject>("getAdManager");
-                            version = adManager.Call<string>("getSDKVersion");
-                        }
-                        break;
+                    const string name = "jp.supership.vamp.mediation.admob.AdMobAdapter";
+                    return AndroidGetAdnwVersion(name) + " | " + AndroidGetAdapterVersion(name);
                 }
-            }
-            catch (AndroidJavaException ex)
-            {
-                Debug.Log(adnw + ":" + ex.Message);
+                case "FAN":
+                {
+                    const string name = "jp.supership.vamp.mediation.fan.FANAdapter";
+                    return AndroidGetAdnwVersion(name) + " | " + AndroidGetAdapterVersion(name);
+                }
+                case "Maio":
+                {
+                    const string name = "jp.supership.vamp.mediation.maio.MaioAdapter";
+                    return AndroidGetAdnwVersion(name) + " | " + AndroidGetAdapterVersion(name);
+                }
+                case "Nend":
+                {
+                    const string name = "jp.supership.vamp.mediation.nend.NendAdapter";
+                    return AndroidGetAdnwVersion(name) + " | " + AndroidGetAdapterVersion(name);
+                }
+                case "Tapjoy":
+                {
+                    const string name = "jp.supership.vamp.mediation.tapjoy.TapjoyAdapter";
+                    return AndroidGetAdnwVersion(name) + " | " + AndroidGetAdapterVersion(name);
+                }
+                case "UnityAds":
+                {
+                    const string name = "jp.supership.vamp.mediation.unityads.UnityAdsAdapter";
+                    return AndroidGetAdnwVersion(name) + " | " + AndroidGetAdapterVersion(name);
+                }
+                case "LINEAds":
+                {
+                    const string name = "jp.supership.vamp.mediation.lineads.LINEAdsAdapter";
+                    return AndroidGetAdnwVersion(name) + " | " + AndroidGetAdapterVersion(name);
+                }
+                case "Pangle":
+                {
+                    const string name = "jp.supership.vamp.mediation.pangle.PangleAdapter";
+                    return AndroidGetAdnwVersion(name) + " | " + AndroidGetAdapterVersion(name);
+                }
             }
         }
 #endif
-        Debug.Log(adnw + ":" + version);
-        return version;
+
+        return "nothing";
     }
+
+#if UNITY_ANDROID
+    private static string AndroidGetAdnwVersion(string className)
+    {
+        if (Application.platform != RuntimePlatform.Android) return "nothing";
+
+        try
+        {
+            using (var adapter = new AndroidJavaObject(className))
+            {
+                return adapter.Call<string>("getAdNetworkVersion");
+            }
+        }
+        catch (Exception e)
+        {
+            return "nothing";
+        }
+    }
+
+    private static string AndroidGetAdapterVersion(string className)
+    {
+        if (Application.platform != RuntimePlatform.Android) return "nothing";
+
+        try
+        {
+            using (var adapter = new AndroidJavaObject(className))
+            {
+                return adapter.Call<string>("getAdapterVersion");
+            }
+        }
+        catch (Exception e)
+        {
+            return "nothing";
+        }
+    }
+#endif
 
     public static void AddFANTestDevice(string deviceIdHash)
     {

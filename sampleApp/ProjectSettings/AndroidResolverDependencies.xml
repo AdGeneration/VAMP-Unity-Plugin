@@ -2,21 +2,18 @@
   <packages>
     <package>androidx.annotation:annotation:1.1.0</package>
     <package>androidx.appcompat:appcompat:1.3.0</package>
-    <package>androidx.constraintlayout:constraintlayout:2.0.4</package>
-    <package>androidx.legacy:legacy-support-v4:1.0.0</package>
     <package>androidx.multidex:multidex:2.0.1</package>
-    <package>com.google.android.gms:play-services-ads-identifier:17.0.1</package>
+    <package>com.google.android.gms:play-services-ads-identifier:17.6.0</package>
     <package>com.google.android.gms:play-services-base:17.6.0</package>
-    <package>jp.supership.vamp:vamp-admob-adapter:20.3.0.0</package>
-    <package>jp.supership.vamp:vamp-applovin-adapter:10.3.2.0</package>
-    <package>jp.supership.vamp:vamp-fan-adapter:6.6.0.0</package>
-    <package>jp.supership.vamp:vamp-lineads-adapter:2.3.20210514.0</package>
-    <package>jp.supership.vamp:vamp-maio-adapter:1.1.15.0</package>
-    <package>jp.supership.vamp:vamp-nend-adapter:7.1.0.1</package>
-    <package>jp.supership.vamp:vamp-pangle-adapter:3.9.0.3.0</package>
-    <package>jp.supership.vamp:vamp-sdk:4.3.0</package>
-    <package>jp.supership.vamp:vamp-tapjoy-adapter:12.8.1.2</package>
-    <package>jp.supership.vamp:vamp-unityads-adapter:3.7.5.1</package>
+    <package>jp.supership.vamp:vamp-admob-adapter:+</package>
+    <package>jp.supership.vamp:vamp-fan-adapter:+</package>
+    <package>jp.supership.vamp:vamp-lineads-adapter:+</package>
+    <package>jp.supership.vamp:vamp-maio-adapter:+</package>
+    <package>jp.supership.vamp:vamp-nend-adapter:+</package>
+    <package>jp.supership.vamp:vamp-pangle-adapter:+</package>
+    <package>jp.supership.vamp:vamp-sdk:4.6.0</package>
+    <package>jp.supership.vamp:vamp-tapjoy-adapter:+</package>
+    <package>jp.supership.vamp:vamp-unityads-adapter:+</package>
   </packages>
   <files />
   <settings>

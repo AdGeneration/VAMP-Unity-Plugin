@@ -7,7 +7,7 @@
 ///
 /// </summary>
 
-#if UNITY_EDITOR_OSX 
+#if UNITY_EDITOR_OSX
 using UnityEditor;
 using UnityEditor.Callbacks;
 using System.IO;
@@ -22,20 +22,32 @@ public class PostBuildProcess
     private static readonly string adMobAppId = "ca-app-pub-3940256099942544~3347511713";
 
     // ATT
-    private static readonly string plistKeyTrackingUsageDescription = "NSUserTrackingUsageDescription";
-    private static readonly string trackingUsageDescription = "App would like to access IDFA for tracking purpose";
+    private static readonly string plistKeyTrackingUsageDescription =
+        "NSUserTrackingUsageDescription";
+
+    private static readonly string trackingUsageDescription =
+        "App would like to access IDFA for tracking purpose";
 
     // SKAdNetwork
     private static readonly string plistKeySKAdNetworkItems = "SKAdNetworkItems";
     private static readonly string plistKeySKAdNetworkIdentifier = "SKAdNetworkIdentifier";
-    private static readonly string plistKeySupershipSKAdNetworkIdentifier = "348L86ZLVX.skadnetwork";
+
+    private static readonly string
+        plistKeySupershipSKAdNetworkIdentifier = "348L86ZLVX.skadnetwork";
 
     // AR
     private static readonly string plistKeyCameraUsageDescription = "NSCameraUsageDescription";
     private static readonly string cameraUsageDescription = "For AR";
 
-    private static readonly string plistKeyPhotoLibraryAddUsageDescription = "NSPhotoLibraryAddUsageDescription";
-    private static readonly string photoLibraryAddUsageDescription = "Take a screenshot for AR demo";
+    private static readonly string plistKeyPhotoLibraryAddUsageDescription =
+        "NSPhotoLibraryAddUsageDescription";
+
+    private static readonly string
+        photoLibraryAddUsageDescription = "Take a screenshot for AR demo";
+
+    // Appearance
+    private static readonly string plistKeyAppearance = "UIUserInterfaceStyle";
+    private static readonly string appearance = "Dark";
 
     [PostProcessBuild]
     public static void OnPostProcessBuild(BuildTarget buildTarget, string path)
@@ -69,7 +81,7 @@ public class PostBuildProcess
             proj.AddFrameworkToProject(target, "ARKit.framework", true);
             proj.AddFrameworkToProject(target, "AppTrackingTransparency.framework", false);
             proj.AddFrameworkToProject(target, "CoreFoundation.framework", true);
-            
+
             File.WriteAllText(projPath, proj.WriteToString());
 
             var plistPath = path + "/Info.plist";
@@ -79,17 +91,33 @@ public class PostBuildProcess
             var rootDict = plist.root;
             rootDict.SetString(plistKeyadMobAppId, adMobAppId);
             rootDict.SetString(plistKeyTrackingUsageDescription, trackingUsageDescription);
-            rootDict.SetString(plistKeyPhotoLibraryAddUsageDescription, photoLibraryAddUsageDescription);
+            rootDict.SetString(plistKeyPhotoLibraryAddUsageDescription,
+                photoLibraryAddUsageDescription);
             rootDict.SetString(plistKeyCameraUsageDescription, cameraUsageDescription);
             rootDict.CreateArray(plistKeySKAdNetworkItems).AddDict()
                 .SetString(plistKeySKAdNetworkIdentifier, plistKeySupershipSKAdNetworkIdentifier);
+            rootDict.SetString(plistKeyAppearance, appearance);
             File.WriteAllText(plistPath, plist.WriteToString());
         }
+    }
+
+    [PostProcessBuild(101)]
+    public static void OnPostprocessBuildEmbedSwiftLibraries(BuildTarget target,
+        string pathToBuiltProject)
+    {
+        // 「Always Embed Swift Standard Libraries」をYESに設定する
+        var projPath = PBXProject.GetPBXProjectPath(pathToBuiltProject);
+        var proj = new PBXProject();
+        proj.ReadFromFile(projPath);
+        var mainTarget = proj.GetUnityMainTargetGuid();
+        proj.SetBuildProperty(mainTarget, "ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES", "YES");
+        var frameworkTarget = proj.GetUnityFrameworkTargetGuid();
+        proj.SetBuildProperty(frameworkTarget, "ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES", "YES");
+        File.WriteAllText(projPath, proj.WriteToString());
     }
 }
 
 #elif UNITY_ANDROID && UNITY_2018_1_OR_NEWER
-
 public class PostBuildProcess : UnityEditor.Android.IPostGenerateGradleAndroidProject
 {
     public int callbackOrder

@@ -14,59 +14,35 @@ public class SDKTest : MonoBehaviour
      */
 
     // iOS 広告枠ID
-    [SerializeField]
-    private string iosPlacementID = "59755";
+    [SerializeField] private string iosPlacementID = "59755";
+
     // Android 広告枠ID
-    [SerializeField]
-    private string androidPlacementID = "59756";
+    [SerializeField] private string androidPlacementID = "59756";
+
     // FAN's device ID hash to enable test mode on Android
-    [SerializeField]
-    private string androidFANHashedID = "HASHED ID";
+    [SerializeField] private string androidFANHashedID = "HASHED ID";
 
     // Test mode flag
-    [SerializeField]
-    private bool testMode;
+    [SerializeField] private bool testMode;
+
     // Debug mode flag
-    [SerializeField]
-    private bool debugMode;
+    [SerializeField] private bool debugMode;
 
-    [SerializeField]
-    private VAMP.Privacy.ChildDirected childDirected;
+    [SerializeField] private VAMP.Privacy.ChildDirected childDirected;
 
-    [SerializeField]
-    private VAMP.Privacy.UnderAgeOfConsent underAgeOfConsent;
+    [SerializeField] private VAMP.Privacy.UnderAgeOfConsent underAgeOfConsent;
 
-    // ターゲティング属性 ユーザの性別
-    [SerializeField]
-    private VAMP.Targeting.Gender userGender = VAMP.Targeting.Gender.Unknown;
+    [SerializeField] private Texture logoTexture;
 
-    // ターゲティング属性 ユーザの誕生日
-    [SerializeField]
-    private Birthday birthday;
+    [SerializeField] private Texture btnOnTexture;
 
-    [SerializeField]
-    private FrequencyCap frequencyCap;
+    [SerializeField] public Texture btnOffTexture;
 
-    [SerializeField]
-    private VAMPConfig vampConfig;
+    [SerializeField] private Texture soundOnTexture;
 
-    [SerializeField]
-    private Texture logoTexture;
+    [SerializeField] private Texture soundOffTexture;
 
-    [SerializeField]
-    private Texture btnOnTexture;
-
-    [SerializeField]
-    public Texture btnOffTexture;
-
-    [SerializeField]
-    private Texture soundOnTexture;
-
-    [SerializeField]
-    private Texture soundOffTexture;
-
-    [SerializeField]
-    private AudioSource audioSource;
+    [SerializeField] private AudioSource audioSource;
 
     private bool isPlayingPrev;
 
@@ -79,8 +55,8 @@ public class SDKTest : MonoBehaviour
         Info
     }
 
-    private const float SCREEN_WIDTH = 540f;
-    private const float SCREEN_HEIGHT = 960f;
+    private const float ScreenWidth = 540f;
+    private const float ScreenHeight = 960f;
 
     private string placementID;
     private bool isLoading;
@@ -107,7 +83,8 @@ public class SDKTest : MonoBehaviour
         get
         {
             var safeArea = Screen.safeArea;
-            return new EdgeInsets(safeArea.yMin, safeArea.xMin, Screen.height - safeArea.yMax, Screen.width - safeArea.xMax);
+            return new EdgeInsets(safeArea.yMin, safeArea.xMin, Screen.height - safeArea.yMax,
+                Screen.width - safeArea.xMax);
         }
     }
 
@@ -121,25 +98,25 @@ public class SDKTest : MonoBehaviour
 
 #if UNITY_ANDROID
         // Android FANのテストデバイスIDを登録
-        if (androidFANHashedID != null && androidFANHashedID.Length > 0)
+        if (!string.IsNullOrEmpty(androidFANHashedID))
         {
             SDKTestUtil.AddFANTestDevice(androidFANHashedID);
         }
 #endif
 
-        // ユーザ属性をセットします
-        var targeting = new VAMP.Targeting.Targeting
-        {
-            Gender = userGender,
-            Birthday = new VAMP.Targeting.Birthday
-            {
-                Year = birthday.year,
-                Month = birthday.month,
-                Day = birthday.day
-            }
-        };
+        // Meta Audience Network（旧Facebook Audience Network） Biddingを設定します。
+        // Meta Audience Network Biddingを有効にするときはuseBiddingをtrueにしてください。
+        // また、Meta Audience Network BiddingのテストをするときはtestModeもtrueにしてください。
+        // ※ストアにリリースするときは必ずtestModeをfalseにしてください。
+        VAMP.SDK.SetMetaAudienceNetworkBidding(true, false);
+        Debug.Log("[VAMPUnitySDK] UseMetaAudienceNetworkBidding: " +
+                  VAMP.SDK.UseMetaAudienceNetworkBidding);
+        Debug.Log("[VAMPUnitySDK] IsMetaAudienceNetworkBiddingTestMode: " +
+                  VAMP.SDK.IsMetaAudienceNetworkBiddingTestMode);
 
-        VAMP.Targeting.TargetingManager.SetTargeting(targeting);
+        // Hyper IDモードを設定します。有効にするときはtrueを指定します。
+        // VAMP.SDK.UseHyperID = true;
+        Debug.Log("[VAMPUnitySDK] UseHyperID: " + VAMP.SDK.UseHyperID);
 
         // COPPA対象ユーザかどうかを設定します
         VAMP.Privacy.PrivacySettings.SetChildDirected(childDirected);
@@ -155,14 +132,14 @@ public class SDKTest : MonoBehaviour
         logoCube.SetActive(false);
         isLoading = false;
 
-        float scaleX = Screen.width / SCREEN_WIDTH;
-        float scaleY = Screen.height / SCREEN_HEIGHT;
-        float scale = scaleX < scaleY ? scaleX : scaleY;
+        var scaleX = Screen.width / ScreenWidth;
+        var scaleY = Screen.height / ScreenHeight;
+        var scale = scaleX < scaleY ? scaleX : scaleY;
         scaleV3 = new Vector3(scale, scale, 1.0f);
         matrix = Matrix4x4.TRS(
             new Vector2(
-                (Screen.width - SCREEN_WIDTH * scale) / 2,
-                (Screen.height - SCREEN_HEIGHT * scale) / 2
+                (Screen.width - ScreenWidth * scale) / 2,
+                (Screen.height - ScreenHeight * scale) / 2
             ),
             Quaternion.identity, scaleV3
         );
@@ -174,9 +151,9 @@ public class SDKTest : MonoBehaviour
         infos = SDKTestUtil.GetDeviceInfo();
 
         //// EU圏内からのアクセスか判定します
-        VAMP.SDK.IsEUAccess((bool access) =>
+        VAMP.SDK.IsEUAccess(access =>
         {
-            AddMessage(string.Format("IsEUAccess {0}", access));
+            AddMessage($"IsEUAccess {access}");
 
             Debug.Log("[VAMPUnitySDK] IsEUAccess: " + access);
 
@@ -286,10 +263,10 @@ public class SDKTest : MonoBehaviour
             {
                 blk = Block.Info;
 
-                VAMP.SDK.GetLocation((VAMP.Location location) =>
+                VAMP.SDK.GetLocation(location =>
                 {
                     this.countryCode = location.CountryCode;
-                    AddMessage(string.Format("CountryCode {0}", countryCode));
+                    AddMessage($"CountryCode {countryCode}");
 
                     Debug.Log("[VAMPUnitySDK] CountryCode: " + countryCode);
 
@@ -339,7 +316,8 @@ public class SDKTest : MonoBehaviour
                 }
             }
 
-            if (GUI.Button(new Rect(420, 60 + safeAreaInsets.Top, 120, 60), audioSource.isPlaying ? soundOffTexture : soundOnTexture))
+            if (GUI.Button(new Rect(420, 60 + safeAreaInsets.Top, 120, 60),
+                    audioSource.isPlaying ? soundOffTexture : soundOnTexture))
             {
                 if (audioSource.isPlaying)
                 {
@@ -359,16 +337,18 @@ public class SDKTest : MonoBehaviour
             GUI.Label(new Rect(0, 180 + safeAreaInsets.Top, width, 50),
                 "ID:" + placementID);
 
-            GUILayout.BeginArea(new Rect(20, 230 + safeAreaInsets.Top, width - 40, height - 190 - safeAreaInsets.Bottom));
+            GUILayout.BeginArea(
+                new Rect(20, 230 + safeAreaInsets.Top, width - 40,
+                    height - 190 - safeAreaInsets.Bottom));
 
             logPosition = GUILayout.BeginScrollView(logPosition);
 
             labelStyle.alignment = TextAnchor.MiddleLeft;
             labelStyle.fontSize = 20;
 
-            int count = 0;
+            var count = 0;
 
-            for (int i = messages.Count - 1; i >= 0; i--)
+            for (var i = messages.Count - 1; i >= 0; i--)
             {
                 GUILayout.Label(messages[i], labelStyle);
                 count++;
@@ -417,7 +397,8 @@ public class SDKTest : MonoBehaviour
                 }
             }
 
-            if (GUI.Button(new Rect(420, 60 + safeAreaInsets.Top, 120, 60), audioSource.isPlaying ? soundOffTexture : soundOnTexture))
+            if (GUI.Button(new Rect(420, 60 + safeAreaInsets.Top, 120, 60),
+                    audioSource.isPlaying ? soundOffTexture : soundOnTexture))
             {
                 if (audioSource.isPlaying)
                 {
@@ -437,16 +418,18 @@ public class SDKTest : MonoBehaviour
             GUI.Label(new Rect(0, 180 + safeAreaInsets.Top, width, 50),
                 "ID:" + placementID);
 
-            GUILayout.BeginArea(new Rect(20, 230 + safeAreaInsets.Top, width - 40, height - 190 - safeAreaInsets.Bottom));
+            GUILayout.BeginArea(
+                new Rect(20, 230 + safeAreaInsets.Top, width - 40,
+                    height - 190 - safeAreaInsets.Bottom));
 
             logPosition = GUILayout.BeginScrollView(logPosition);
 
             labelStyle.alignment = TextAnchor.MiddleLeft;
             labelStyle.fontSize = 20;
 
-            int count = 0;
+            var count = 0;
 
-            for (int i = messages.Count - 1; i >= 0; i--)
+            for (var i = messages.Count - 1; i >= 0; i--)
             {
                 GUILayout.Label(messages[i], labelStyle);
                 count++;
@@ -497,7 +480,8 @@ public class SDKTest : MonoBehaviour
                 }
             }
 
-            if (GUI.Button(new Rect(420, 60 + safeAreaInsets.Top, 120, 60), audioSource.isPlaying ? soundOffTexture : soundOnTexture))
+            if (GUI.Button(new Rect(420, 60 + safeAreaInsets.Top, 120, 60),
+                    audioSource.isPlaying ? soundOffTexture : soundOnTexture))
             {
                 if (audioSource.isPlaying)
                 {
@@ -517,16 +501,18 @@ public class SDKTest : MonoBehaviour
             GUI.Label(new Rect(0, 180 + safeAreaInsets.Top, width, 50),
                 "ID:" + placementID);
 
-            GUILayout.BeginArea(new Rect(20, 230 + safeAreaInsets.Top, width - 40, height - 190 - safeAreaInsets.Bottom));
+            GUILayout.BeginArea(
+                new Rect(20, 230 + safeAreaInsets.Top, width - 40,
+                    height - 190 - safeAreaInsets.Bottom));
 
             logPosition = GUILayout.BeginScrollView(logPosition);
 
             labelStyle.alignment = TextAnchor.MiddleLeft;
             labelStyle.fontSize = 20;
 
-            int count = 0;
+            var count = 0;
 
-            for (int i = messages.Count - 1; i >= 0; i--)
+            for (var i = messages.Count - 1; i >= 0; i--)
             {
                 GUILayout.Label(messages[i], labelStyle);
                 count++;
@@ -547,14 +533,15 @@ public class SDKTest : MonoBehaviour
                 blk = Block.Title;
             }
 
-            GUILayout.BeginArea(new Rect(20, 130 + safeAreaInsets.Top, width - 40, height - 90 - safeAreaInsets.Bottom));
+            GUILayout.BeginArea(new Rect(20, 130 + safeAreaInsets.Top, width - 40,
+                height - 90 - safeAreaInsets.Bottom));
 
             infoPosition = GUILayout.BeginScrollView(infoPosition);
 
             labelStyle.alignment = TextAnchor.MiddleLeft;
             labelStyle.fontSize = 20;
 
-            for (int i = 0; i < infos.Count; i++)
+            for (var i = 0; i < infos.Count; i++)
             {
                 GUILayout.Label(infos[i], labelStyle);
             }
@@ -611,7 +598,7 @@ public class SDKTest : MonoBehaviour
         rewardedAd.OnExpired += HandleVAMPRewardedAdDidExpire;
     }
 
-    public void InitializeARAd()
+    private void InitializeARAd()
     {
         if (arAd != null)
         {
@@ -628,15 +615,9 @@ public class SDKTest : MonoBehaviour
         arAd.OnCameraAccessNotAuthorized += HandleVAMPARAdCameraAccessNotAuthorized;
     }
 
-    private VAMP.Request CreateRequest()
+    private static VAMP.Request CreateRequest()
     {
-        var config = new VAMP.VideoConfiguration
-        {
-            PlayerAlertTitleText = vampConfig.playerAlertTitleText,
-            PlayerAlertBodyText = vampConfig.playerAlertBodyText,
-            PlayerAlertCloseButtonText = vampConfig.playerAlertCloseButtonText,
-            PlayerAlertContinueButtonText = vampConfig.playerAlertContinueButtonText
-        };
+        var config = new VAMP.VideoConfiguration();
 
         return new VAMP.Request.Builder()
             .SetVideoConfiguration(config)
@@ -645,7 +626,7 @@ public class SDKTest : MonoBehaviour
 
     public void HandleVAMPRewardedAdDidReceive(object sender, System.EventArgs args)
     {
-        AddMessage($"Receive adnwName={rewardedAd.ResponseInfo.AdNetworkName}");
+        AddMessage($"Receive adnwName={rewardedAd.ResponseInfo?.AdNetworkName}");
 
         isLoading = false;
 
@@ -665,7 +646,7 @@ public class SDKTest : MonoBehaviour
         isLoading = false;
         ResumeSound();
         Debug.Log($"[VAMPUnitySDK] OnFailedToLoad: " +
-            $"error={args.Error}, {GetRewardedAdInfoString()}");
+                  $"error={args.Error}, {GetRewardedAdInfoString()}");
     }
 
     public void HandleVAMPRewardedAdDidFailToShow(object sender, VAMP.AdFailEventArgs args)
@@ -673,7 +654,7 @@ public class SDKTest : MonoBehaviour
         AddMessage($"FailToShow error={args.Error}");
 
         Debug.Log($"[VAMPUnitySDK] OnFailedToShow: " +
-            $"error={args.Error}, {GetRewardedAdInfoString()}");
+                  $"error={args.Error}, {GetRewardedAdInfoString()}");
     }
 
     public void HandleVAMPRewardedAdDidOpen(object sender, System.EventArgs args)
@@ -692,7 +673,7 @@ public class SDKTest : MonoBehaviour
 
     public void HandleVAMPRewardedAdDidClose(object sender, VAMP.AdCloseEventArgs args)
     {
-        AddMessage($"Close adnwname={rewardedAd.ResponseInfo?.AdNetworkName ?? ""}, AdClicked={args.AdClicked}");
+        AddMessage($"Close AdClicked={args.AdClicked}");
 
         ResumeSound();
 
@@ -717,10 +698,11 @@ public class SDKTest : MonoBehaviour
 
     public void HandleVAMPRewardedAdLoadResult(object sender, VAMP.AdLoadResultEventArgs args)
     {
-        AddMessage($"LoadResult adnwName={args.AdNetworkName}, success={args.IsSuccess}, message={args.Message}");
+        AddMessage(
+            $"LoadResult adnwName={args.AdNetworkName}, success={args.IsSuccess}, message={args.Message}");
 
         Debug.Log($"[VAMPUnitySDK] OnLoadStart: " +
-            $"placementId={rewardedAd.PlacementId}, adnwName={args.AdNetworkName}, seqId={rewardedAd.ResponseInfo?.SeqId ?? ""}, success={args.IsSuccess}, message={args.Message}");
+                  $"placementId={rewardedAd.PlacementId}, adnwName={args.AdNetworkName}, seqId={rewardedAd.ResponseInfo?.SeqId ?? ""}, success={args.IsSuccess}, message={args.Message}");
     }
 
     public void HandleVAMPARAdReceived(object sender, System.EventArgs args)
@@ -773,7 +755,8 @@ public class SDKTest : MonoBehaviour
 
     private string GetRewardedAdInfoString()
     {
-        return $"placementId={rewardedAd.PlacementId}, adnwName={rewardedAd.ResponseInfo?.AdNetworkName ?? ""}, seqId={rewardedAd.ResponseInfo?.SeqId ?? ""}";
+        return
+            $"placementId={rewardedAd.PlacementId}, adnwName={rewardedAd.ResponseInfo?.AdNetworkName ?? ""}, seqId={rewardedAd.ResponseInfo?.SeqId ?? ""}";
     }
 }
 
@@ -797,32 +780,6 @@ public struct EdgeInsets
 
     public override string ToString()
     {
-        return
-            string.Format("Top:{0}, Left:{1} Bottom:{2} Right:{3}", Top, Left, Bottom, Right);
+        return $"Top:{Top}, Left:{Left} Bottom:{Bottom} Right:{Right}";
     }
-}
-
-[System.Serializable]
-public class VAMPConfig
-{
-    public bool playerCancelable = true;
-    public string playerAlertTitleText = "注意!";
-    public string playerAlertBodyText = "視聴途中でキャンセルすると報酬がもらえません";
-    public string playerAlertCloseButtonText = "終了";
-    public string playerAlertContinueButtonText = "再開";
-}
-
-[System.Serializable]
-public class FrequencyCap
-{
-    public uint impressions = 3;
-    public uint timeLimit = 3;
-}
-
-[System.Serializable]
-public class Birthday
-{
-    public uint year = 1980;
-    public uint month = 2;
-    public uint day = 20;
 }
