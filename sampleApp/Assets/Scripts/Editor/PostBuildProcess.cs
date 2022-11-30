@@ -102,7 +102,7 @@ public class PostBuildProcess
     }
 
     [PostProcessBuild(101)]
-    public static void OnPostprocessBuildEmbedSwiftLibraries(BuildTarget target,
+    public static void OnPostProcessBuildEmbedSwiftLibraries(BuildTarget target,
         string pathToBuiltProject)
     {
         // 「Always Embed Swift Standard Libraries」をYESに設定する
@@ -113,6 +113,20 @@ public class PostBuildProcess
         proj.SetBuildProperty(mainTarget, "ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES", "YES");
         var frameworkTarget = proj.GetUnityFrameworkTargetGuid();
         proj.SetBuildProperty(frameworkTarget, "ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES", "YES");
+        File.WriteAllText(projPath, proj.WriteToString());
+    }
+
+    [PostProcessBuild(102)]
+    public static void OnPostProcessBuildDisableBitcode(BuildTarget buildTarget, string path)
+    {
+        // 「Enable Bitcode」をNOに設定する
+        var projPath = PBXProject.GetPBXProjectPath(path);
+        var proj = new PBXProject();
+        proj.ReadFromFile(projPath);
+        var mainTarget = proj.GetUnityMainTargetGuid();
+        proj.SetBuildProperty(mainTarget, "ENABLE_BITCODE", "NO");
+        var frameworkTarget = proj.GetUnityFrameworkTargetGuid();
+        proj.SetBuildProperty(frameworkTarget, "ENABLE_BITCODE", "NO");
         File.WriteAllText(projPath, proj.WriteToString());
     }
 }
