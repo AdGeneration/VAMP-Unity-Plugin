@@ -10,11 +10,17 @@
         <repositories>
             <repository>https://AdGeneration.github.io/VAMP-Android-SDK/repository</repository>
         </repositories>
-        <androidPackage spec="jp.supership.vamp:vamp-sdk:4.6.1"/>
+        <androidPackage spec="jp.supership.vamp:vamp-sdk:4.7.0"/>
         <!--AdMob-->
         <androidPackage spec="jp.supership.vamp:vamp-admob-adapter:+"/>
         <!--FAN-->
         <androidPackage spec="jp.supership.vamp:vamp-fan-adapter:+"/>
+        <!--ironSource-->
+        <androidPackage spec="jp.supership.vamp:vamp-ironsource-adapter:+">
+            <repositories>
+                <repository>https://android-sdk.is.com/</repository>
+            </repositories>
+        </androidPackage>
         <!--LINEAds-->
         <androidPackage spec="jp.supership.vamp:vamp-lineads-adapter:+"/>
         <!--maio-->
@@ -46,11 +52,13 @@
     </androidPackages>
     <iosPods>
         <!--VAMP-->
-        <iosPod name="VAMP-SDK" version=">= 4.6.0"/>
+        <iosPod name="VAMP-SDK" version=">= 4.7.0"/>
         <!--AdMob-->
         <iosPod name="VAMPAdmobAdapter"/>
         <!--FAN-->
         <iosPod name="VAMPFANAdapter"/>
+        <!--ironSource-->
+        <iosPod name="VAMPIronSourceAdapter"/>
         <!--LINEAds-->
         <iosPod name="VAMPLINEAdsAdapter"/>
         <!--maio-->

@@ -7,11 +7,12 @@
     <package>com.google.android.gms:play-services-base:17.6.0</package>
     <package>jp.supership.vamp:vamp-admob-adapter:+</package>
     <package>jp.supership.vamp:vamp-fan-adapter:+</package>
+    <package>jp.supership.vamp:vamp-ironsource-adapter:+</package>
     <package>jp.supership.vamp:vamp-lineads-adapter:+</package>
     <package>jp.supership.vamp:vamp-maio-adapter:+</package>
     <package>jp.supership.vamp:vamp-nend-adapter:+</package>
     <package>jp.supership.vamp:vamp-pangle-adapter:+</package>
-    <package>jp.supership.vamp:vamp-sdk:4.6.1</package>
+    <package>jp.supership.vamp:vamp-sdk:4.7.0</package>
     <package>jp.supership.vamp:vamp-tapjoy-adapter:+</package>
     <package>jp.supership.vamp:vamp-unityads-adapter:+</package>
   </packages>

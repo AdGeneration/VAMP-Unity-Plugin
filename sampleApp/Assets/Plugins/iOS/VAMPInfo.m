@@ -15,6 +15,20 @@
 
 #import "VAMPInfo.h"
 
+NSString *const VAMPInfoDeviceInfoKeyDeviceName = @"DeviceName";
+NSString *const VAMPInfoDeviceInfoKeyOSName = @"OSName";
+NSString *const VAMPInfoDeviceInfoKeyOSVersion = @"OSVer";
+NSString *const VAMPInfoDeviceInfoKeyModel = @"Model";
+NSString *const VAMPInfoDeviceInfoKeyCarrier = @"Carrier";
+NSString *const VAMPInfoDeviceInfoKeyISOCountryCode = @"ISOCountryCode";
+NSString *const VAMPInfoDeviceInfoKeyCountryCode = @"CountryCode";
+NSString *const VAMPInfoDeviceInfoKeyLocaleCode = @"LocaleCode";
+NSString *const VAMPInfoDeviceInfoKeyIDFA = @"IDFA";
+NSString *const VAMPInfoDeviceInfoKeyIDFV = @"IDFV";
+NSString *const VAMPInfoDeviceInfoKeyBundleID = @"BundleID";
+NSString *const VAMPInfoDeviceInfoKeyAppVersion = @"AppVer";
+NSString *const VAMPInfoDeviceInfoKeyAdMobAppID = @"AdMobAppID";
+
 typedef NSString *(*AdNetworkVersionMethod)(id, SEL);
 typedef NSString *(*AdapterVersionMethod)(id, SEL);
 
@@ -51,81 +65,92 @@ NSString *VAMPInfoGetAdapterVersionWithAdapterClass(NSString *adapterClass) {
 
 @implementation VAMPInfo
 
-static NSString *const kAdMobAdapter = @"VAMPAdMobSDKAdapter";
-static NSString *const kFANAdapter = @"VAMPFANSDKAdapter";
-static NSString *const kLINEAdsAdapter = @"VAMPLINEAdsSDKAdapter";
-static NSString *const kMaioAdapter = @"VAMPMaioSDKAdapter";
-static NSString *const kNendAdapter = @"VAMPNendSDKAdapter";
-static NSString *const kPangleAdapter = @"VAMPPangleSDKAdapter";
-static NSString *const kTapjoyAdapter = @"VAMPTapjoySDKAdapter";
-static NSString *const kUnityAdsAdapter = @"VAMPUnityAdsSDKAdapter";
+static NSString *const VAMPInfoVersion = @"0.1.1";
 
-+ (nullable NSString *)adNetworkVersionOfAdNetworkName:(NSString *)name {
-    NSString *adnwName = name.lowercaseString;
+static NSString *const VAMPInfoAdMobAdapter = @"VAMPAdMobSDKAdapter";
+static NSString *const VAMPInfoFANAdapter = @"VAMPFANSDKAdapter";
+static NSString *const VAMPInfoIronSourceAdapter = @"VAMPIronSourceSDKAdapter";
+static NSString *const VAMPInfoLINEAdsAdapter = @"VAMPLINEAdsSDKAdapter";
+static NSString *const VAMPInfoMaioAdapter = @"VAMPMaioSDKAdapter";
+static NSString *const VAMPInfoNendAdapter = @"VAMPNendSDKAdapter";
+static NSString *const VAMPInfoPangleAdapter = @"VAMPPangleSDKAdapter";
+static NSString *const VAMPInfoTapjoyAdapter = @"VAMPTapjoySDKAdapter";
+static NSString *const VAMPInfoUnityAdsAdapter = @"VAMPUnityAdsSDKAdapter";
 
-    if ([adnwName isEqualToString:@"vamp"]) {
++ (NSString *)versionString {
+    return VAMPInfoVersion;
+}
+
++ (nullable NSString *)adNetworkVersionOfAdNetworkName:(NSString *)adNetworkName {
+    NSString *name = adNetworkName.lowercaseString;
+
+    if ([name isEqualToString:@"vamp"]) {
         return VAMPSDKVersion;
     }
-    else if ([adnwName isEqualToString:@"admob"]) {
-        return VAMPInfoGetAdNetworkVersionWithAdapterClass(kAdMobAdapter);
+    else if ([name isEqualToString:@"admob"]) {
+        return VAMPInfoGetAdNetworkVersionWithAdapterClass(VAMPInfoAdMobAdapter);
     }
-    else if ([adnwName isEqualToString:@"fan"] ||
-        [adnwName isEqualToString:@"meta"]) {
-        return VAMPInfoGetAdNetworkVersionWithAdapterClass(kFANAdapter);
+    else if ([name isEqualToString:@"fan"] || [name isEqualToString:@"meta"]) {
+        return VAMPInfoGetAdNetworkVersionWithAdapterClass(VAMPInfoFANAdapter);
     }
-    else if ([adnwName isEqualToString:@"lineads"]) {
-        return VAMPInfoGetAdNetworkVersionWithAdapterClass(kLINEAdsAdapter);
+    else if ([name isEqualToString:@"ironsource"] || [name isEqualToString:@"is"]) {
+        return VAMPInfoGetAdNetworkVersionWithAdapterClass(VAMPInfoIronSourceAdapter);
     }
-    else if ([adnwName isEqualToString:@"maio"]) {
-        return VAMPInfoGetAdNetworkVersionWithAdapterClass(kMaioAdapter);
+    else if ([name isEqualToString:@"lineads"]) {
+        return VAMPInfoGetAdNetworkVersionWithAdapterClass(VAMPInfoLINEAdsAdapter);
     }
-    else if ([adnwName isEqualToString:@"nend"]) {
-        return VAMPInfoGetAdNetworkVersionWithAdapterClass(kNendAdapter);
+    else if ([name isEqualToString:@"maio"]) {
+        return VAMPInfoGetAdNetworkVersionWithAdapterClass(VAMPInfoMaioAdapter);
     }
-    else if ([adnwName isEqualToString:@"pangle"]) {
-        return VAMPInfoGetAdNetworkVersionWithAdapterClass(kPangleAdapter);
+    else if ([name isEqualToString:@"nend"]) {
+        return VAMPInfoGetAdNetworkVersionWithAdapterClass(VAMPInfoNendAdapter);
     }
-    else if ([adnwName isEqualToString:@"tapjoy"]) {
-        return VAMPInfoGetAdNetworkVersionWithAdapterClass(kTapjoyAdapter);
+    else if ([name isEqualToString:@"pangle"]) {
+        return VAMPInfoGetAdNetworkVersionWithAdapterClass(VAMPInfoPangleAdapter);
     }
-    else if ([adnwName isEqualToString:@"unityads"]) {
-        return VAMPInfoGetAdNetworkVersionWithAdapterClass(kUnityAdsAdapter);
+    else if ([name isEqualToString:@"tapjoy"]) {
+        return VAMPInfoGetAdNetworkVersionWithAdapterClass(VAMPInfoTapjoyAdapter);
+    }
+    else if ([name isEqualToString:@"unityads"]) {
+        return VAMPInfoGetAdNetworkVersionWithAdapterClass(VAMPInfoUnityAdsAdapter);
     }
     else {
         return nil;
     }
 }
 
-+ (nullable NSString *)adapterVersionOfAdNetworkName:(NSString *)name {
-    NSString *adnwName = name.lowercaseString;
++ (nullable NSString *)adapterVersionOfAdNetworkName:(NSString *)adNetworkName {
+    NSString *name = adNetworkName.lowercaseString;
 
-    if ([adnwName isEqualToString:@"vamp"]) {
+    if ([name isEqualToString:@"vamp"]) {
         return VAMPSDKVersion;
     }
-    else if ([adnwName isEqualToString:@"admob"]) {
-        return VAMPInfoGetAdapterVersionWithAdapterClass(kAdMobAdapter);
+    else if ([name isEqualToString:@"admob"]) {
+        return VAMPInfoGetAdapterVersionWithAdapterClass(VAMPInfoAdMobAdapter);
     }
-    else if ([adnwName isEqualToString:@"fan"] ||
-        [adnwName isEqualToString:@"meta"]) {
-        return VAMPInfoGetAdapterVersionWithAdapterClass(kFANAdapter);
+    else if ([name isEqualToString:@"fan"] || [name isEqualToString:@"meta"]) {
+        return VAMPInfoGetAdapterVersionWithAdapterClass(VAMPInfoFANAdapter);
     }
-    else if ([adnwName isEqualToString:@"lineads"]) {
-        return VAMPInfoGetAdapterVersionWithAdapterClass(kLINEAdsAdapter);
+    else if ([name isEqualToString:@"ironsource"] || [name isEqualToString:@"is"]) {
+        return VAMPInfoGetAdapterVersionWithAdapterClass(VAMPInfoIronSourceAdapter);
     }
-    else if ([adnwName isEqualToString:@"maio"]) {
-        return VAMPInfoGetAdapterVersionWithAdapterClass(kMaioAdapter);
+    else if ([name isEqualToString:@"lineads"]) {
+        return VAMPInfoGetAdapterVersionWithAdapterClass(VAMPInfoLINEAdsAdapter);
     }
-    else if ([adnwName isEqualToString:@"nend"]) {
-        return VAMPInfoGetAdapterVersionWithAdapterClass(kNendAdapter);
+    else if ([name isEqualToString:@"maio"]) {
+        return VAMPInfoGetAdapterVersionWithAdapterClass(VAMPInfoMaioAdapter);
     }
-    else if ([adnwName isEqualToString:@"pangle"]) {
-        return VAMPInfoGetAdapterVersionWithAdapterClass(kPangleAdapter);
+    else if ([name isEqualToString:@"nend"]) {
+        return VAMPInfoGetAdapterVersionWithAdapterClass(VAMPInfoNendAdapter);
     }
-    else if ([adnwName isEqualToString:@"tapjoy"]) {
-        return VAMPInfoGetAdapterVersionWithAdapterClass(kTapjoyAdapter);
+    else if ([name isEqualToString:@"pangle"]) {
+        return VAMPInfoGetAdapterVersionWithAdapterClass(VAMPInfoPangleAdapter);
     }
-    else if ([adnwName isEqualToString:@"unityads"]) {
-        return VAMPInfoGetAdapterVersionWithAdapterClass(kUnityAdsAdapter);
+    else if ([name isEqualToString:@"tapjoy"]) {
+        return VAMPInfoGetAdapterVersionWithAdapterClass(VAMPInfoTapjoyAdapter);
+    }
+    else if ([name isEqualToString:@"unityads"]) {
+        return VAMPInfoGetAdapterVersionWithAdapterClass(VAMPInfoUnityAdsAdapter);
     }
     else {
         return nil;
@@ -133,42 +158,48 @@ static NSString *const kUnityAdsAdapter = @"VAMPUnityAdsSDKAdapter";
 }
 
 + (nullable NSString *)deviceInfoForKey:(NSString *)key {
-    if ([key isEqualToString:@"DeviceName"]) {
-        return [[UIDevice currentDevice] name];
+    if ([key isEqualToString:VAMPInfoDeviceInfoKeyDeviceName]) {
+        return [UIDevice currentDevice].name;
     }
-    else if ([key isEqualToString:@"OSName"]) {
-        return [[UIDevice currentDevice] systemName];
+    else if ([key isEqualToString:VAMPInfoDeviceInfoKeyOSName]) {
+        return [UIDevice currentDevice].systemName;
     }
-    else if ([key isEqualToString:@"OSVersion"]) {
-        return [[UIDevice currentDevice] systemVersion];
+    else if ([key isEqualToString:VAMPInfoDeviceInfoKeyOSVersion]) {
+        return [UIDevice currentDevice].systemVersion;
     }
-    else if ([key isEqualToString:@"OSModel"]) {
-        return [[UIDevice currentDevice] model];
+    else if ([key isEqualToString:VAMPInfoDeviceInfoKeyModel]) {
+        return [UIDevice currentDevice].model;
     }
-    else if ([key isEqualToString:@"Carrier"]) {
+    else if ([key isEqualToString:VAMPInfoDeviceInfoKeyCarrier]) {
         CTTelephonyNetworkInfo *networkInfo = [CTTelephonyNetworkInfo new];
         CTCarrier *provider = [networkInfo subscriberCellularProvider];
         return provider.carrierName;
     }
-    else if ([key isEqualToString:@"ISOCountry"]) {
+    else if ([key isEqualToString:VAMPInfoDeviceInfoKeyISOCountryCode]) {
         CTTelephonyNetworkInfo *networkInfo = [CTTelephonyNetworkInfo new];
         CTCarrier *provider = [networkInfo subscriberCellularProvider];
         return provider.isoCountryCode;
     }
-    else if ([key isEqualToString:@"CountryCode"]) {
+    else if ([key isEqualToString:VAMPInfoDeviceInfoKeyCountryCode]) {
         return [NSLocale preferredLanguages].firstObject;
     }
-    else if ([key isEqualToString:@"LocaleCode"]) {
+    else if ([key isEqualToString:VAMPInfoDeviceInfoKeyLocaleCode]) {
         return [[NSLocale currentLocale] objectForKey:NSLocaleIdentifier];
     }
-    else if ([key isEqualToString:@"IDFA"]) {
+    else if ([key isEqualToString:VAMPInfoDeviceInfoKeyIDFA]) {
         return [ASIdentifierManager sharedManager].advertisingIdentifier.UUIDString;
     }
-    else if ([key isEqualToString:@"BundleID"]) {
+    else if ([key isEqualToString:VAMPInfoDeviceInfoKeyIDFV]) {
+        return [UIDevice currentDevice].identifierForVendor.UUIDString;
+    }
+    else if ([key isEqualToString:VAMPInfoDeviceInfoKeyBundleID]) {
         return [NSBundle mainBundle].bundleIdentifier;
     }
-    else if ([key isEqualToString:@"AppVer"]) {
+    else if ([key isEqualToString:VAMPInfoDeviceInfoKeyAppVersion]) {
         return [NSBundle mainBundle].infoDictionary[@"CFBundleShortVersionString"];
+    }
+    else if ([key isEqualToString:VAMPInfoDeviceInfoKeyAdMobAppID]) {
+        return [[NSBundle mainBundle] objectForInfoDictionaryKey:@"GADApplicationIdentifier"];
     }
     else {
         return nil;

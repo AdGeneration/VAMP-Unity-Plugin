@@ -104,6 +104,9 @@ public class SDKTest : MonoBehaviour
         }
 #endif
 
+        // 広告の有効期限を変更します。ミリ秒で指定してください。(Androidのみ対応)
+        // VAMP.DebugUtils.SetExpirationTimeInMilliseconds(1 * 60 * 1000);
+
         // Meta Audience Network（旧Facebook Audience Network） Biddingを設定します。
         // Meta Audience Network Biddingを有効にするときはuseBiddingをtrueにしてください。
         // また、Meta Audience Network BiddingのテストをするときはtestModeもtrueにしてください。
@@ -385,7 +388,6 @@ public class SDKTest : MonoBehaviour
                     Debug.Log("[VAMPUnitySDK] RewardedAd.Load()");
 
                     rewardedAd.Load(CreateRequest());
-
                     isLoading = true;
                 }
                 else
@@ -617,11 +619,7 @@ public class SDKTest : MonoBehaviour
 
     private static VAMP.Request CreateRequest()
     {
-        var config = new VAMP.VideoConfiguration();
-
-        return new VAMP.Request.Builder()
-            .SetVideoConfiguration(config)
-            .Build();
+        return new VAMP.Request.Builder().Build();
     }
 
     public void HandleVAMPRewardedAdDidReceive(object sender, System.EventArgs args)
@@ -684,7 +682,9 @@ public class SDKTest : MonoBehaviour
     {
         AddMessage("Expire");
 
-        isLoading = false;
+        // 再度、広告をロードします
+        rewardedAd.Load(CreateRequest());
+        isLoading = true;
 
         Debug.Log($"[VAMPUnitySDK] OnExpire: {GetRewardedAdInfoString()}");
     }

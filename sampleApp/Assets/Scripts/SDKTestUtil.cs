@@ -30,6 +30,7 @@ public static class SDKTestUtil
             "VAMP SDK: " + VAMP.SDK.SDKVersion,
             "AdMob: " + GetAdnwSDKVersion("AdMob"),
             "FAN: " + GetAdnwSDKVersion("FAN"),
+            "ironSource: " + GetAdnwSDKVersion("IronSource"),
             "LINEAds: " + GetAdnwSDKVersion("LINEAds"),
             "maio: " + GetAdnwSDKVersion("Maio"),
             "nend: " + GetAdnwSDKVersion("Nend"),
@@ -78,6 +79,16 @@ public static class SDKTestUtil
                     const string name = "jp.supership.vamp.mediation.fan.FANAdapter";
                     return AndroidGetAdnwVersion(name) + " | " + AndroidGetAdapterVersion(name);
                 }
+                case "IronSource":
+                {
+                    const string name = "jp.supership.vamp.mediation.ironsource.IronSourceAdapter";
+                    return AndroidGetAdnwVersion(name) + " | " + AndroidGetAdapterVersion(name);
+                }
+                case "LINEAds":
+                {
+                    const string name = "jp.supership.vamp.mediation.lineads.LINEAdsAdapter";
+                    return AndroidGetAdnwVersion(name) + " | " + AndroidGetAdapterVersion(name);
+                }
                 case "Maio":
                 {
                     const string name = "jp.supership.vamp.mediation.maio.MaioAdapter";
@@ -88,6 +99,11 @@ public static class SDKTestUtil
                     const string name = "jp.supership.vamp.mediation.nend.NendAdapter";
                     return AndroidGetAdnwVersion(name) + " | " + AndroidGetAdapterVersion(name);
                 }
+                case "Pangle":
+                {
+                    const string name = "jp.supership.vamp.mediation.pangle.PangleAdapter";
+                    return AndroidGetAdnwVersion(name) + " | " + AndroidGetAdapterVersion(name);
+                }
                 case "Tapjoy":
                 {
                     const string name = "jp.supership.vamp.mediation.tapjoy.TapjoyAdapter";
@@ -96,16 +112,6 @@ public static class SDKTestUtil
                 case "UnityAds":
                 {
                     const string name = "jp.supership.vamp.mediation.unityads.UnityAdsAdapter";
-                    return AndroidGetAdnwVersion(name) + " | " + AndroidGetAdapterVersion(name);
-                }
-                case "LINEAds":
-                {
-                    const string name = "jp.supership.vamp.mediation.lineads.LINEAdsAdapter";
-                    return AndroidGetAdnwVersion(name) + " | " + AndroidGetAdapterVersion(name);
-                }
-                case "Pangle":
-                {
-                    const string name = "jp.supership.vamp.mediation.pangle.PangleAdapter";
                     return AndroidGetAdnwVersion(name) + " | " + AndroidGetAdapterVersion(name);
                 }
             }
