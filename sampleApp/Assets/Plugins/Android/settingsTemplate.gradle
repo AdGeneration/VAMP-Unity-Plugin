@@ -1,0 +1,39 @@
+pluginManagement {
+    repositories {
+        **ARTIFACTORYREPOSITORY**
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+}
+
+include ':launcher', ':unityLibrary'
+**INCLUDES**
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        **ARTIFACTORYREPOSITORY**
+        google()
+        mavenCentral()
+// Android Resolver Repos Start
+        def unityProjectPath = $/file:///**DIR_UNITYPROJECT**/$.replace("\\", "/")
+        maven {
+            url "https://AdGeneration.github.io/VAMP-Android-SDK/repository" // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:10
+        }
+        maven {
+            url "https://android-sdk.is.com/" // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:19
+        }
+        maven {
+            url "https://imobile-maio.github.io/maven" // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:27
+        }
+        maven {
+            url "https://artifact.bytedance.com/repository/pangle" // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:33
+        }
+        mavenLocal()
+// Android Resolver Repos End
+        flatDir {
+            dirs "${project(':unityLibrary').projectDir}/libs"
+        }
+    }
+}

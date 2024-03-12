@@ -6,69 +6,33 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.0.0'
+        classpath 'com.android.tools.build:gradle:7.4.2'
 **BUILD_SCRIPT_DEPS**}
 }
 
 
-// Android Resolver Repos Start
-([rootProject] + (rootProject.subprojects as List)).each { project ->
-    project.repositories {
-        def unityProjectPath = $/file:///**DIR_UNITYPROJECT**/$.replace("\\", "/")
-        maven {
-            url "https://maven.google.com"
-        }
-        maven {
-            url "https://AdGeneration.github.io/VAMP-Android-SDK/repository" // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:12
-        }
-        maven {
-            url "https://android-sdk.is.com/" // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:23
-        }
-        maven {
-            url "https://imobile-maio.github.io/maven" // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:31
-        }
-        maven {
-            url "https://fan-adn.github.io/nendSDK-Android-lib/library" // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:37
-        }
-        maven {
-            url "https://artifact.bytedance.com/repository/pangle" // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:43
-        }
-        maven {
-            url "https://sdk.tapjoy.com/" // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:49
-        }
-        mavenLocal()
-        mavenCentral()
-    }
-}
-// Android Resolver Repos End
 apply plugin: 'com.android.library'
 **APPLY_PLUGINS**
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 // Android Resolver Dependencies Start
-    implementation 'androidx.annotation:annotation:1.1.0' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:6
-    implementation 'androidx.appcompat:appcompat:1.3.0' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:8
-    implementation 'androidx.multidex:multidex:2.0.1' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:7
-    implementation 'com.google.android.gms:play-services-ads-identifier:17.6.0' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:5
+    implementation 'androidx.appcompat:appcompat:1.3.0' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:6
+    implementation 'androidx.multidex:multidex:2.0.1' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:5
     implementation 'com.google.android.gms:play-services-base:17.6.0' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:4
-    implementation 'jp.supership.vamp:vamp-admob-adapter:+' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:15
-    implementation 'jp.supership.vamp:vamp-fan-adapter:+' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:17
-    implementation 'jp.supership.vamp:vamp-ironsource-adapter:+' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:23
-    implementation 'jp.supership.vamp:vamp-lineads-adapter:+' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:25
-    implementation 'jp.supership.vamp:vamp-maio-adapter:+' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:31
-    implementation 'jp.supership.vamp:vamp-nend-adapter:+' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:37
-    implementation 'jp.supership.vamp:vamp-pangle-adapter:+' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:43
-    implementation 'jp.supership.vamp:vamp-sdk:4.7.0' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:13
-    implementation 'jp.supership.vamp:vamp-tapjoy-adapter:+' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:49
-    implementation 'jp.supership.vamp:vamp-unityads-adapter:+' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:51
+    implementation 'jp.supership.vamp:vamp-admob-adapter:+' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:13
+    implementation 'jp.supership.vamp:vamp-ironsource-adapter:+' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:19
+    implementation 'jp.supership.vamp:vamp-lineads-adapter:+' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:21
+    implementation 'jp.supership.vamp:vamp-maio-adapter:+' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:27
+    implementation 'jp.supership.vamp:vamp-pangle-adapter:+' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:33
+    implementation 'jp.supership.vamp:vamp-sdk:5.1.1' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:11
+    implementation 'jp.supership.vamp:vamp-unityads-adapter:+' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:35
 // Android Resolver Dependencies End
 **DEPS**}
 
 // Android Resolver Exclusions Start
 android {
   packagingOptions {
-      exclude ('/lib/arm64-v8a/*' + '*')
       exclude ('/lib/armeabi/*' + '*')
       exclude ('/lib/mips/*' + '*')
       exclude ('/lib/mips64/*' + '*')
@@ -78,6 +42,8 @@ android {
 }
 // Android Resolver Exclusions End
 android {
+    namespace 'jp.supership.vamp.sample.lib'
+
     compileSdkVersion **APIVERSION**
     buildToolsVersion '**BUILDTOOLS**'
 

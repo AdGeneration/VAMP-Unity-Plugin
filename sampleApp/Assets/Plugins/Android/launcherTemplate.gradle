@@ -10,7 +10,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.0.0'
+        classpath 'com.android.tools.build:gradle:7.4.2'
 **BUILD_SCRIPT_DEPS**}
 }
 
@@ -19,6 +19,8 @@ dependencies {
     }
 
 android {
+    namespace 'jp.supership.vamp.sample'
+
     compileSdkVersion **APIVERSION**
     buildToolsVersion '**BUILDTOOLS**'
 

@@ -1,8 +1,8 @@
-#import <VAMP/VAMP.h>
 #import "VAMPInfo.h"
+#import <VAMP/VAMP.h>
 
 extern "C" {
-char *VAMPUnityTestAdnwSDKVersion(const char *cAdnwName) {
+char * VAMPUnityTestAdnwSDKVersion(const char *cAdnwName) {
     NSString *adnwName = [NSString stringWithCString:cAdnwName encoding:NSUTF8StringEncoding];
 
     NSString *version = [VAMPInfo adNetworkVersionOfAdNetworkName:adnwName];
@@ -18,7 +18,7 @@ char *VAMPUnityTestAdnwSDKVersion(const char *cAdnwName) {
     return res;
 }
 
-char *VAMPUnityTestAdapterVersion(const char *cAdnwName) {
+char * VAMPUnityTestAdapterVersion(const char *cAdnwName) {
     NSString *adnwName = [NSString stringWithCString:cAdnwName encoding:NSUTF8StringEncoding];
 
     NSString *version = [VAMPInfo adapterVersionOfAdNetworkName:adnwName];
@@ -34,7 +34,7 @@ char *VAMPUnityTestAdapterVersion(const char *cAdnwName) {
     return res;
 }
 
-char *VAMPUnityTestDeviceInfo(const char *cInfoName) {
+char * VAMPUnityTestDeviceInfo(const char *cInfoName) {
     NSString *infoName = [NSString stringWithCString:cInfoName encoding:NSUTF8StringEncoding];
 
     NSString *info = [VAMPInfo deviceInfoForKey:infoName];

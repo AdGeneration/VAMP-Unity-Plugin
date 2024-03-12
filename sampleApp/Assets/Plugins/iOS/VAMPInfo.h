@@ -28,23 +28,23 @@ FOUNDATION_EXTERN NSString *const VAMPInfoDeviceInfoKeyAdMobAppID;
 /**
  * VAMPInfoフレームワークのバージョンを返します
  */
-+ (NSString *)versionString;
++ (NSString *) versionString;
 /**
  * アドネットワークのバージョンを返します。
  * 対応するアダプタがインポートされていない場合はnilを返します
  */
-+ (nullable NSString *)adNetworkVersionOfAdNetworkName:(NSString *)adNetworkName;
++ (nullable NSString *) adNetworkVersionOfAdNetworkName:(NSString *)adNetworkName;
 /**
  * アドネットワークアダプタのバージョンを返します。
  * 対応するアダプタがインポートされていない場合はnilを返します
  */
-+ (nullable NSString *)adapterVersionOfAdNetworkName:(NSString *)adNetworkName;
++ (nullable NSString *) adapterVersionOfAdNetworkName:(NSString *)adNetworkName;
 /**
  * 指定したキーの端末情報およびアプリ情報を返します
  *
  * @param key VAMPInfoDeviceInfoKey*
  */
-+ (nullable NSString *)deviceInfoForKey:(NSString *)key;
++ (nullable NSString *) deviceInfoForKey:(NSString *)key;
 
 @end
 

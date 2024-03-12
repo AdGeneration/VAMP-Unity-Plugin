@@ -8,9 +8,9 @@
 /// </summary>
 
 #if UNITY_EDITOR_OSX
+using System.IO;
 using UnityEditor;
 using UnityEditor.Callbacks;
-using System.IO;
 
 #if UNITY_IOS
 using UnityEditor.iOS.Xcode;
@@ -50,10 +50,8 @@ public class PostBuildProcess
     private static readonly string appearance = "Dark";
 
     [PostProcessBuild]
-    public static void OnPostProcessBuild(BuildTarget buildTarget, string path)
-    {
-        if (buildTarget == BuildTarget.iOS)
-        {
+    public static void OnPostProcessBuild(BuildTarget buildTarget, string path) {
+        if (buildTarget == BuildTarget.iOS) {
             var projPath = PBXProject.GetPBXProjectPath(path);
             var proj = new PBXProject();
             proj.ReadFromFile(projPath);
@@ -78,7 +76,6 @@ public class PostBuildProcess
             proj.AddFrameworkToProject(target, "libresolv.9.tbd", false);
             proj.AddFrameworkToProject(target, "libbz2.tbd", false);
             proj.AddFrameworkToProject(target, "AVKit.framework", false);
-            proj.AddFrameworkToProject(target, "ARKit.framework", true);
             proj.AddFrameworkToProject(target, "AppTrackingTransparency.framework", false);
             proj.AddFrameworkToProject(target, "CoreFoundation.framework", true);
 
@@ -92,10 +89,10 @@ public class PostBuildProcess
             rootDict.SetString(plistKeyadMobAppId, adMobAppId);
             rootDict.SetString(plistKeyTrackingUsageDescription, trackingUsageDescription);
             rootDict.SetString(plistKeyPhotoLibraryAddUsageDescription,
-                photoLibraryAddUsageDescription);
+                               photoLibraryAddUsageDescription);
             rootDict.SetString(plistKeyCameraUsageDescription, cameraUsageDescription);
             rootDict.CreateArray(plistKeySKAdNetworkItems).AddDict()
-                .SetString(plistKeySKAdNetworkIdentifier, plistKeySupershipSKAdNetworkIdentifier);
+            .SetString(plistKeySKAdNetworkIdentifier, plistKeySupershipSKAdNetworkIdentifier);
             rootDict.SetString(plistKeyAppearance, appearance);
             File.WriteAllText(plistPath, plist.WriteToString());
         }
@@ -103,11 +100,11 @@ public class PostBuildProcess
 
     [PostProcessBuild(101)]
     public static void OnPostProcessBuildEmbedSwiftLibraries(BuildTarget target,
-        string pathToBuiltProject)
-    {
+                                                             string      pathToBuiltProject) {
         // 「Always Embed Swift Standard Libraries」をYESに設定する
         var projPath = PBXProject.GetPBXProjectPath(pathToBuiltProject);
         var proj = new PBXProject();
+
         proj.ReadFromFile(projPath);
         var mainTarget = proj.GetUnityMainTargetGuid();
         proj.SetBuildProperty(mainTarget, "ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES", "YES");
@@ -117,11 +114,11 @@ public class PostBuildProcess
     }
 
     [PostProcessBuild(102)]
-    public static void OnPostProcessBuildDisableBitcode(BuildTarget buildTarget, string path)
-    {
+    public static void OnPostProcessBuildDisableBitcode(BuildTarget buildTarget, string path) {
         // 「Enable Bitcode」をNOに設定する
         var projPath = PBXProject.GetPBXProjectPath(path);
         var proj = new PBXProject();
+
         proj.ReadFromFile(projPath);
         var mainTarget = proj.GetUnityMainTargetGuid();
         proj.SetBuildProperty(mainTarget, "ENABLE_BITCODE", "NO");
@@ -129,6 +126,28 @@ public class PostBuildProcess
         proj.SetBuildProperty(frameworkTarget, "ENABLE_BITCODE", "NO");
         File.WriteAllText(projPath, proj.WriteToString());
     }
+
+    // Must be between 40 and 50 to ensure that it's not overriden by Podfile generation (40) and
+    // that it's added before "pod install" (50).
+    // [PostProcessBuildAttribute(45)]
+    // private static void OnPostProcessBuildPodfile(BuildTarget target, string buildPath) {
+    //     if (target == BuildTarget.iOS) {
+    //         string[] lines = File.ReadAllLines(buildPath + "/Podfile");
+    //         string text = "";
+    //         for (int i = 0; i < lines.Length; i++) {
+    //             text += lines[i] + "\n";
+    //             if (lines[i].Contains("target 'Unity-iPhone' do")) {
+    //                 text += "  pod 'VAMPAdmobAdapter'\n" +
+    //                     "  pod 'VAMPIronSourceAdapter'\n" +
+    //                     "  pod 'VAMPMaioAdapter'\n" +
+    //                     "  pod 'VAMPLINEAdsAdapter'\n" +
+    //                     "  pod 'VAMPPangleAdapter'\n" +
+    //                     "  pod 'VAMPUnityAdsAdapter'\n";
+    //             }
+    //         }
+    //         File.WriteAllText(buildPath + "/Podfile", text);
+    //     }
+    // }
 }
 
 #elif UNITY_ANDROID && UNITY_2018_1_OR_NEWER
@@ -142,12 +161,10 @@ public class PostBuildProcess : UnityEditor.Android.IPostGenerateGradleAndroidPr
         }
     }
 
-    void UnityEditor.Android.IPostGenerateGradleAndroidProject.OnPostGenerateGradleAndroidProject(string path)
-    {
+    void UnityEditor.Android.IPostGenerateGradleAndroidProject.OnPostGenerateGradleAndroidProject(string path) {
         var gradlePropertiesFile = path + "/gradle.properties";
 
-        if (File.Exists(gradlePropertiesFile))
-        {
+        if (File.Exists(gradlePropertiesFile)) {
             File.Delete(gradlePropertiesFile);
         }
 
