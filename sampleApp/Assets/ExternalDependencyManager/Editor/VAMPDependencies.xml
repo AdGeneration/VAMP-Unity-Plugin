@@ -37,7 +37,6 @@
     <iosPods>
         <!--VAMP-->
         <iosPod name="VAMP-SDK" version=">= 5.1.1"/>
-        <iosPod name="SSCore" version="0.1.5-beta.1"/>
         <!--AdMob-->
         <iosPod name="VAMPAdmobAdapter"/>
         <!--ironSource-->

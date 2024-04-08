@@ -59,15 +59,8 @@ public class AdSample : MonoBehaviour
     private static string PlacementID2 => ConfigurationManager.Instance.PlacementID2;
 
     private void Start() {
-        if (rewardedAd != null) {
-            rewardedAd.Dispose();
-            rewardedAd = null;
-        }
-
-        if (rewardedAd2 != null) {
-            rewardedAd2.Dispose();
-            rewardedAd2 = null;
-        }
+        rewardedAd = null;
+        rewardedAd2 = null;
 
         VAMP.SDK.TestMode = ConfigurationManager.Instance.TestMode;
         VAMP.SDK.DebugMode = ConfigurationManager.Instance.DebugMode;
