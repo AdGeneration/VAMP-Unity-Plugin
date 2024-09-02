@@ -8,7 +8,7 @@
     <package>jp.supership.vamp:vamp-lineads-adapter:+</package>
     <package>jp.supership.vamp:vamp-maio-adapter:+</package>
     <package>jp.supership.vamp:vamp-pangle-adapter:+</package>
-    <package>jp.supership.vamp:vamp-sdk:5.1.1</package>
+    <package>jp.supership.vamp:vamp-sdk:5.2.1</package>
     <package>jp.supership.vamp:vamp-unityads-adapter:+</package>
   </packages>
   <files />

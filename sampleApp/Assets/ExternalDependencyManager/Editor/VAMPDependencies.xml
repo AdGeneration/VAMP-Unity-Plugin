@@ -8,7 +8,7 @@
         <repositories>
             <repository>https://AdGeneration.github.io/VAMP-Android-SDK/repository</repository>
         </repositories>
-        <androidPackage spec="jp.supership.vamp:vamp-sdk:5.1.1"/>
+        <androidPackage spec="jp.supership.vamp:vamp-sdk:5.2.1"/>
         <!--AdMob-->
         <androidPackage spec="jp.supership.vamp:vamp-admob-adapter:+"/>
         <!--ironSource-->
@@ -36,7 +36,7 @@
     </androidPackages>
     <iosPods>
         <!--VAMP-->
-        <iosPod name="VAMP-SDK" version=">= 5.1.1"/>
+        <iosPod name="VAMP-SDK" version=">= 5.2.0"/>
         <!--AdMob-->
         <iosPod name="VAMPAdmobAdapter"/>
         <!--ironSource-->

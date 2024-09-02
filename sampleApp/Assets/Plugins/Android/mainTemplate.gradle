@@ -25,7 +25,7 @@ dependencies {
     implementation 'jp.supership.vamp:vamp-lineads-adapter:+' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:21
     implementation 'jp.supership.vamp:vamp-maio-adapter:+' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:27
     implementation 'jp.supership.vamp:vamp-pangle-adapter:+' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:33
-    implementation 'jp.supership.vamp:vamp-sdk:5.1.1' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:11
+    implementation 'jp.supership.vamp:vamp-sdk:5.2.1' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:11
     implementation 'jp.supership.vamp:vamp-unityads-adapter:+' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:35
 // Android Resolver Dependencies End
 **DEPS**}
