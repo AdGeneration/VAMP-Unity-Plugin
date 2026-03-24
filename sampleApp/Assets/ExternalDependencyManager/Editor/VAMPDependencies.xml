@@ -8,46 +8,52 @@
         <repositories>
             <repository>https://AdGeneration.github.io/VAMP-Android-SDK/repository</repository>
         </repositories>
-        <androidPackage spec="jp.supership.vamp:vamp-sdk:5.2.1"/>
+        <androidPackage spec="jp.supership.vamp:vamp-sdk:5.3.4"/>
+        <!--Allow non-major adapter updates while keeping VAMP SDK at 5.3.4.-->
         <!--AdMob-->
-        <androidPackage spec="jp.supership.vamp:vamp-admob-adapter:+"/>
+        <androidPackage spec="jp.supership.vamp:vamp-admob-adapter:[24.9.0,25.0.0)"/>
+        <!--AppLovin-->
+        <androidPackage spec="jp.supership.vamp:vamp-applovin-adapter:[13.5.100,14.0.0)"/>
         <!--ironSource-->
-        <androidPackage spec="jp.supership.vamp:vamp-ironsource-adapter:+">
+        <androidPackage spec="jp.supership.vamp:vamp-ironsource-adapter:[8.11.1,9.0.0)">
             <repositories>
                 <repository>https://android-sdk.is.com/</repository>
             </repositories>
         </androidPackage>
         <!--LINEAds-->
-        <androidPackage spec="jp.supership.vamp:vamp-lineads-adapter:+"/>
+        <androidPackage spec="jp.supership.vamp:vamp-lineads-adapter:[3.0.100,4.0.0)"/>
         <!--maio-->
-        <androidPackage spec="jp.supership.vamp:vamp-maio-adapter:+">
+        <androidPackage spec="jp.supership.vamp:vamp-maio-adapter:[2.0.800,3.0.0)">
             <repositories>
                 <repository>https://imobile-maio.github.io/maven</repository>
             </repositories>
         </androidPackage>
         <!--Pangle-->
-        <androidPackage spec="jp.supership.vamp:vamp-pangle-adapter:+">
+        <androidPackage spec="jp.supership.vamp:vamp-pangle-adapter:[7.9.900,8.0.0)">
             <repositories>
                 <repository>https://artifact.bytedance.com/repository/pangle</repository>
             </repositories>
         </androidPackage>
-        <!--UnityAds-->
-        <androidPackage spec="jp.supership.vamp:vamp-unityads-adapter:+"/>
+        <!--UnityAds: keep exact to avoid version skew with the UnityAds integration used by this project.-->
+        <androidPackage spec="jp.supership.vamp:vamp-unityads-adapter:4.16.300"/>
     </androidPackages>
     <iosPods>
         <!--VAMP-->
-        <iosPod name="VAMP-SDK" version=">= 5.2.0"/>
+        <iosPod name="VAMP-SDK" version="~> 5.3.4"/>
+        <!--Allow non-major adapter updates while keeping VAMP iOS at 5.3.4.-->
         <!--AdMob-->
-        <iosPod name="VAMPAdmobAdapter"/>
+        <iosPod name="VAMPAdmobAdapter" version="~> 13.0"/>
+        <!--AppLovin-->
+        <iosPod name="VAMPAppLovinAdapter" version="~> 13.5"/>
         <!--ironSource-->
-        <iosPod name="VAMPIronSourceAdapter"/>
+        <iosPod name="VAMPIronSourceAdapter" version="~> 8.11"/>
         <!--LINEAds-->
-        <iosPod name="VAMPLINEAdsAdapter"/>
+        <iosPod name="VAMPLINEAdsAdapter" version="~> 3.0"/>
         <!--maio-->
-<!--        <iosPod name="VAMPMaioAdapter"/>-->
+        <iosPod name="VAMPMaioAdapter" version="~> 2.2"/>
         <!--Pangle-->
-        <iosPod name="VAMPPangleAdapter"/>
-        <!--UnityAds-->
-        <iosPod name="VAMPUnityAdsAdapter"/>
+        <iosPod name="VAMPPangleAdapter" version="~> 7.9"/>
+        <!--UnityAds: keep exact to avoid version skew with the UnityAds integration used by this project.-->
+        <iosPod name="VAMPUnityAdsAdapter" version="4.16.500"/>
     </iosPods>
 </dependencies>

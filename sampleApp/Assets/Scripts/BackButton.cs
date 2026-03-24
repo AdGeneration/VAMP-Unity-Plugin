@@ -25,7 +25,7 @@ public class BackButton : MonoBehaviour
 
 public class BackEventManager
 {
-    private static Queue<UnityAction> onBackQueue = new Queue<UnityAction>();
+    private static readonly Queue<UnityAction> onBackQueue = new();
 
     private static BackEventManager instance;
     public static BackEventManager Instance
@@ -60,9 +60,7 @@ public class BackEventManager
     public void OnBack() {
         if (CanBack) {
             var onBack = onBackQueue.Dequeue();
-            if (onBack != null) {
-                onBack.Invoke();
-            }
+            onBack?.Invoke();
         }
     }
 }

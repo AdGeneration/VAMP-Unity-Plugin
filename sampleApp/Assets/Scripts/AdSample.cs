@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -26,27 +27,15 @@ public class AdSample : MonoBehaviour
     private Button showButton2;
 
     [SerializeField]
-    private Button soundButton;
-
-    [SerializeField]
-    private Texture2D soundOnImage;
-
-    [SerializeField]
-    private Texture2D soundOffImage;
-
-    [SerializeField]
-    private AudioSource audioSource;
+    private SoundButton soundButton;
 
     [SerializeField]
     private Text infoText;
 
     [SerializeField]
-    private TMPro.TextMeshProUGUI messageText;
+    private ScrollLogText scrollLog;
 
-    [SerializeField]
-    private Transform content;
-
-    private bool isPlayingPrev;
+    private SynchronizationContext mainThreadContext;
 
     private VAMP.RewardedAd rewardedAd;
     private VAMP.RewardedAd rewardedAd2;
@@ -57,6 +46,10 @@ public class AdSample : MonoBehaviour
 
     private static string PlacementID1 => ConfigurationManager.Instance.PlacementID1;
     private static string PlacementID2 => ConfigurationManager.Instance.PlacementID2;
+
+    private void Awake() {
+        mainThreadContext = SynchronizationContext.Current;
+    }
 
     private void Start() {
         rewardedAd = null;
@@ -75,23 +68,6 @@ public class AdSample : MonoBehaviour
         showButton1.gameObject.SetActive(IsAd3);
         loadButton2.gameObject.SetActive(IsAd3);
         showButton2.gameObject.SetActive(IsAd3);
-        messageText.text = string.Empty;
-        messageText.gameObject.SetActive(false);
-
-        var soundTexture = audioSource.isPlaying ? soundOffImage : soundOnImage;
-        var soundImage = soundButton.transform.Find("Image").GetComponent<Image>();
-        soundImage.sprite = Sprite.Create(soundTexture, new Rect(0, 0, soundTexture.width, soundTexture.height), Vector2.zero);
-        soundButton.onClick.AddListener(() =>
-        {
-            if (audioSource.isPlaying) {
-                audioSource.Stop();
-                soundImage.sprite = Sprite.Create(soundOnImage, new Rect(0, 0, soundOnImage.width, soundOnImage.height), Vector2.zero);
-            }
-            else {
-                audioSource.Play();
-                soundImage.sprite = Sprite.Create(soundOffImage, new Rect(0, 0, soundOffImage.width, soundOffImage.height), Vector2.zero);
-            }
-        });
 
         if (IsAd1) {
             SetupAd1();
@@ -234,18 +210,9 @@ public class AdSample : MonoBehaviour
         });
     }
 
-    private void PauseSound() {
-        isPlayingPrev = audioSource.isPlaying;
-        if (audioSource.isPlaying) {
-            audioSource.Pause();
-        }
-    }
+    private void PauseSound() => soundButton.Pause();
 
-    private void ResumeSound() {
-        if (isPlayingPrev) {
-            audioSource.UnPause();
-        }
-    }
+    private void ResumeSound() => soundButton.Resume();
 
     private void AddMessage(string str, MessageColor color) {
         if (color == MessageColor.Default) {
@@ -259,12 +226,11 @@ public class AdSample : MonoBehaviour
     }
 
     private void AddMessage(string str) {
-        var text = GameObject.Instantiate(messageText, content);
+        var line = DateTime.Now.ToString("MM/dd HH:mm:ss ") + str;
 
-        text.gameObject.SetActive(true);
-        text.transform.SetAsFirstSibling();
-        text.text = DateTime.Now.ToString("MM/dd HH:mm:ss ") + str;
-        text.fontSize = 32;
+        Debug.Log("[VAMP-SampleApp] " + line);
+
+        scrollLog?.AddLine(line);
     }
 
     private void SetEventHandlers(VAMP.RewardedAd ad) {
@@ -284,7 +250,7 @@ public class AdSample : MonoBehaviour
     }
 
     private void HandleRewardedAdDidReceive(object sender, VAMP.AdEventArgs args) {
-        MainThreadDispatcher.Instance.Dispatch(() =>
+        mainThreadContext.Post(_ =>
         {
             AddMessage($"onReceived({args.PlacementId})");
 
@@ -294,11 +260,11 @@ public class AdSample : MonoBehaviour
                 PauseSound();
                 rewardedAd.Show();
             }
-        });
+        }, null);
     }
 
     private void HandleRewardedAdDidFailToLoad(object sender, VAMP.AdFailEventArgs args) {
-        MainThreadDispatcher.Instance.Dispatch(() =>
+        mainThreadContext.Post(_ =>
         {
             AddMessage($"onFailedToLoad({args.PlacementId}, {args.Error})", MessageColor.Red);
 
@@ -306,11 +272,11 @@ public class AdSample : MonoBehaviour
                       $"error={args.Error}");
 
             ResumeSound();
-        });
+        }, null);
     }
 
     private void HandleRewardedAdDidExpire(object sender, VAMP.AdEventArgs args) {
-        MainThreadDispatcher.Instance.Dispatch(() =>
+        mainThreadContext.Post(_ =>
         {
             AddMessage($"onExpired({args.PlacementId})", MessageColor.Red);
 
@@ -318,21 +284,21 @@ public class AdSample : MonoBehaviour
 
             // 再度、広告をロードします
             rewardedAd.Load(CreateRequest());
-        });
+        }, null);
     }
 
     private void HandleRewardedAdDidStartLoading(object sender, VAMP.AdLoadEventArgs args) {
-        MainThreadDispatcher.Instance.Dispatch(() =>
+        mainThreadContext.Post(_ =>
         {
             AddMessage($"onStartedLoading({args.PlacementId}, {args.AdNetworkName})");
 
             Debug.Log($"[VAMPUnitySDK] OnStartedLoading: placementId={args.PlacementId}, " +
                       $"adNetworkName={args.AdNetworkName}");
-        });
+        }, null);
     }
 
     private void HandleRewardedAdDidLoad(object sender, VAMP.AdLoadResultEventArgs args) {
-        MainThreadDispatcher.Instance.Dispatch(() =>
+        mainThreadContext.Post(_ =>
         {
             AddMessage(
                 $"onLoaded({args.PlacementId}, {args.AdNetworkName}, success: {args.IsSuccess}, message: {args.Message})");
@@ -342,39 +308,52 @@ public class AdSample : MonoBehaviour
                       $"seqId={rewardedAd.ResponseInfo?.SeqId ?? ""}, " +
                       $"success={args.IsSuccess}, " +
                       $"message={args.Message}");
-        });
+        }, null);
     }
 
     private void HandleRewardedAdDidFailToShow(object sender, VAMP.AdFailEventArgs args) {
-        MainThreadDispatcher.Instance.Dispatch(() =>
+        mainThreadContext.Post(_ =>
         {
-            AddMessage($"onFailedToShow({args.PlacementId}, {args.Error})", MessageColor.Red);
+            AddMessage(GetFailToShowMessage(sender, args), MessageColor.Red);
 
             Debug.Log($"[VAMPUnitySDK] OnFailedToShow: placementId={args.PlacementId}, " +
                       $"error={args.Error}");
-        });
+        }, null);
+    }
+
+    private static string GetFailToShowMessage(object sender, VAMP.AdFailEventArgs args) {
+#if UNITY_ANDROID
+        if (args.Error == VAMP.Error.ADNETWORK_ERROR &&
+            sender is VAMP.RewardedAd rewardedAd &&
+            string.Equals(rewardedAd.ResponseInfo?.AdNetworkName, "AdMob",
+                          StringComparison.OrdinalIgnoreCase)) {
+            return
+                $"onFailedToShow({args.PlacementId}, {args.Error}) - AdMob rewarded show skipped: device is in keyguard/lockscreen state";
+        }
+#endif
+        return $"onFailedToShow({args.PlacementId}, {args.Error})";
     }
 
     private void HandleRewardedAdDidComplete(object sender, VAMP.AdEventArgs args) {
-        MainThreadDispatcher.Instance.Dispatch(() =>
+        mainThreadContext.Post(_ =>
         {
             AddMessage($"onCompleted({args.PlacementId})", MessageColor.Green);
 
             Debug.Log($"[VAMPUnitySDK] OnCompleted: placementId={args.PlacementId}");
-        });
+        }, null);
     }
 
     private void HandleRewardedAdDidOpen(object sender, VAMP.AdEventArgs args) {
-        MainThreadDispatcher.Instance.Dispatch(() =>
+        mainThreadContext.Post(_ =>
         {
             AddMessage($"onOpened({args.PlacementId})");
 
             Debug.Log($"[VAMPUnitySDK] OnOpened: placementId={args.PlacementId}");
-        });
+        }, null);
     }
 
     private void HandleRewardedAdDidClose(object sender, VAMP.AdCloseEventArgs args) {
-        MainThreadDispatcher.Instance.Dispatch(() =>
+        mainThreadContext.Post(_ =>
         {
             AddMessage($"onClosed({args.PlacementId}, adClicked: {args.AdClicked})", MessageColor.Blue);
 
@@ -387,7 +366,7 @@ public class AdSample : MonoBehaviour
                 // 必要に応じて次に表示する広告をプリロードします
                 rewardedAd.Preload(CreateRequest());
             }
-        });
+        }, null);
     }
 
     private static string MessageColorToHtmlStringRGBA(MessageColor messageColor) {

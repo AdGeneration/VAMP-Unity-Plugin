@@ -8,15 +8,23 @@
 /// </summary>
 
 #if UNITY_EDITOR_OSX
+using System;
 using System.IO;
 using UnityEditor;
 using UnityEditor.Callbacks;
+using UnityEngine;
 
 #if UNITY_IOS
 using UnityEditor.iOS.Xcode;
+using UnityEditor.iOS.Xcode.Extensions;
 
 public class PostBuildProcess
 {
+    private static readonly string[] privateIosPodsForMainTarget = {
+        "  pod 'AppLovinSDK', '13.5.0'",
+        "  pod 'MaioSDK-v2', '2.2.1'",
+    };
+
     // AdMob AppID
     private static readonly string plistKeyadMobAppId = "GADApplicationIdentifier";
     private static readonly string adMobAppId = "ca-app-pub-3940256099942544~3347511713";
@@ -113,6 +121,52 @@ public class PostBuildProcess
         File.WriteAllText(projPath, proj.WriteToString());
     }
 
+    // When using `use_frameworks! :linkage => :static`, CocoaPods converts most pods to static
+    // linkage and does not generate an "Embed Pods Frameworks" build phase. However, some SDKs
+    // (e.g. AppLovinSDK, Maio) ship as prebuilt dynamic XCFrameworks/frameworks that cannot be
+    // made static. These must be explicitly embedded in the main app target so that they are
+    // copied into the app bundle at build time and can be found by the dynamic linker at runtime.
+    [PostProcessBuild(103)]
+    public static void OnPostProcessBuildEmbedDynamicFrameworks(BuildTarget buildTarget,
+                                                                string      path) {
+        if (buildTarget != BuildTarget.iOS) return;
+
+        var projPath = PBXProject.GetPBXProjectPath(path);
+        var proj = new PBXProject();
+        proj.ReadFromFile(projPath);
+
+        var mainTarget = proj.GetUnityMainTargetGuid();
+        var podsDir = Path.Combine(path, "Pods");
+
+        if (!Directory.Exists(podsDir)) {
+            Debug.LogWarning("Pods directory not found. Skipping framework embedding.");
+            return;
+        }
+
+        // These are prebuilt dynamic frameworks that cannot be made static by CocoaPods
+        // and must be embedded in the main app target.
+        var dynamicFrameworks = new[] {
+            "AppLovinSDK.xcframework",
+            "Maio.xcframework",
+        };
+
+        foreach (var frameworkName in dynamicFrameworks) {
+            var dirs = Directory.GetDirectories(podsDir, frameworkName,
+                                                SearchOption.AllDirectories);
+            if (dirs.Length == 0) {
+                Debug.LogWarning($"{frameworkName} not found under Pods. Skipping.");
+                continue;
+            }
+
+            var relativePath = dirs[0].Substring(path.Length + 1);
+            var fileGuid = proj.AddFile(relativePath, $"Frameworks/{frameworkName}",
+                                        PBXSourceTree.Source);
+            PBXProjectExtensions.AddFileToEmbedFrameworks(proj, mainTarget, fileGuid);
+        }
+
+        File.WriteAllText(projPath, proj.WriteToString());
+    }
+
     [PostProcessBuild(102)]
     public static void OnPostProcessBuildDisableBitcode(BuildTarget buildTarget, string path) {
         // 「Enable Bitcode」をNOに設定する
@@ -129,25 +183,60 @@ public class PostBuildProcess
 
     // Must be between 40 and 50 to ensure that it's not overriden by Podfile generation (40) and
     // that it's added before "pod install" (50).
-    // [PostProcessBuildAttribute(45)]
-    // private static void OnPostProcessBuildPodfile(BuildTarget target, string buildPath) {
-    //     if (target == BuildTarget.iOS) {
-    //         string[] lines = File.ReadAllLines(buildPath + "/Podfile");
-    //         string text = "";
-    //         for (int i = 0; i < lines.Length; i++) {
-    //             text += lines[i] + "\n";
-    //             if (lines[i].Contains("target 'Unity-iPhone' do")) {
-    //                 text += "  pod 'VAMPAdmobAdapter'\n" +
-    //                     "  pod 'VAMPIronSourceAdapter'\n" +
-    //                     "  pod 'VAMPMaioAdapter'\n" +
-    //                     "  pod 'VAMPLINEAdsAdapter'\n" +
-    //                     "  pod 'VAMPPangleAdapter'\n" +
-    //                     "  pod 'VAMPUnityAdsAdapter'\n";
-    //             }
-    //         }
-    //         File.WriteAllText(buildPath + "/Podfile", text);
-    //     }
-    // }
+    [PostProcessBuildAttribute(45)]
+    public static void OnPostProcessBuildPodfile(BuildTarget target, string buildPath) {
+        if (target != BuildTarget.iOS) return;
+
+        var podfilePath = Path.Combine(buildPath, "Podfile");
+        if (!File.Exists(podfilePath)) return;
+
+        var lines = File.ReadAllLines(podfilePath);
+        using (var writer = new StringWriter()) {
+            var insertedMainTargetPods = false;
+            foreach (var line in lines) {
+                writer.WriteLine(line);
+                if (!insertedMainTargetPods && line.Contains("target 'Unity-iPhone' do")) {
+                    foreach (var podLine in privateIosPodsForMainTarget) {
+                        if (!ContainsPod(lines, podLine)) {
+                            writer.WriteLine(podLine);
+                        }
+                    }
+                    insertedMainTargetPods = true;
+                }
+            }
+            File.WriteAllText(podfilePath, writer.ToString());
+        }
+    }
+
+    private static bool ContainsPod(string[] lines, string podLine) {
+        var podName = ExtractPodName(podLine);
+        if (string.IsNullOrEmpty(podName)) {
+            return false;
+        }
+
+        foreach (var line in lines) {
+            if (string.Equals(ExtractPodName(line), podName, StringComparison.Ordinal)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static string ExtractPodName(string line) {
+        var trimmed = line.Trim();
+        if (!trimmed.StartsWith("pod '", StringComparison.Ordinal)) {
+            return null;
+        }
+
+        var start = "pod '".Length;
+        var end = trimmed.IndexOf('\'', start);
+        if (end < 0) {
+            return null;
+        }
+
+        return trimmed.Substring(start, end - start);
+    }
 }
 
 #elif UNITY_ANDROID && UNITY_2018_1_OR_NEWER

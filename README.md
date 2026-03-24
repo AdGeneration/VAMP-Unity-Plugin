@@ -16,7 +16,7 @@ VAMP Unity Pluginの最新版は下記リンクよりダウンロードしてく
 
 VAMP Unity Pluginのドキュメントは下記リンクをご参照ください。
 
-[https://supership-jp.github.io/VAMP-SDK-Document/unity/](https://supership-jp.github.io/VAMP-SDK-Document/unity/)
+[https://docs.sdk.ad-generation.jp/vamp/unity](https://docs.sdk.ad-generation.jp/vamp/unity)
 
 ### サンプルアプリ
 

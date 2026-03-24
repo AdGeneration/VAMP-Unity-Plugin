@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -37,6 +38,12 @@ public class MainScene : MonoBehaviour
 
     [SerializeField] private Text sdkInfoText;
 
+    private SynchronizationContext mainThreadContext;
+
+    private void Awake() {
+        mainThreadContext = SynchronizationContext.Current;
+    }
+
     private IEnumerator Start() {
         sdkInfoText.text = $"App {Application.version} / SDK {VAMP.SDK.SDKVersion}";
 
@@ -70,7 +77,7 @@ public class MainScene : MonoBehaviour
         //// EU圏内からのアクセスか判定します
         VAMP.SDK.IsEUAccess(access =>
         {
-            MainThreadDispatcher.Instance.Dispatch(() =>
+            mainThreadContext.Post(_ =>
             {
                 Debug.Log("[VAMPUnitySDK] IsEUAccess: " + access);
 
@@ -80,12 +87,12 @@ public class MainScene : MonoBehaviour
                     // ユーザの入力を受け付けACCEPTEDまたはDENIEDをセットします
                     VAMP.Privacy.PrivacySettings.SetConsentStatus(VAMP.Privacy.ConsentStatus.Accepted);
                 }
-            });
+            }, null);
         });
 
         VAMP.SDK.GetLocation(location =>
         {
-            MainThreadDispatcher.Instance.Dispatch(() =>
+            mainThreadContext.Post(_ =>
             {
                 sdkInfoText.text = $"App {Application.version} / SDK {VAMP.SDK.SDKVersion} / {location.CountryCode}-{location.Region}";
 
@@ -95,7 +102,7 @@ public class MainScene : MonoBehaviour
                 //    VAMP.Privacy.PrivacySettings.SetChildDirected(VAMP.Privacy.ChildDirected.True);
                 // }
                 SDKTestUtil.CountryCode = location.CountryCode;
-            });
+            }, null);
         });
 
         adIDInputField1.text = ConfigurationManager.Instance.PlacementID1;
