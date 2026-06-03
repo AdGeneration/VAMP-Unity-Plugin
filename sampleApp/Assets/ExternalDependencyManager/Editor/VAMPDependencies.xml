@@ -8,8 +8,10 @@
         <repositories>
             <repository>https://AdGeneration.github.io/VAMP-Android-SDK/repository</repository>
         </repositories>
-        <androidPackage spec="jp.supership.vamp:vamp-sdk:5.3.4"/>
-        <!--Allow non-major adapter updates while keeping VAMP SDK at 5.3.4.-->
+        <androidPackage spec="jp.supership.vamp:vamp-sdk:5.3.5"/>
+        <!--AppOpenAdManager サンプルのライフサイクル統合に必要 (Issue #51 PR-2)-->
+        <androidPackage spec="androidx.lifecycle:lifecycle-process:[2.5.1,3.0.0)"/>
+        <!--Pin VAMP SDK to 5.3.5 and Pangle adapter to 7.9.10200 for App Open Ads support (Issue #51).-->
         <!--AdMob-->
         <androidPackage spec="jp.supership.vamp:vamp-admob-adapter:[24.9.0,25.0.0)"/>
         <!--AppLovin-->
@@ -29,18 +31,18 @@
             </repositories>
         </androidPackage>
         <!--Pangle-->
-        <androidPackage spec="jp.supership.vamp:vamp-pangle-adapter:[7.9.900,8.0.0)">
+        <androidPackage spec="jp.supership.vamp:vamp-pangle-adapter:[7.9.10200,8.0.0)">
             <repositories>
                 <repository>https://artifact.bytedance.com/repository/pangle</repository>
             </repositories>
         </androidPackage>
-        <!--UnityAds: keep exact to avoid version skew with the UnityAds integration used by this project.-->
-        <androidPackage spec="jp.supership.vamp:vamp-unityads-adapter:4.16.300"/>
+        <!--UnityAds: exclude unity-ads を削除 (本質、Unity 6 で NoClassDefFoundError 解消のため) + adapter を 4.16.600 へ bump (副次、新版 unity-ads を Gradle resolve に委ねる) (Issue #60).-->
+        <androidPackage spec="jp.supership.vamp:vamp-unityads-adapter:4.16.600"/>
     </androidPackages>
     <iosPods>
         <!--VAMP-->
-        <iosPod name="VAMP-SDK" version="~> 5.3.4"/>
-        <!--Allow non-major adapter updates while keeping VAMP iOS at 5.3.4.-->
+        <iosPod name="VAMP-SDK" version="5.3.5"/>
+        <!--Pin VAMP iOS SDK to 5.3.5 and Pangle adapter to 7.9.800 for App Open Ads support (Issue #51).-->
         <!--AdMob-->
         <iosPod name="VAMPAdmobAdapter" version="~> 13.0"/>
         <!--AppLovin-->
@@ -52,7 +54,7 @@
         <!--maio-->
         <iosPod name="VAMPMaioAdapter" version="~> 2.2"/>
         <!--Pangle-->
-        <iosPod name="VAMPPangleAdapter" version="~> 7.9"/>
+        <iosPod name="VAMPPangleAdapter" version="7.9.800"/>
         <!--UnityAds: keep exact to avoid version skew with the UnityAds integration used by this project.-->
         <iosPod name="VAMPUnityAdsAdapter" version="4.16.500"/>
     </iosPods>

@@ -15,10 +15,18 @@ public class ConfigurationManager
     public const string AndroidPlacementID1 = "59756";
     public const string AndroidPlacementID2 = "59756";
 
+    // App Open Ads 用 placement ID のデフォルト。公開サンプルでは空文字。
+    // 利用者はホームの AppOpenAd InputField から設定する (QA 時のみテスト枠 ID を一時設定する)。
+    public const string IOSAppOpenAdPlacementID = "";
+    public const string AndroidAppOpenAdPlacementID = "";
+
     public string PlacementID1 {
         get; set;
     }
     public string PlacementID2 {
+        get; set;
+    }
+    public string AppOpenAdPlacementID {
         get; set;
     }
     public bool DebugMode {
@@ -41,9 +49,11 @@ public class ConfigurationManager
 #if UNITY_IOS
         PlacementID1 = IOSPlacementID1;
         PlacementID2 = IOSPlacementID2;
+        AppOpenAdPlacementID = IOSAppOpenAdPlacementID;
 #elif UNITY_ANDROID
         PlacementID1 = AndroidPlacementID1;
         PlacementID2 = AndroidPlacementID2;
+        AppOpenAdPlacementID = AndroidAppOpenAdPlacementID;
 #endif
     }
 }

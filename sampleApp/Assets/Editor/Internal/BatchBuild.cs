@@ -23,7 +23,7 @@ public class BatchBuild
             new[] { "Assets/VAMP" },
             "vamp_for_unity.unitypackage",
             ExportPackageOptions.Recurse | ExportPackageOptions.IncludeDependencies
-        );
+            );
     }
 
     private static void PerformBuild(string locationPathName, BuildTarget target) {
@@ -32,7 +32,8 @@ public class BatchBuild
         var scenes = new[] {
             "Assets/Scenes/Main.unity",
             "Assets/Scenes/AdSample.unity",
-            "Assets/Scenes/Info.unity"
+            "Assets/Scenes/Info.unity",
+            "Assets/Scenes/AppOpenAdSample.unity"
         };
 
         var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions {
@@ -44,7 +45,8 @@ public class BatchBuild
 
         if (report.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded) {
             Debug.Log($"{target} build succeeded: {report.summary.totalSize} bytes");
-        } else {
+        }
+        else {
             Debug.LogError($"{target} build failed");
             EditorApplication.Exit(1);
         }

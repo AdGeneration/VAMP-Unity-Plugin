@@ -21,5 +21,6 @@ public class SceneManager : SingletonMonoBehaviour<SceneManager>
 public enum Scene {
     Main,
     AdSample,
-    Info
+    Info,
+    AppOpenAdSample
 }

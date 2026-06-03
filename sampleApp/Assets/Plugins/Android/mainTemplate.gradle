@@ -5,6 +5,7 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 // Android Resolver Dependencies Start
     implementation 'androidx.appcompat:appcompat:1.3.0' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:6
+    implementation 'androidx.lifecycle:lifecycle-process:[2.5.1,3.0.0)' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:13
     implementation 'androidx.multidex:multidex:2.0.1' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:5
     implementation 'com.google.android.gms:play-services-base:17.6.0' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:4
     implementation 'jp.supership.vamp:vamp-admob-adapter:[24.9.0,25.0.0)' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:13
@@ -12,11 +13,9 @@ dependencies {
     implementation 'jp.supership.vamp:vamp-ironsource-adapter:[8.11.1,9.0.0)' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:21
     implementation 'jp.supership.vamp:vamp-lineads-adapter:[3.0.100,4.0.0)' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:23
     implementation 'jp.supership.vamp:vamp-maio-adapter:[2.0.800,3.0.0)' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:29
-    implementation 'jp.supership.vamp:vamp-pangle-adapter:[7.9.900,8.0.0)' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:35
-    implementation 'jp.supership.vamp:vamp-sdk:5.3.4' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:11
-    implementation('jp.supership.vamp:vamp-unityads-adapter:4.16.300') { // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:37
-        exclude group: 'com.unity3d.ads', module: 'unity-ads'
-    }
+    implementation 'jp.supership.vamp:vamp-pangle-adapter:[7.9.10200,8.0.0)' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:35
+    implementation 'jp.supership.vamp:vamp-sdk:5.3.5' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:11
+    implementation 'jp.supership.vamp:vamp-unityads-adapter:4.16.600' // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:40
 // Android Resolver Dependencies End
 **DEPS**}
 

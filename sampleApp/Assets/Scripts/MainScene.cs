@@ -23,6 +23,7 @@ public class MainScene : MonoBehaviour
 
     [SerializeField] private InputField adIDInputField1;
     [SerializeField] private InputField adIDInputField2;
+    [SerializeField] private InputField adIDInputFieldAppOpen;
 
     [SerializeField] private Toggle testModeToggle;
 
@@ -35,6 +36,8 @@ public class MainScene : MonoBehaviour
     [SerializeField] private Button ad3Button;
 
     [SerializeField] private Button infoButton;
+
+    [SerializeField] private Button appOpenAdButton;
 
     [SerializeField] private Text sdkInfoText;
 
@@ -119,10 +122,29 @@ public class MainScene : MonoBehaviour
             ConfigurationManager.Instance.PlacementID2 = placementID;
         });
 
+        adIDInputFieldAppOpen.text = ConfigurationManager.Instance.AppOpenAdPlacementID;
+        adIDInputFieldAppOpen.onEndEdit.AddListener(text =>
+        {
+            var placementID = text.Trim();
+            ConfigurationManager.Instance.AppOpenAdPlacementID = placementID;
+            // 入力即時に AppOpenAdManager を初期化することで、アプリ再起動なしで QA 可能。
+            // 空文字の場合は Initialize しない (= 自動表示が走らない、想定通り)。
+            if (!string.IsNullOrEmpty(placementID)) {
+                AppOpenAdManager.Instance.Initialize(placementID);
+            }
+        });
+
+        // ConfigurationManager の初期値を VAMP SDK にも反映する。
+        // (これを行わないと AppOpenAdManager.Initialize 時点で TestMode=false 扱いになり、
+        //  Pangle 等のテスト枠が serving されず NO_ADSTOCK / 40016 になる)
+        VAMP.SDK.TestMode = ConfigurationManager.Instance.TestMode;
+        VAMP.SDK.DebugMode = ConfigurationManager.Instance.DebugMode;
+
         testModeToggle.isOn = ConfigurationManager.Instance.TestMode;
         testModeToggle.onValueChanged.AddListener(isOn =>
         {
             ConfigurationManager.Instance.TestMode = isOn;
+            VAMP.SDK.TestMode = isOn;
 
             Debug.Log("[VAMPUnitySDK] TestMode: " + isOn);
         });
@@ -131,6 +153,7 @@ public class MainScene : MonoBehaviour
         debugModeToggle.onValueChanged.AddListener(isOn =>
         {
             ConfigurationManager.Instance.DebugMode = isOn;
+            VAMP.SDK.DebugMode = isOn;
 
             Debug.Log("[VAMPUnitySDK] DebugMode: " + isOn);
         });
@@ -166,6 +189,13 @@ public class MainScene : MonoBehaviour
             BackEventManager.Instance.RegisterBackEvent(() => SceneManager.Instance.LoadScene(Scene.Main));
         });
 
+        appOpenAdButton.onClick.AddListener(() =>
+        {
+            SceneManager.Instance.LoadScene(Scene.AppOpenAdSample);
+
+            BackEventManager.Instance.RegisterBackEvent(() => SceneManager.Instance.LoadScene(Scene.Main));
+        });
+
 #if UNITY_IOS
         ATTrackingStatusBinding.RequestAuthorizationTracking();
 
@@ -174,6 +204,17 @@ public class MainScene : MonoBehaviour
 
         Debug.Log("[VAMPUnitySDK] ATT status: " + ATTrackingStatusBinding.GetAuthorizationTrackingStatus());
 #endif
+
+        // ATT 結果確定後に AppOpenAdManager シングルトンを初期化する。
+        // AppOpenAdPlacementID は AppOpen 専用枠 (Rewarded 用 PlacementID1 とは別系統)。
+        // 空文字の場合は Initialize しない (= QA 時に Inspector / InputField で設定後に走らせる想定)。
+        // DontDestroyOnLoad によりシーン遷移後も生存するため、Main シーン再ロード時の
+        // 二重 Initialize (= isInitialLaunch リセットによる広告再表示) を IsInitialized ガードで防ぐ。
+        var appOpenPlacementId = ConfigurationManager.Instance.AppOpenAdPlacementID;
+        if (!string.IsNullOrEmpty(appOpenPlacementId) && !AppOpenAdManager.Instance.IsInitialized) {
+            AppOpenAdManager.Instance.Initialize(appOpenPlacementId);
+        }
+
         yield return null;
     }
 }

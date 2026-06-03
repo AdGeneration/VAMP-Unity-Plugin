@@ -11,8 +11,8 @@ public class ScrollLogText : Text
         base.Awake();
         if (font == null) {
             font = fallbackFont ??
-                   Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf") ??
-                   Resources.GetBuiltinResource<Font>("Arial.ttf");
+                Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf") ??
+                Resources.GetBuiltinResource<Font>("Arial.ttf");
         }
         fontSize = 48;
         color = new Color(0.2f, 0.2f, 0.2f, 1f);

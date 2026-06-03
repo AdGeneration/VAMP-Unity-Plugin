@@ -36,7 +36,7 @@
 
 #UnityAds
 
--keep class com.unity3d.ads.android.** { *; }
+-keep class com.unity3d.ads.** { *; }
 
 #nend
 

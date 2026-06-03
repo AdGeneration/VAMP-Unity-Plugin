@@ -9,6 +9,7 @@
 
 #if UNITY_EDITOR_OSX
 using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -40,8 +41,148 @@ public class PostBuildProcess
     private static readonly string plistKeySKAdNetworkItems = "SKAdNetworkItems";
     private static readonly string plistKeySKAdNetworkIdentifier = "SKAdNetworkIdentifier";
 
-    private static readonly string
-        plistKeySupershipSKAdNetworkIdentifier = "348L86ZLVX.skadnetwork";
+    // Canonical source: VAMP-iOS-SDK/ProvisionSample/VAMPAppOpenAdsSwiftUISample/
+    //                   VAMPAppOpenAdsSwiftUISample/Info.plist (Issue #51 §11 案 B)
+    // VAMP-iOS-SDK の release ごとに canonical source を再確認し、本配列を更新する責務が
+    // plugin 保守側に発生する。
+    private static readonly string[] VAMP_SKADNETWORK_IDS = {
+        "22mmun2rn5.skadnetwork",
+        "238da6jt44.skadnetwork",
+        "24t9a8vw3c.skadnetwork",
+        "252b5q8x7y.skadnetwork",
+        "275upjj5gd.skadnetwork",
+        "294l99pt4k.skadnetwork",
+        "2fnua5tdw4.skadnetwork",
+        "2u9pt9hc89.skadnetwork",
+        "32z4fx6l9h.skadnetwork",
+        "348l86zlvx.skadnetwork",
+        "3l6bd9hu43.skadnetwork",
+        "3qcr597p9d.skadnetwork",
+        "3qy4746246.skadnetwork",
+        "3rd42ekr43.skadnetwork",
+        "3sh42y64q3.skadnetwork",
+        "424m5254lk.skadnetwork",
+        "4468km3ulz.skadnetwork",
+        "44jx6755aq.skadnetwork",
+        "44n7hlldy6.skadnetwork",
+        "47vhws6wlr.skadnetwork",
+        "488r3q3dtq.skadnetwork",
+        "4dzt52r2t5.skadnetwork",
+        "4fzdc2evr5.skadnetwork",
+        "4mn522wn87.skadnetwork",
+        "4pfyvq9l8r.skadnetwork",
+        "4w7y6s5ca2.skadnetwork",
+        "523jb4fst2.skadnetwork",
+        "52fl2v3hgk.skadnetwork",
+        "54nzkqm89y.skadnetwork",
+        "5594blyghf.skadnetwork",
+        "578prtvx9j.skadnetwork",
+        "5a6flpkh64.skadnetwork",
+        "5l3tpt7t6e.skadnetwork",
+        "5lm9lj6jb7.skadnetwork",
+        "5tjdwbrq8w.skadnetwork",
+        "6g9af3uyq4.skadnetwork",
+        "6xzpu9s2p8.skadnetwork",
+        "6yxyv74ff7.skadnetwork",
+        "737z793b9f.skadnetwork",
+        "74b6s63p6l.skadnetwork",
+        "79pbpufp6p.skadnetwork",
+        "7fmhfwg9en.skadnetwork",
+        "7rz58n8ntl.skadnetwork",
+        "7ug5zh24hu.skadnetwork",
+        "866k9ut3g3.skadnetwork",
+        "8c4e2ghe7u.skadnetwork",
+        "8r8llnkz5a.skadnetwork",
+        "8s468mfl3y.skadnetwork",
+        "97r2b46745.skadnetwork",
+        "9b89h5y424.skadnetwork",
+        "9nlqeag3gk.skadnetwork",
+        "9rd848q2bz.skadnetwork",
+        "9t245vhmpl.skadnetwork",
+        "9yg77x724h.skadnetwork",
+        "a2p9lx4jpn.skadnetwork",
+        "a8cz6cu7e5.skadnetwork",
+        "av6w8kgt66.skadnetwork",
+        "c3frkrj4fj.skadnetwork",
+        "c6k4g5qg8m.skadnetwork",
+        "cg4yq2srnc.skadnetwork",
+        "cj5566h2ga.skadnetwork",
+        "cp8zw746q7.skadnetwork",
+        "cstr6suwn9.skadnetwork",
+        "dbu4b84rxf.skadnetwork",
+        "dkc879ngq3.skadnetwork",
+        "dzg6xy7pwj.skadnetwork",
+        "e5fvkxwrpn.skadnetwork",
+        "ecpz2srf59.skadnetwork",
+        "eh6m2bh4zr.skadnetwork",
+        "ejvt5qm6ak.skadnetwork",
+        "f38h382jlk.skadnetwork",
+        "f73kdq92p3.skadnetwork",
+        "f7s53z58qe.skadnetwork",
+        "feyaarzu9v.skadnetwork",
+        "g28c52eehv.skadnetwork",
+        "g6gcrrvk4p.skadnetwork",
+        "ggvn48r87g.skadnetwork",
+        "glqzh8vgby.skadnetwork",
+        "gta9lk7p23.skadnetwork",
+        "gvmwg8q7h5.skadnetwork",
+        "hdw39hrw9y.skadnetwork",
+        "hs6bdukanm.skadnetwork",
+        "k674qkevps.skadnetwork",
+        "kbd757ywx3.skadnetwork",
+        "kbmxgpxpgc.skadnetwork",
+        "klf5c3l5u5.skadnetwork",
+        "lr83yxwka7.skadnetwork",
+        "ludvb6z3bs.skadnetwork",
+        "m5mvw97r93.skadnetwork",
+        "m8dbw4sv7c.skadnetwork",
+        "mlmmfzh3r3.skadnetwork",
+        "mls7yz5dvl.skadnetwork",
+        "mp6xlyr22a.skadnetwork",
+        "mqn7fxpca7.skadnetwork",
+        "mtkv5xtk9e.skadnetwork",
+        "n38lu8286q.skadnetwork",
+        "n66cz3y3bx.skadnetwork",
+        "n6fk4nfna4.skadnetwork",
+        "n9x2a789qt.skadnetwork",
+        "nzq8sh4pbs.skadnetwork",
+        "p78axxw29g.skadnetwork",
+        "ppxm28t8ap.skadnetwork",
+        "prcb7njmu6.skadnetwork",
+        "pu4na253f3.skadnetwork",
+        "pwa73g5rt2.skadnetwork",
+        "qqp299437r.skadnetwork",
+        "r45fhb6rf7.skadnetwork",
+        "rvh3l7un93.skadnetwork",
+        "s39g8k73mm.skadnetwork",
+        "su67r6k2v3.skadnetwork",
+        "t38b2kh725.skadnetwork",
+        "tl55sbb4fm.skadnetwork",
+        "u679fj5vs4.skadnetwork",
+        "uw77j35x4d.skadnetwork",
+        "v4nxqhlyqp.skadnetwork",
+        "v72qych5uu.skadnetwork",
+        "v79kvwwj4g.skadnetwork",
+        "v9wttpbfk9.skadnetwork",
+        "vcra2ehyfk.skadnetwork",
+        "vutu7akeur.skadnetwork",
+        "w9q455wk68.skadnetwork",
+        "wg4vff78zm.skadnetwork",
+        "wzmmz9fp6w.skadnetwork",
+        "x44k69ngh6.skadnetwork",
+        "x5l83yy675.skadnetwork",
+        "x8jxxk4ff5.skadnetwork",
+        "x8uqf25wch.skadnetwork",
+        "xy9t38ct57.skadnetwork",
+        "y45688jllp.skadnetwork",
+        "y5ghdn5j9k.skadnetwork",
+        "yclnxrl5pm.skadnetwork",
+        "ydx93a7ass.skadnetwork",
+        "yrqqpx2mcb.skadnetwork",
+        "z4gj7hsk7h.skadnetwork",
+        "zmvfpc5aq8.skadnetwork",
+        "zq492l623r.skadnetwork",
+    };
 
     // AR
     private static readonly string plistKeyCameraUsageDescription = "NSCameraUsageDescription";
@@ -99,8 +240,7 @@ public class PostBuildProcess
             rootDict.SetString(plistKeyPhotoLibraryAddUsageDescription,
                                photoLibraryAddUsageDescription);
             rootDict.SetString(plistKeyCameraUsageDescription, cameraUsageDescription);
-            rootDict.CreateArray(plistKeySKAdNetworkItems).AddDict()
-            .SetString(plistKeySKAdNetworkIdentifier, plistKeySupershipSKAdNetworkIdentifier);
+            MergeSKAdNetworkItems(rootDict);
             rootDict.SetString(plistKeyAppearance, appearance);
             File.WriteAllText(plistPath, plist.WriteToString());
         }
@@ -129,7 +269,9 @@ public class PostBuildProcess
     [PostProcessBuild(103)]
     public static void OnPostProcessBuildEmbedDynamicFrameworks(BuildTarget buildTarget,
                                                                 string      path) {
-        if (buildTarget != BuildTarget.iOS) return;
+        if (buildTarget != BuildTarget.iOS) {
+            return;
+        }
 
         var projPath = PBXProject.GetPBXProjectPath(path);
         var proj = new PBXProject();
@@ -185,10 +327,14 @@ public class PostBuildProcess
     // that it's added before "pod install" (50).
     [PostProcessBuildAttribute(45)]
     public static void OnPostProcessBuildPodfile(BuildTarget target, string buildPath) {
-        if (target != BuildTarget.iOS) return;
+        if (target != BuildTarget.iOS) {
+            return;
+        }
 
         var podfilePath = Path.Combine(buildPath, "Podfile");
-        if (!File.Exists(podfilePath)) return;
+        if (!File.Exists(podfilePath)) {
+            return;
+        }
 
         var lines = File.ReadAllLines(podfilePath);
         using (var writer = new StringWriter()) {
@@ -210,6 +356,7 @@ public class PostBuildProcess
 
     private static bool ContainsPod(string[] lines, string podLine) {
         var podName = ExtractPodName(podLine);
+
         if (string.IsNullOrEmpty(podName)) {
             return false;
         }
@@ -223,8 +370,48 @@ public class PostBuildProcess
         return false;
     }
 
+    // Issue #51 §11 案 B: 既存 SKAdNetworkItems を保持しつつ canonical 136 個を dedupe merge する。
+    // メディア個別渡しサンプルに ADG SDK バナーも含むため Pangle 単体ではなく VAMP-iOS-SDK
+    // 公式 sample の全 SKAdNetworkID をマージする。case-insensitive で比較する。
+    private static void MergeSKAdNetworkItems(PlistElementDict rootDict) {
+        PlistElementArray skanArray;
+
+        if (rootDict.values.TryGetValue(plistKeySKAdNetworkItems, out var existingElement) &&
+            existingElement.AsArray() is PlistElementArray existing) {
+            skanArray = existing;
+        }
+        else {
+            skanArray = rootDict.CreateArray(plistKeySKAdNetworkItems);
+        }
+
+        var existingIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in skanArray.values) {
+            var dict = item.AsDict();
+            if (dict == null) {
+                continue;
+            }
+
+            if (!dict.values.TryGetValue(plistKeySKAdNetworkIdentifier, out var idElement)) {
+                continue;
+            }
+
+            var id = idElement.AsString();
+            if (!string.IsNullOrEmpty(id)) {
+                existingIds.Add(id);
+            }
+        }
+
+        foreach (var skanId in VAMP_SKADNETWORK_IDS) {
+            // HashSet.Add() returns true only when the id is newly added; existing ids are skipped.
+            if (existingIds.Add(skanId)) {
+                skanArray.AddDict().SetString(plistKeySKAdNetworkIdentifier, skanId);
+            }
+        }
+    }
+
     private static string ExtractPodName(string line) {
         var trimmed = line.Trim();
+
         if (!trimmed.StartsWith("pod '", StringComparison.Ordinal)) {
             return null;
         }
