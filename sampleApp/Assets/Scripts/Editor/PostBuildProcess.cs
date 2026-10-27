@@ -21,9 +21,13 @@ using UnityEditor.iOS.Xcode.Extensions;
 
 public class PostBuildProcess
 {
+    // VAMPAppLovinAdapter / VAMPMaioAdapter が固定する版 (= AppLovinSDK / MaioSDK-v2) と揃えること。
+    // 食い違うと pod install が版の衝突で失敗する (VAMPDependencies.xml のアダプターを上げたら一緒に上げる)
+    // アプリ本体のターゲットに置くと、CocoaPods が動的 framework (AppLovinSDK / Maio) をアプリに埋め込む。
+    // ここで Embed Frameworks に足すと埋め込みが重なり、Multiple commands produce になる (Issue #76)
     private static readonly string[] privateIosPodsForMainTarget = {
-        "  pod 'AppLovinSDK', '13.5.0'",
-        "  pod 'MaioSDK-v2', '2.2.1'",
+        "  pod 'AppLovinSDK', '13.6.4'",
+        "  pod 'MaioSDK-v2', '2.2.3'",
     };
 
     // AdMob AppID
@@ -258,54 +262,6 @@ public class PostBuildProcess
         proj.SetBuildProperty(mainTarget, "ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES", "YES");
         var frameworkTarget = proj.GetUnityFrameworkTargetGuid();
         proj.SetBuildProperty(frameworkTarget, "ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES", "YES");
-        File.WriteAllText(projPath, proj.WriteToString());
-    }
-
-    // When using `use_frameworks! :linkage => :static`, CocoaPods converts most pods to static
-    // linkage and does not generate an "Embed Pods Frameworks" build phase. However, some SDKs
-    // (e.g. AppLovinSDK, Maio) ship as prebuilt dynamic XCFrameworks/frameworks that cannot be
-    // made static. These must be explicitly embedded in the main app target so that they are
-    // copied into the app bundle at build time and can be found by the dynamic linker at runtime.
-    [PostProcessBuild(103)]
-    public static void OnPostProcessBuildEmbedDynamicFrameworks(BuildTarget buildTarget,
-                                                                string      path) {
-        if (buildTarget != BuildTarget.iOS) {
-            return;
-        }
-
-        var projPath = PBXProject.GetPBXProjectPath(path);
-        var proj = new PBXProject();
-        proj.ReadFromFile(projPath);
-
-        var mainTarget = proj.GetUnityMainTargetGuid();
-        var podsDir = Path.Combine(path, "Pods");
-
-        if (!Directory.Exists(podsDir)) {
-            Debug.LogWarning("Pods directory not found. Skipping framework embedding.");
-            return;
-        }
-
-        // These are prebuilt dynamic frameworks that cannot be made static by CocoaPods
-        // and must be embedded in the main app target.
-        var dynamicFrameworks = new[] {
-            "AppLovinSDK.xcframework",
-            "Maio.xcframework",
-        };
-
-        foreach (var frameworkName in dynamicFrameworks) {
-            var dirs = Directory.GetDirectories(podsDir, frameworkName,
-                                                SearchOption.AllDirectories);
-            if (dirs.Length == 0) {
-                Debug.LogWarning($"{frameworkName} not found under Pods. Skipping.");
-                continue;
-            }
-
-            var relativePath = dirs[0].Substring(path.Length + 1);
-            var fileGuid = proj.AddFile(relativePath, $"Frameworks/{frameworkName}",
-                                        PBXSourceTree.Source);
-            PBXProjectExtensions.AddFileToEmbedFrameworks(proj, mainTarget, fileGuid);
-        }
-
         File.WriteAllText(projPath, proj.WriteToString());
     }
 

@@ -19,10 +19,12 @@ public class BatchBuild
     [MenuItem("VAMP/Export VAMP Unity Package")]
     public static void ExportUnityPackage() {
         Debug.Log("Exporting unitypackage...");
+        // IncludeDependencies を付けると、ダミー広告の prefab が参照する uGUI のファイルが入り、
+        // 読み込んだ側の Packages/com.unity.ugui を書き出した Unity の版で上書きしてしまう
         AssetDatabase.ExportPackage(
             new[] { "Assets/VAMP" },
             "vamp_for_unity.unitypackage",
-            ExportPackageOptions.Recurse | ExportPackageOptions.IncludeDependencies
+            ExportPackageOptions.Recurse
             );
     }
 

@@ -22,13 +22,10 @@ dependencyResolutionManagement {
             url "https://AdGeneration.github.io/VAMP-Android-SDK/repository" // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:10
         }
         maven {
-            url "https://android-sdk.is.com/" // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:19
+            url "https://imobile-maio.github.io/maven" // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:26
         }
         maven {
-            url "https://imobile-maio.github.io/maven" // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:27
-        }
-        maven {
-            url "https://artifact.bytedance.com/repository/pangle" // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:33
+            url "https://artifact.bytedance.com/repository/pangle" // Assets/ExternalDependencyManager/Editor/VAMPDependencies.xml:32
         }
         mavenLocal()
 // Android Resolver Repos End

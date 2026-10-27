@@ -24,7 +24,6 @@ public static class SDKTestUtil
                    "VAMPUnityPlugin: " + VAMP.SDK.VAMPUnityPluginVersion,
                    "VAMP SDK: " + VAMP.SDK.SDKVersion,
                    "AdMob: " + GetAdnwSDKVersion("AdMob"),
-                   "ironSource: " + GetAdnwSDKVersion("IronSource"),
                    "LINEAds: " + GetAdnwSDKVersion("LINEAds"),
                    "maio: " + GetAdnwSDKVersion("Maio"),
                    "Pangle: " + GetAdnwSDKVersion("Pangle"),
@@ -65,11 +64,6 @@ public static class SDKTestUtil
                 case "AdMob":
                 {
                     const string name = "jp.supership.vamp.mediation.admob.AdMobAdapter";
-                    return AndroidGetAdnwVersion(name) + " | " + AndroidGetAdapterVersion(name);
-                }
-                case "IronSource":
-                {
-                    const string name = "jp.supership.vamp.mediation.ironsource.IronSourceAdapter";
                     return AndroidGetAdnwVersion(name) + " | " + AndroidGetAdapterVersion(name);
                 }
                 case "LINEAds":
